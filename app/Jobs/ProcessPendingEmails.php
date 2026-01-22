@@ -3,7 +3,6 @@
 namespace App\Jobs;
 
 use App\Enums\MessageStatus;
-use App\Jobs\SendNewsletterEmail;
 use App\Models\Message;
 use App\Models\MessageSend;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -14,6 +13,7 @@ class ProcessPendingEmails implements ShouldQueue
     use Queueable;
 
     public int $tries = 3;
+
     public int $backoff = 60;
 
     /**
@@ -50,7 +50,7 @@ class ProcessPendingEmails implements ShouldQueue
                 // Mark as failed if dispatch fails
                 $messageSend->update([
                     'failed_at' => now(),
-                    'error_message' => 'Failed to queue: ' . $e->getMessage(),
+                    'error_message' => 'Failed to queue: '.$e->getMessage(),
                 ]);
                 $failed++;
             }
@@ -72,7 +72,7 @@ class ProcessPendingEmails implements ShouldQueue
                 if ($sentSends > 0 && $failedSends === 0) {
                     $message->update([
                         'status' => MessageStatus::Sent,
-                        'sent_at' => now()
+                        'sent_at' => now(),
                     ]);
                 }
             }

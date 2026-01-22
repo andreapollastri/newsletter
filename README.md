@@ -15,12 +15,16 @@ Sistema completo di gestione newsletter per Laravel con Filament.
 ## 🚀 Quick Start
 
 ```bash
-# 1. Avvia il worker della coda
+# 1. Popola con dati di esempio (opzionale ma consigliato)
+php artisan newsletter:seed-data
+
+# 2. Avvia il worker della coda
 ./start-worker.sh
 
-# 2. Vai su https://newsletter.test
-# 3. Crea subscriber, template, campagne
-# 4. Invia newsletter!
+# 3. Accedi al sistema
+# URL: https://newsletter.test
+# Email: admin@newsletter.test
+# Password: password
 ```
 
 ## 📧 Invio Newsletter

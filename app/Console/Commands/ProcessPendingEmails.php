@@ -2,9 +2,6 @@
 
 namespace App\Console\Commands;
 
-use App\Enums\MessageStatus;
-use App\Jobs\SendNewsletterEmail;
-use App\Models\Message;
 use App\Models\MessageSend;
 use Illuminate\Console\Command;
 
@@ -37,6 +34,7 @@ class ProcessPendingEmails extends Command
 
         if ($pendingSends === 0) {
             $this->info('✅ No pending emails to process.');
+
             return self::SUCCESS;
         }
 
