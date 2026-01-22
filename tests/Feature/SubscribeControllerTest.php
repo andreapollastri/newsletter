@@ -69,11 +69,25 @@ class SubscribeControllerTest extends TestCase
             ->assertViewIs('subscribe.invalid-token');
     }
 
-    public function test_unsubscribe_sets_subscriber_status_to_unsubscribed(): void
+    public function test_unsubscribe_shows_confirmation_page(): void
     {
         $subscriber = Subscriber::factory()->confirmed()->create();
 
         $this->get(route('unsubscribe', $subscriber))
+            ->assertViewIs('subscribe.unsubscribe-confirm')
+            ->assertViewHas('subscriber');
+
+        // Subscriber should NOT be unsubscribed yet
+        $subscriber->refresh();
+        $this->assertEquals(SubscriberStatus::Confirmed, $subscriber->status);
+        $this->assertNull($subscriber->unsubscribed_at);
+    }
+
+    public function test_confirm_unsubscribe_sets_subscriber_status_to_unsubscribed(): void
+    {
+        $subscriber = Subscriber::factory()->confirmed()->create();
+
+        $this->post(route('unsubscribe.confirm', $subscriber))
             ->assertViewIs('subscribe.unsubscribed');
 
         $subscriber->refresh();

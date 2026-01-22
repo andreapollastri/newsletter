@@ -21,17 +21,32 @@ class NewsletterStatsWidget extends StatsOverviewWidget
             ->whereYear('sent_at', now()->year)
             ->count();
 
+        // Conteggio invii totali del mese
         $sendsThisMonth = MessageSend::whereMonth('created_at', now()->month)
             ->whereYear('created_at', now()->year)
             ->whereNotNull('sent_at')
             ->count();
-        $opensThisMonth = MessageSend::whereMonth('created_at', now()->month)
+
+        // Conteggio univoco aperture (messaggi aperti almeno una volta)
+        $uniqueOpensThisMonth = MessageSend::whereMonth('created_at', now()->month)
             ->whereYear('created_at', now()->year)
             ->whereNotNull('sent_at')
-            ->sum('opens_count');
+            ->where('opens_count', '>', 0)
+            ->count();
+
+        // Conteggio univoco click (messaggi cliccati almeno una volta)
+        $uniqueClicksThisMonth = MessageSend::whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year)
+            ->whereNotNull('sent_at')
+            ->where('clicks_count', '>', 0)
+            ->count();
 
         $openRate = $sendsThisMonth > 0
-            ? round(($opensThisMonth / $sendsThisMonth) * 100, 1).'%'
+            ? round(($uniqueOpensThisMonth / $sendsThisMonth) * 100, 1).'%'
+            : 'N/A';
+
+        $clickRate = $sendsThisMonth > 0
+            ? round(($uniqueClicksThisMonth / $sendsThisMonth) * 100, 1).'%'
             : 'N/A';
 
         $bouncesThisMonth = Bounce::whereMonth('detected_at', now()->month)
@@ -39,19 +54,25 @@ class NewsletterStatsWidget extends StatsOverviewWidget
             ->count();
 
         return [
-            Stat::make('Subscribers Totali', $totalSubscribers)
+            Stat::make(__('Total Subscribers'), $totalSubscribers)
                 ->icon(Heroicon::Users)
                 ->color('success'),
 
-            Stat::make('Messaggi Inviati (mese)', $sentThisMonth)
+            Stat::make(__('Messages Sent (month)'), $sentThisMonth)
                 ->icon(Heroicon::EnvelopeOpen)
                 ->color('info'),
 
-            Stat::make('Tasso Apertura (mese)', $openRate)
+            Stat::make(__('Open Rate (month)'), $openRate)
+                ->description(__('Opens').': '.$uniqueOpensThisMonth)
                 ->icon(Heroicon::Eye)
                 ->color('warning'),
 
-            Stat::make('Bounces (mese)', $bouncesThisMonth)
+            Stat::make(__('Click Rate (month)'), $clickRate)
+                ->description(__('Clicks').': '.$uniqueClicksThisMonth)
+                ->icon(Heroicon::CursorArrowRays)
+                ->color('info'),
+
+            Stat::make(__('Bounces (month)'), $bouncesThisMonth)
                 ->icon(Heroicon::ExclamationTriangle)
                 ->color('danger'),
         ];

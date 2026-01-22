@@ -27,9 +27,6 @@
                 <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-4 rounded-lg transition duration-200">
                     Sì, disiscrivimi
                 </button>
-                <a href="{{ url('/') }}" class="block w-full text-center bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-3 px-4 rounded-lg transition duration-200">
-                    No, rimani iscritto
-                </a>
             </form>
         </div>
     </div>
