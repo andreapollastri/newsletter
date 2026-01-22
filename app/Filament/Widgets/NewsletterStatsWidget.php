@@ -62,6 +62,10 @@ class NewsletterStatsWidget extends StatsOverviewWidget
                 ->icon(Heroicon::EnvelopeOpen)
                 ->color('info'),
 
+            Stat::make(__('Total Emails Sent (month)'), $sendsThisMonth)
+                ->icon(Heroicon::PaperAirplane)
+                ->color('success'),
+
             Stat::make(__('Open Rate (month)'), $openRate)
                 ->description(__('Opens').': '.$uniqueOpensThisMonth)
                 ->icon(Heroicon::Eye)
