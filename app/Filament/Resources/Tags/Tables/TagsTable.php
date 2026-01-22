@@ -5,7 +5,6 @@ namespace App\Filament\Resources\Tags\Tables;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
-use Filament\Tables\Columns\ColorColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
@@ -18,8 +17,6 @@ class TagsTable
                 TextColumn::make('name')
                     ->searchable()
                     ->sortable(),
-
-                ColorColumn::make('color'),
 
                 TextColumn::make('subscribers_count')
                     ->counts('subscribers')

@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\Tags\Schemas;
 
-use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
 
@@ -16,8 +15,6 @@ class TagForm
                     ->required()
                     ->unique(ignoreRecord: true)
                     ->maxLength(255),
-
-                ColorPicker::make('color'),
             ]);
     }
 }

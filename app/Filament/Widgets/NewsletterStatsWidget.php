@@ -2,7 +2,6 @@
 
 namespace App\Filament\Widgets;
 
-use App\Enums\MessageStatus;
 use App\Enums\SubscriberStatus;
 use App\Models\Bounce;
 use App\Models\Message;
@@ -17,7 +16,7 @@ class NewsletterStatsWidget extends StatsOverviewWidget
     protected function getStats(): array
     {
         $totalSubscribers = Subscriber::where('status', SubscriberStatus::Confirmed)->count();
-        $sentThisMonth = Message::where('status', MessageStatus::Sent)
+        $sentThisMonth = Message::where('status', \App\Enums\MessageStatus::Sent)
             ->whereMonth('sent_at', now()->month)
             ->whereYear('sent_at', now()->year)
             ->count();

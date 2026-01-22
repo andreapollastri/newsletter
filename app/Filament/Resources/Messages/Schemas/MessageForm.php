@@ -9,7 +9,6 @@ use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
-use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 
 class MessageForm
@@ -65,25 +64,38 @@ class MessageForm
                     ]),
 
                 Section::make('Destinatari e Invio')
-                    ->columns(1)
+                    ->columns(2)
                     ->schema([
                         Select::make('tags')
                             ->relationship('tags', 'name')
                             ->multiple()
                             ->searchable()
                             ->preload()
+                            ->columnSpanFull()
                             ->helperText('Seleziona i tag dei destinatari. Se vuoto, invia a tutti i confermati.'),
 
                         Select::make('status')
-                            ->options(MessageStatus::class)
+                            ->options([
+                                MessageStatus::Draft->value => MessageStatus::Draft->getLabel(),
+                                MessageStatus::Ready->value => MessageStatus::Ready->getLabel(),
+                            ])
                             ->default(MessageStatus::Draft)
                             ->required()
                             ->live()
-                            ->disabled(fn (?Message $record) => $record?->status === MessageStatus::Sent),
+                            ->disabled(fn (?Message $record) => $record?->status === MessageStatus::Sent || $record?->status === MessageStatus::Sending)
+                            ->helperText(fn (?Message $record) => match ($record?->status) {
+                                MessageStatus::Sent => 'Messaggio già inviato, impossibile modificare lo status',
+                                MessageStatus::Sending => 'Messaggio in invio, impossibile modificare lo status',
+                                default => 'Seleziona "Pronto" per programmare o inviare il messaggio'
+                            }),
 
                         DateTimePicker::make('scheduled_at')
+                            ->label('Data e ora programmazione')
                             ->minDate(now())
-                            ->visible(fn (Get $get) => $get('status') === MessageStatus::Ready->value),
+                            ->seconds(false)
+                            ->native(false)
+                            ->helperText('Opzionale: programma invio automatico. Imposta lo status su "Pronto" per attivare l\'invio programmato.')
+                            ->disabled(fn (?Message $record) => $record?->status === MessageStatus::Sent || $record?->status === MessageStatus::Sending),
                     ]),
             ]);
     }

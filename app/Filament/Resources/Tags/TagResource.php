@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Tags;
 use App\Filament\Resources\Tags\Pages\CreateTag;
 use App\Filament\Resources\Tags\Pages\EditTag;
 use App\Filament\Resources\Tags\Pages\ListTags;
+use App\Filament\Resources\Tags\RelationManagers\SubscribersRelationManager;
 use App\Filament\Resources\Tags\Schemas\TagForm;
 use App\Filament\Resources\Tags\Tables\TagsTable;
 use App\Models\Tag;
@@ -20,9 +21,7 @@ class TagResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedTag;
 
-    protected static \UnitEnum|string|null $navigationGroup = 'Newsletter';
-
-    protected static ?int $navigationSort = 2;
+    protected static ?int $navigationSort = 5;
 
     protected static ?string $recordTitleAttribute = 'name';
 
@@ -39,7 +38,7 @@ class TagResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            SubscribersRelationManager::class,
         ];
     }
 

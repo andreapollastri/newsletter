@@ -28,6 +28,8 @@ class NewsletterPanelProvider extends PanelProvider
             ->id('newsletter')
             ->path('/')
             ->login()
+            ->profile()
+            ->topNavigation()
             ->colors([
                 'primary' => Color::Slate,
             ])

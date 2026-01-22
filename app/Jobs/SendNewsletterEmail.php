@@ -2,7 +2,6 @@
 
 namespace App\Jobs;
 
-use App\Enums\MessageStatus;
 use App\Mail\NewsletterMail;
 use App\Models\MessageSend;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -195,9 +194,9 @@ HTML;
             ->whereNull('failed_at')
             ->count();
 
-        if ($pendingSends === 0 && $message->status === MessageStatus::Sending) {
+        if ($pendingSends === 0 && $message->status !== \App\Enums\MessageStatus::Sent) {
             $message->update([
-                'status' => MessageStatus::Sent,
+                'status' => \App\Enums\MessageStatus::Sent,
                 'sent_at' => now(),
             ]);
         }

@@ -44,9 +44,9 @@ class SeedNewsletterData extends Command
         $this->info('✅ Admin user: '.$user->email);
 
         // Create tags
-        $clientiTag = Tag::firstOrCreate(['name' => 'Clienti'], ['color' => '#3b82f6']);
-        $fornitoriTag = Tag::firstOrCreate(['name' => 'Fornitori'], ['color' => '#10b981']);
-        $partnerTag = Tag::firstOrCreate(['name' => 'Partner'], ['color' => '#f59e0b']);
+        $clientiTag = Tag::firstOrCreate(['name' => 'Clienti']);
+        $fornitoriTag = Tag::firstOrCreate(['name' => 'Fornitori']);
+        $partnerTag = Tag::firstOrCreate(['name' => 'Partner']);
         $this->info('✅ Created 3 tags');
 
         // Create subscribers
