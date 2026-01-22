@@ -30,7 +30,9 @@ class SendNewsletterEmailJobTest extends TestCase
             'subscriber_id' => $subscriber->id,
         ]);
 
-        SendNewsletterEmail::dispatch($messageSend->id);
+        // Execute job directly instead of dispatching
+        $job = new SendNewsletterEmail($messageSend->id);
+        $job->handle();
 
         Mail::assertSent(NewsletterMail::class, function ($mail) use ($subscriber) {
             return $mail->hasTo($subscriber->email);
@@ -43,7 +45,9 @@ class SendNewsletterEmailJobTest extends TestCase
 
         $messageSend = MessageSend::factory()->create();
 
-        SendNewsletterEmail::dispatch($messageSend->id);
+        // Execute job directly
+        $job = new SendNewsletterEmail($messageSend->id);
+        $job->handle();
 
         $messageSend->refresh();
         $this->assertNotNull($messageSend->sent_at);
@@ -66,7 +70,9 @@ class SendNewsletterEmailJobTest extends TestCase
             'subscriber_id' => $subscriber->id,
         ]);
 
-        SendNewsletterEmail::dispatch($messageSend->id);
+        // Execute job directly
+        $job = new SendNewsletterEmail($messageSend->id);
+        $job->handle();
 
         Mail::assertSent(NewsletterMail::class, function ($mail) {
             return $mail->emailSubject === 'Hello John Doe'
@@ -81,7 +87,9 @@ class SendNewsletterEmailJobTest extends TestCase
 
         $messageSend = MessageSend::factory()->create();
 
-        SendNewsletterEmail::dispatch($messageSend->id);
+        // Execute job directly
+        $job = new SendNewsletterEmail($messageSend->id);
+        $job->handle();
 
         Mail::assertSent(NewsletterMail::class, function ($mail) use ($messageSend) {
             return str_contains($mail->htmlContent, route('tracking.open', $messageSend->id));
@@ -99,7 +107,9 @@ class SendNewsletterEmailJobTest extends TestCase
             'message_id' => $message->id,
         ]);
 
-        SendNewsletterEmail::dispatch($messageSend->id);
+        // Execute job directly
+        $job = new SendNewsletterEmail($messageSend->id);
+        $job->handle();
 
         $message->refresh();
         $this->assertEquals(MessageStatus::Sent, $message->status);
