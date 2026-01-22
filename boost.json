@@ -7,7 +7,8 @@
         "vscode"
     ],
     "guidelines": [
-        "filament/filament"
+        "filament/filament",
+        "filament/blueprint"
     ],
     "herd_mcp": true
 }
