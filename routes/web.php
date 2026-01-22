@@ -9,6 +9,7 @@ Route::get('/subscribe', [SubscribeController::class, 'showForm'])->name('subscr
 Route::post('/subscribe', [SubscribeController::class, 'subscribe'])->name('subscribe.store');
 Route::get('/subscribe/confirm/{token}', [SubscribeController::class, 'confirm'])->name('subscribe.confirm');
 Route::get('/unsubscribe/{subscriber}', [SubscribeController::class, 'unsubscribe'])->name('unsubscribe');
+Route::post('/unsubscribe/{subscriber}/confirm', [SubscribeController::class, 'confirmUnsubscribe'])->name('unsubscribe.confirm');
 
 // Tracking routes
 Route::get('/track/open/{messageSend}', [TrackingController::class, 'open'])->name('tracking.open');

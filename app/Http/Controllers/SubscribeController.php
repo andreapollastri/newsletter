@@ -95,9 +95,17 @@ class SubscribeController extends Controller
     }
 
     /**
-     * Unsubscribe.
+     * Show unsubscribe confirmation page.
      */
     public function unsubscribe(Subscriber $subscriber): View
+    {
+        return view('subscribe.unsubscribe-confirm', compact('subscriber'));
+    }
+
+    /**
+     * Confirm and process unsubscribe.
+     */
+    public function confirmUnsubscribe(Request $request, Subscriber $subscriber): View
     {
         if ($subscriber->status !== SubscriberStatus::Unsubscribed) {
             $subscriber->update([
