@@ -1,3 +1,60 @@
+# 📰 Newsletter System
+
+Sistema completo di gestione newsletter per Laravel con Filament.
+
+## ✨ Funzionalità
+
+- 👥 **Gestione Subscriber**: Import/Export CSV, tagging, status
+- 📧 **Campagne e Messaggi**: Organizzazione gerarchica
+- 🎨 **Template HTML**: Personalizzabili con placeholder
+- ⏰ **Invio Schedulato**: Automatico con cron
+- 📊 **Tracking Completo**: Aperture, click, unsubscribe
+- 🎯 **Targeting**: Filtri per tag e status
+- 📈 **Dashboard**: Statistiche e monitoraggio
+
+## 🚀 Quick Start
+
+```bash
+# 1. Avvia il worker della coda
+./start-worker.sh
+
+# 2. Vai su https://newsletter.test
+# 3. Crea subscriber, template, campagne
+# 4. Invia newsletter!
+```
+
+## 📧 Invio Newsletter
+
+### Immediato
+1. **Newsletter > Messaggi** → Nuovo messaggio
+2. **Status = Pronto** → **"Invia Ora"**
+3. Email inviate automaticamente via coda
+
+### Schedulato
+1. Imposta **"Data Programmata"**
+2. Il sistema invia automaticamente
+
+## 📊 Monitoraggio
+
+- **Dashboard**: KPI principali
+- **Messaggi**: Status e conteggi invii
+- **Dettagli**: Tracking individuale
+
+## 🔧 Troubleshooting
+
+```bash
+# Se email non partono
+php artisan newsletter:process-pending
+
+# Controlla coda
+php artisan tinker --execute="DB::table('jobs')->count()"
+
+# Test email
+php artisan tinker --execute="Mail::raw('Test',fn(\$m)=>\$m->to('test@example.com'))"
+```
+
+---
+
 <p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
 <p align="center">

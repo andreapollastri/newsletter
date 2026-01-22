@@ -84,11 +84,12 @@ class SendScheduledMessages extends Command
                     'subscriber_id' => $subscriber->id,
                 ]);
 
+                // Dispatch to queue instead of processing immediately
                 SendNewsletterEmail::dispatch($messageSend->id);
                 $created++;
             }
         }
 
-        $this->info("Dispatched {$created} job(s) for message: {$message->subject}");
+        $this->info("Queued {$created} job(s) for message: {$message->subject}");
     }
 }
