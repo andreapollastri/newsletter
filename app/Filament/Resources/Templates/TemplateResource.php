@@ -24,6 +24,21 @@ class TemplateResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'name';
 
+    public static function getModelLabel(): string
+    {
+        return __('Template');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('Templates');
+    }
+
+    public static function getNavigationLabel(): string
+    {
+        return __('Templates');
+    }
+
     public static function form(Schema $schema): Schema
     {
         return TemplateForm::configure($schema);

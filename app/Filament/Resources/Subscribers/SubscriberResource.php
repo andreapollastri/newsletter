@@ -26,6 +26,21 @@ class SubscriberResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'email';
 
+    public static function getModelLabel(): string
+    {
+        return __('Subscriber');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('Subscribers');
+    }
+
+    public static function getNavigationLabel(): string
+    {
+        return __('Subscribers');
+    }
+
     public static function form(Schema $schema): Schema
     {
         return SubscriberForm::configure($schema);

@@ -17,10 +17,10 @@ enum MessageStatus: string implements HasColor, HasIcon, HasLabel
     public function getLabel(): string
     {
         return match ($this) {
-            self::Draft => 'Bozza',
-            self::Ready => 'Pronto',
-            self::Sending => 'In invio',
-            self::Sent => 'Inviato',
+            self::Draft => __('Draft'),
+            self::Ready => __('Ready'),
+            self::Sending => __('Sending'),
+            self::Sent => __('Sent'),
         };
     }
 

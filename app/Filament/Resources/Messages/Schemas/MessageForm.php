@@ -18,29 +18,31 @@ class MessageForm
         return $schema
             ->columns(1)
             ->components([
-                Section::make('Contenuto')
+                Section::make(__('Content'))
                     ->columns(1)
                     ->schema([
                         Select::make('campaign_id')
+                            ->label(__('Campaign'))
                             ->relationship('campaign', 'name')
                             ->searchable()
                             ->preload()
                             ->required(),
 
                         Select::make('template_id')
+                            ->label(__('Template'))
                             ->relationship('template', 'name')
                             ->searchable()
                             ->preload()
-                            ->helperText('Il template contiene la struttura HTML. Il contenuto del messaggio verrà inserito al posto di {{body}}'),
+                            ->helperText(__('The template contains the HTML structure. The message content will be inserted in place of {{body}}')),
 
                         TextInput::make('subject')
-                            ->label('Oggetto')
+                            ->label(__('Subject'))
                             ->required()
                             ->maxLength(255)
-                            ->helperText('Placeholders: {{name}}, {{email}}'),
+                            ->helperText(__('Placeholders: {{name}}, {{email}}')),
 
                         RichEditor::make('html_content')
-                            ->label('Contenuto del messaggio')
+                            ->label(__('Message Content'))
                             ->required()
                             ->fileAttachmentsDisk('public')
                             ->fileAttachmentsDirectory('newsletter-images')
@@ -60,21 +62,23 @@ class MessageForm
                                 'undo',
                                 'redo',
                             ])
-                            ->helperText('Questo contenuto verrà inserito nel template al posto di {{body}}. Placeholders: {{name}}, {{email}}'),
+                            ->helperText(__('This content will be inserted into the template in place of {{body}}. Placeholders: {{name}}, {{email}}')),
                     ]),
 
-                Section::make('Destinatari e Invio')
+                Section::make(__('Recipients and Sending'))
                     ->columns(2)
                     ->schema([
                         Select::make('tags')
+                            ->label(__('Tags'))
                             ->relationship('tags', 'name')
                             ->multiple()
                             ->searchable()
                             ->preload()
                             ->columnSpanFull()
-                            ->helperText('Seleziona i tag dei destinatari. Se vuoto, invia a tutti i confermati.'),
+                            ->helperText(__('Select recipient tags. If empty, send to all confirmed.')),
 
                         Select::make('status')
+                            ->label(__('Status'))
                             ->options([
                                 MessageStatus::Draft->value => MessageStatus::Draft->getLabel(),
                                 MessageStatus::Ready->value => MessageStatus::Ready->getLabel(),
@@ -84,17 +88,17 @@ class MessageForm
                             ->live()
                             ->disabled(fn (?Message $record) => $record?->status === MessageStatus::Sent || $record?->status === MessageStatus::Sending)
                             ->helperText(fn (?Message $record) => match ($record?->status) {
-                                MessageStatus::Sent => 'Messaggio già inviato, impossibile modificare lo status',
-                                MessageStatus::Sending => 'Messaggio in invio, impossibile modificare lo status',
-                                default => 'Seleziona "Pronto" per programmare o inviare il messaggio'
+                                MessageStatus::Sent => __('Message already sent, cannot modify status'),
+                                MessageStatus::Sending => __('Message sending, cannot modify status'),
+                                default => __('Select "Ready" to schedule or send the message')
                             }),
 
                         DateTimePicker::make('scheduled_at')
-                            ->label('Data e ora programmazione')
+                            ->label(__('Scheduled Date and Time'))
                             ->minDate(now())
                             ->seconds(false)
                             ->native(false)
-                            ->helperText('Opzionale: programma invio automatico. Imposta lo status su "Pronto" per attivare l\'invio programmato.')
+                            ->helperText(__('Optional: schedule automatic sending. Set status to "Ready" to activate scheduled sending.'))
                             ->disabled(fn (?Message $record) => $record?->status === MessageStatus::Sent || $record?->status === MessageStatus::Sending),
                     ]),
             ]);

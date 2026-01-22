@@ -15,10 +15,10 @@ enum SubscriberStatus: string implements HasColor, HasLabel
     public function getLabel(): string
     {
         return match ($this) {
-            self::Pending => 'In attesa',
-            self::Confirmed => 'Confermato',
-            self::Unsubscribed => 'Disiscritto',
-            self::Bounced => 'Bounced',
+            self::Pending => __('Pending'),
+            self::Confirmed => __('Confirmed'),
+            self::Unsubscribed => __('Unsubscribed'),
+            self::Bounced => __('Bounced'),
         };
     }
 

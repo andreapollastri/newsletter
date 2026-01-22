@@ -27,6 +27,21 @@ class MessageResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'subject';
 
+    public static function getModelLabel(): string
+    {
+        return __('Message');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('Messages');
+    }
+
+    public static function getNavigationLabel(): string
+    {
+        return __('Messages');
+    }
+
     public static function form(Schema $schema): Schema
     {
         return MessageForm::configure($schema);

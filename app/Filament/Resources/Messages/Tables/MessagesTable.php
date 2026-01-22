@@ -29,31 +29,32 @@ class MessagesTable
             ->defaultSort('id', 'desc')
             ->columns([
                 TextColumn::make('subject')
-                    ->label('Messaggio')
+                    ->label(__('Message'))
                     ->searchable()
                     ->sortable()
                     ->limit(50)
                     ->description(fn (Message $record): ?string => $record->campaign?->name),
 
                 TextColumn::make('status')
+                    ->label(__('Status'))
                     ->badge(),
 
                 TextColumn::make('scheduled_at')
-                    ->label('Programmato per')
+                    ->label(__('Scheduled At'))
                     ->dateTime('d/m/Y H:i')
                     ->sortable()
                     ->placeholder('—')
                     ->description(fn (Message $record): ?string => $record->scheduled_at && $record->scheduled_at->isFuture()
-                        ? 'Invio automatico tra '.$record->scheduled_at->diffForHumans()
+                        ? __('Automatic sending in :time', ['time' => $record->scheduled_at->diffForHumans()])
                         : null),
 
                 TextColumn::make('sent_at')
-                    ->label('Inviato il')
+                    ->label(__('Sent At'))
                     ->dateTime('d/m/Y H:i')
                     ->sortable()
                     ->placeholder('—')
                     ->description(fn (Message $record): ?string => $record->sent_at
-                        ? $record->sent_at->diffForHumans()
+                        ? __(':time ago', ['time' => $record->sent_at->diffForHumans()])
                         : null),
             ])
             ->filters([
@@ -69,13 +70,13 @@ class MessagesTable
                 ActionGroup::make([
                     EditAction::make(),
                     Action::make('sendNow')
-                        ->label('Invia Ora')
+                        ->label(__('Send Now'))
                         ->icon(Heroicon::PaperAirplane)
                         ->color('success')
                         ->visible(fn (Message $record) => $record->status === MessageStatus::Ready)
                         ->requiresConfirmation()
-                        ->modalHeading('Invia Messaggio')
-                        ->modalDescription('Sei sicuro di voler inviare questo messaggio immediatamente?')
+                        ->modalHeading(__('Send Message'))
+                        ->modalDescription(__('Are you sure you want to send this message immediately?'))
                         ->action(function (Message $record) {
                             $record->update(['status' => MessageStatus::Sending]);
 
@@ -99,13 +100,13 @@ class MessagesTable
                             }
 
                             Notification::make()
-                                ->title('Invio avviato')
-                                ->body("Invio in corso a {$subscribers->count()} destinatari.")
+                                ->title(__('Sending started'))
+                                ->body(__('Sending in progress to :count recipients.', ['count' => $subscribers->count()]))
                                 ->success()
                                 ->send();
                         }),
                     Action::make('sendTest')
-                        ->label('Invia Test')
+                        ->label(__('Send Test'))
                         ->icon(Heroicon::Beaker)
                         ->color('warning')
                         ->form([
@@ -113,7 +114,7 @@ class MessagesTable
                                 ->email()
                                 ->required()
                                 ->placeholder('test@example.com')
-                                ->label('Email di prova'),
+                                ->label(__('Test Email')),
                         ])
                         ->action(function (Message $record, array $data) {
                             // Send test email directly without tracking
@@ -123,8 +124,8 @@ class MessagesTable
                             });
 
                             Notification::make()
-                                ->title('Email di prova inviata')
-                                ->body("Email inviata a {$data['test_email']}")
+                                ->title(__('Test email sent'))
+                                ->body(__('Email sent to :email', ['email' => $data['test_email']]))
                                 ->success()
                                 ->send();
                         }),
