@@ -6,6 +6,7 @@ use App\Enums\SubscriberStatus;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -25,6 +26,7 @@ class Subscriber extends Model
         'confirmation_token',
         'confirmed_at',
         'unsubscribed_at',
+        'unsubscribed_from_message_id',
     ];
 
     /**
@@ -53,5 +55,13 @@ class Subscriber extends Model
     public function messageSends(): HasMany
     {
         return $this->hasMany(MessageSend::class);
+    }
+
+    /**
+     * @return BelongsTo<Message, $this>
+     */
+    public function unsubscribedFromMessage(): BelongsTo
+    {
+        return $this->belongsTo(Message::class, 'unsubscribed_from_message_id');
     }
 }

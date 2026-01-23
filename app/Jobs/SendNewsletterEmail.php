@@ -48,8 +48,8 @@ class SendNewsletterEmail implements ShouldQueue
             $htmlContent = $this->convertToAbsoluteUrls($htmlContent);
 
             // Replace placeholders
-            $subject = $this->replacePlaceholders($message->subject, $subscriber);
-            $htmlContent = $this->replacePlaceholders($htmlContent, $subscriber);
+            $subject = $this->replacePlaceholders($message->subject, $subscriber, $messageSend);
+            $htmlContent = $this->replacePlaceholders($htmlContent, $subscriber, $messageSend);
 
             // Add tracking pixel
             if (config('newsletter.tracking.enabled', true)) {
@@ -131,9 +131,14 @@ class SendNewsletterEmail implements ShouldQueue
         return $content;
     }
 
-    protected function replacePlaceholders(string $content, $subscriber): string
+    protected function replacePlaceholders(string $content, $subscriber, $messageSend = null): string
     {
         $unsubscribeUrl = route('unsubscribe', $subscriber->id);
+
+        // Add message_send_id as query parameter if available
+        if ($messageSend) {
+            $unsubscribeUrl .= '?message_send='.$messageSend->id;
+        }
 
         return str_replace(
             ['{{name}}', '{{email}}', '{{unsubscribe_url}}'],

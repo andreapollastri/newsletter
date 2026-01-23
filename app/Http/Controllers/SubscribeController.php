@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\SubscriberStatus;
 use App\Mail\SubscriptionConfirmation;
+use App\Models\MessageSend;
 use App\Models\Subscriber;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -97,8 +98,13 @@ class SubscribeController extends Controller
     /**
      * Show unsubscribe confirmation page.
      */
-    public function unsubscribe(Subscriber $subscriber): View
+    public function unsubscribe(Request $request, Subscriber $subscriber): View
     {
+        // Store message_send in session to use in confirmUnsubscribe
+        if ($request->has('message_send')) {
+            $request->session()->put('unsubscribe_message_send', $request->query('message_send'));
+        }
+
         return view('subscribe.unsubscribe-confirm', compact('subscriber'));
     }
 
@@ -107,10 +113,24 @@ class SubscribeController extends Controller
      */
     public function confirmUnsubscribe(Request $request, Subscriber $subscriber): View
     {
+        $messageId = null;
+
+        // Get message_id from message_send if provided (from query or session)
+        $messageSendId = $request->query('message_send') ?? $request->session()->get('unsubscribe_message_send');
+        if ($messageSendId) {
+            $messageSend = MessageSend::find($messageSendId);
+            if ($messageSend) {
+                $messageId = $messageSend->message_id;
+            }
+            // Clear session
+            $request->session()->forget('unsubscribe_message_send');
+        }
+
         if ($subscriber->status !== SubscriberStatus::Unsubscribed) {
             $subscriber->update([
                 'status' => SubscriberStatus::Unsubscribed,
                 'unsubscribed_at' => now(),
+                'unsubscribed_from_message_id' => $messageId,
             ]);
         }
 

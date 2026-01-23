@@ -13,6 +13,45 @@ class MessageInfolist
     {
         return $schema
             ->components([
+                Section::make(__('Send Statistics'))
+                    ->columns(7)
+                    ->schema([
+                        TextEntry::make('total_sends')
+                            ->label(__('Total Sends'))
+                            ->state(fn (Message $record) => $record->sends()->count())
+                            ->numeric(),
+
+                        TextEntry::make('total_opens')
+                            ->label(__('Total Opens'))
+                            ->state(fn (Message $record) => $record->sends()->sum('opens_count'))
+                            ->numeric(),
+
+                        TextEntry::make('unique_opens')
+                            ->label(__('Unique Opens'))
+                            ->state(fn (Message $record) => $record->sends()->where('opens_count', '>', 0)->count())
+                            ->numeric(),
+
+                        TextEntry::make('total_clicks')
+                            ->label(__('Total Clicks'))
+                            ->state(fn (Message $record) => $record->sends()->sum('clicks_count'))
+                            ->numeric(),
+
+                        TextEntry::make('unique_clicks')
+                            ->label(__('Unique Clicks'))
+                            ->state(fn (Message $record) => $record->sends()->where('clicks_count', '>', 0)->count())
+                            ->numeric(),
+
+                        TextEntry::make('failed_sends')
+                            ->label(__('Failed Sends'))
+                            ->state(fn (Message $record) => $record->sends()->whereNotNull('failed_at')->count())
+                            ->numeric(),
+
+                        TextEntry::make('unsubscribes')
+                            ->label(__('Unsubscribes'))
+                            ->state(fn (Message $record) => \App\Models\Subscriber::where('unsubscribed_from_message_id', $record->id)->count())
+                            ->numeric(),
+                    ]),
+
                 Section::make(__('Message Details'))
                     ->columns(2)
                     ->schema([
@@ -41,26 +80,6 @@ class MessageInfolist
                             ->label(__('HTML Content'))
                             ->html()
                             ->columnSpanFull(),
-                    ]),
-
-                Section::make(__('Send Statistics'))
-                    ->columns(4)
-                    ->schema([
-                        TextEntry::make('sends_count')
-                            ->label(__('Total Sends'))
-                            ->state(fn (Message $record) => $record->sends()->count()),
-
-                        TextEntry::make('opens_sum')
-                            ->label(__('Total Opens'))
-                            ->state(fn (Message $record) => $record->sends()->sum('opens_count')),
-
-                        TextEntry::make('clicks_sum')
-                            ->label(__('Total Clicks'))
-                            ->state(fn (Message $record) => $record->sends()->sum('clicks_count')),
-
-                        TextEntry::make('failed_count')
-                            ->label(__('Failed'))
-                            ->state(fn (Message $record) => $record->sends()->whereNotNull('failed_at')->count()),
                     ]),
             ]);
     }
