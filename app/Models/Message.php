@@ -64,6 +64,17 @@ class Message extends Model
     }
 
     /**
+     * Boot the model.
+     * Note: MessageSend records are automatically deleted via cascadeOnDelete in the migration.
+     * Any jobs in the queue will check if MessageSend exists before processing.
+     */
+    protected static function booted(): void
+    {
+        // MessageSend deletion is handled by database cascade
+        // Jobs will gracefully skip if MessageSend no longer exists
+    }
+
+    /**
      * @return BelongsToMany<Tag, $this>
      */
     public function tags(): BelongsToMany

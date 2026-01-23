@@ -65,10 +65,11 @@ class MessagesTable
                     ->relationship('campaign', 'name'),
             ])
             ->recordActions([
-                ViewAction::make()
-                    ->visible(fn (Message $record) => $record->status === MessageStatus::Sent),
                 ActionGroup::make([
-                    EditAction::make(),
+                    ViewAction::make()
+                        ->visible(fn (Message $record) => $record->status === MessageStatus::Sent),
+                    EditAction::make()
+                        ->visible(fn (Message $record) => $record->status !== MessageStatus::Sent),
                     Action::make('sendNow')
                         ->label(__('Send Now'))
                         ->icon(Heroicon::PaperAirplane)
@@ -109,6 +110,7 @@ class MessagesTable
                         ->label(__('Send Test'))
                         ->icon(Heroicon::Beaker)
                         ->color('warning')
+                        ->visible(fn (Message $record) => $record->status !== MessageStatus::Sent)
                         ->form([
                             TextInput::make('test_email')
                                 ->email()
@@ -129,10 +131,37 @@ class MessagesTable
                                 ->success()
                                 ->send();
                         }),
+                    Action::make('duplicate')
+                        ->label(__('Duplicate'))
+                        ->icon(Heroicon::DocumentDuplicate)
+                        ->color('info')
+                        ->requiresConfirmation()
+                        ->modalHeading(__('Duplicate Message'))
+                        ->modalDescription(__('Create a draft copy of this message?'))
+                        ->action(function (Message $record) {
+                            // Create duplicate message
+                            $duplicate = $record->replicate([
+                                'scheduled_at',
+                                'sent_at',
+                            ]);
+                            $duplicate->status = MessageStatus::Draft;
+                            $duplicate->subject = $record->subject.' ('.__('Copy').')';
+                            $duplicate->save();
+
+                            // Copy tag relationships
+                            if ($record->tags->isNotEmpty()) {
+                                $duplicate->tags()->attach($record->tags->pluck('id'));
+                            }
+
+                            Notification::make()
+                                ->title(__('Message duplicated'))
+                                ->body(__('New draft created successfully'))
+                                ->success()
+                                ->send();
+                        }),
                     DeleteAction::make()
                         ->visible(fn (Message $record) => $record->status !== MessageStatus::Sent && $record->status !== MessageStatus::Sending),
-                ])
-                    ->visible(fn (Message $record) => $record->status !== MessageStatus::Sent),
+                ]),
             ]);
     }
 }

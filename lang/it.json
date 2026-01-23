@@ -116,5 +116,11 @@
     "Enter the HTML code for the template. Use {{body}} to indicate where the message content will be inserted. Other placeholders: {{name}}, {{email}}, {{unsubscribe_url}}": "Inserisci il codice HTML del template. Usa {{body}} per indicare dove verrà inserito il contenuto del messaggio. Altri placeholders: {{name}}, {{email}}, {{unsubscribe_url}}",
     "Sends last 30 days": "Invii ultimi 30 giorni",
     "Emails sent": "Email inviate",
-    "Emails with links": "Email con link"
+    "Emails with links": "Email con link",
+    "Duplicate": "Duplica",
+    "Duplicate Message": "Duplica Messaggio",
+    "Create a draft copy of this message?": "Creare una copia in bozza di questo messaggio?",
+    "Message duplicated": "Messaggio duplicato",
+    "New draft created successfully": "Nuova bozza creata con successo",
+    "Copy": "Copia"
 }
