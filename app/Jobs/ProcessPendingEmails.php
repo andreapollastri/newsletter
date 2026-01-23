@@ -50,7 +50,7 @@ class ProcessPendingEmails implements ShouldQueue
                 // Mark as failed if dispatch fails
                 $messageSend->update([
                     'failed_at' => now(),
-                    'error_message' => 'Failed to queue: '.$e->getMessage(),
+                    'error_message' => 'Failed to queue: ' . $e->getMessage(),
                 ]);
                 $failed++;
             }
