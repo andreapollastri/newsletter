@@ -38,7 +38,8 @@ class SendsRelationManager extends RelationManager
 
                 TextColumn::make('sent_at')
                     ->label(__('Sent At'))
-                    ->dateTime(),
+                    ->dateTime()
+                    ->sortable(),
 
                 TextColumn::make('opens_count')
                     ->label(__('Opens'))
