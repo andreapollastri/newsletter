@@ -18,37 +18,37 @@ class MessageInfolist
                     ->schema([
                         TextEntry::make('total_sends')
                             ->label(__('Total Sends'))
-                            ->state(fn(Message $record) => $record->sends()->count())
+                            ->state(fn (Message $record) => $record->sends()->count())
                             ->numeric(),
 
                         TextEntry::make('total_opens')
                             ->label(__('Total Opens'))
-                            ->state(fn(Message $record) => $record->sends()->sum('opens_count'))
+                            ->state(fn (Message $record) => $record->sends()->sum('opens_count'))
                             ->numeric(),
 
                         TextEntry::make('unique_opens')
                             ->label(__('Unique Opens'))
-                            ->state(fn(Message $record) => $record->sends()->where('opens_count', '>', 0)->count())
+                            ->state(fn (Message $record) => $record->sends()->where('opens_count', '>', 0)->count())
                             ->numeric(),
 
                         TextEntry::make('total_clicks')
                             ->label(__('Total Clicks'))
-                            ->state(fn(Message $record) => $record->sends()->sum('clicks_count'))
+                            ->state(fn (Message $record) => $record->sends()->sum('clicks_count'))
                             ->numeric(),
 
                         TextEntry::make('unique_clicks')
                             ->label(__('Unique Clicks'))
-                            ->state(fn(Message $record) => $record->sends()->where('clicks_count', '>', 0)->count())
+                            ->state(fn (Message $record) => $record->sends()->where('clicks_count', '>', 0)->count())
                             ->numeric(),
 
                         TextEntry::make('failed_sends')
                             ->label(__('Failed Sends'))
-                            ->state(fn(Message $record) => $record->sends()->whereNotNull('failed_at')->count())
+                            ->state(fn (Message $record) => $record->sends()->whereNotNull('failed_at')->count())
                             ->numeric(),
 
                         TextEntry::make('unsubscribes')
                             ->label(__('Unsubscribes'))
-                            ->state(fn(Message $record) => \App\Models\Subscriber::where('unsubscribed_from_message_id', $record->id)->count())
+                            ->state(fn (Message $record) => \App\Models\Subscriber::where('unsubscribed_from_message_id', $record->id)->count())
                             ->numeric(),
                     ])
                     ->columnSpanFull(),

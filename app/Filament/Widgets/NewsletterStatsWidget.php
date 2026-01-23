@@ -80,7 +80,7 @@ class NewsletterStatsWidget extends StatsOverviewWidget
             Stat::make(__('New Subscribers').' ('.$periodLabel.')', $newSubscribers)
                 ->description(__('Total subscribers: :count', ['count' => $totalSubscribers]))
                 ->icon(Heroicon::Users)
-                ->color('success'),
+                ->color('danger'),
 
             Stat::make(__('Total Unsubscribes').' ('.$periodLabel.')', $unsubscribesCount)
                 ->icon(Heroicon::UserMinus)

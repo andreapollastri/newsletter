@@ -22,7 +22,7 @@ class MessageFactory extends Factory
             'campaign_id' => Campaign::factory(),
             'template_id' => null,
             'subject' => fake()->sentence(),
-            'html_content' => '<p>' . fake()->paragraphs(3, true) . '</p>',
+            'html_content' => '<p>'.fake()->paragraphs(3, true).'</p>',
             'status' => MessageStatus::Draft,
         ];
     }
@@ -32,7 +32,7 @@ class MessageFactory extends Factory
      */
     public function ready(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'status' => MessageStatus::Ready,
         ]);
     }
@@ -42,7 +42,7 @@ class MessageFactory extends Factory
      */
     public function scheduled(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'status' => MessageStatus::Ready,
             'scheduled_at' => now()->addHour(),
         ]);
@@ -53,7 +53,7 @@ class MessageFactory extends Factory
      */
     public function sent(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'status' => MessageStatus::Sent,
             'sent_at' => now(),
         ]);
@@ -64,7 +64,7 @@ class MessageFactory extends Factory
      */
     public function withTemplate(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'template_id' => \App\Models\Template::factory(),
         ]);
     }
