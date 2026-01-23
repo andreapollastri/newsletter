@@ -13,7 +13,11 @@ class EditTemplate extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            DeleteAction::make(),
+            DeleteAction::make()
+                ->disabled(fn () => $this->record->messages()->exists())
+                ->tooltip(fn () => $this->record->messages()->exists()
+                    ? __('Cannot delete template with associated messages')
+                    : null),
         ];
     }
 }

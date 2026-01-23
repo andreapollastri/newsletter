@@ -5,13 +5,9 @@ namespace App\Filament\Resources\Subscribers\Tables;
 use App\Enums\SubscriberStatus;
 use App\Filament\Exports\SubscriberExporter;
 use App\Filament\Imports\SubscriberImporter;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ExportAction;
-use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\ImportAction;
-use Filament\Actions\RestoreBulkAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
@@ -70,11 +66,7 @@ class SubscribersTable
                 EditAction::make(),
             ])
             ->toolbarActions([
-                BulkActionGroup::make([
-                    DeleteBulkAction::make(),
-                    ForceDeleteBulkAction::make(),
-                    RestoreBulkAction::make(),
-                ]),
+                //
             ]);
     }
 }
