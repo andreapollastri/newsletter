@@ -4,42 +4,16 @@ namespace App\Filament\Resources\Campaigns\RelationManagers;
 
 use App\Enums\MessageStatus;
 use App\Filament\Resources\Messages\MessageResource;
-use Filament\Actions\CreateAction;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
-use Filament\Forms\Components\RichEditor;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
 use Filament\Resources\RelationManagers\RelationManager;
-use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
 class MessagesRelationManager extends RelationManager
 {
     protected static string $relationship = 'messages';
-
-    public function form(Schema $schema): Schema
-    {
-        return $schema
-            ->columns(1)
-            ->components([
-                TextInput::make('subject')
-                    ->label(__('Subject'))
-                    ->required()
-                    ->maxLength(255),
-
-                RichEditor::make('html_content')
-                    ->label(__('HTML Content'))
-                    ->required()
-                    ->resizableImages(),
-
-                Select::make('status')
-                    ->label(__('Status'))
-                    ->options(MessageStatus::class)
-                    ->default(MessageStatus::Draft)
-                    ->required(),
-            ]);
-    }
 
     public function table(Table $table): Table
     {
@@ -67,11 +41,16 @@ class MessagesRelationManager extends RelationManager
                 //
             ])
             ->headerActions([
-                CreateAction::make(),
+                //
             ])
             ->recordActions([
                 ViewAction::make()
                     ->url(fn ($record) => MessageResource::getUrl('view', ['record' => $record])),
+                EditAction::make()
+                    ->url(fn ($record) => MessageResource::getUrl('edit', ['record' => $record]))
+                    ->visible(fn ($record) => $record->status === MessageStatus::Draft || $record->status === MessageStatus::Ready),
+                DeleteAction::make()
+                    ->visible(fn ($record) => $record->status === MessageStatus::Draft || $record->status === MessageStatus::Ready),
             ])
             ->toolbarActions([
                 //
