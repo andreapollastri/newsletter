@@ -22,11 +22,5 @@ class AppServiceProvider extends ServiceProvider
         if ($this->app->environment('production')) {
             \URL::forceScheme('https');
         }
-
-        // Ensure Livewire temporary upload directory exists
-        $livewireTmpPath = storage_path('app/livewire-tmp');
-        if (! is_dir($livewireTmpPath)) {
-            mkdir($livewireTmpPath, 0755, true);
-        }
     }
 }
