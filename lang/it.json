@@ -146,5 +146,14 @@
     "Total subscribers: :count": "Totale iscritti: :count",
     "Total messages: :count": "Totale messaggi: :count",
     "Total Unsubscribes": "Totale Disiscrizioni",
-    "All campaigns": "Tutte le campagne"
+    "All campaigns": "Tutte le campagne",
+    "Status updated": "Stato aggiornato",
+    ":count subscribers updated": ":count iscritti aggiornati",
+    "Tags added": "Tag aggiunti",
+    "Tags added to :count subscribers": "Tag aggiunti a :count iscritti",
+    "Export subscribers completed: :count row(s) exported.": "Export iscritti completato: :count riga/e esportata/e.",
+    ":count row(s) failed.": ":count riga/e fallita/e.",
+    "Subscriber import completed: :count row(s) imported.": "Importazione iscritti completata: :count riga/e importata/e.",
+    "Cannot delete campaign with associated messages": "Impossibile eliminare la campagna con messaggi associati",
+    "Cannot delete template with associated messages": "Impossibile eliminare il template con messaggi associati"
 }

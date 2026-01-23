@@ -71,10 +71,14 @@ class SubscriberImporter extends Importer
 
     public static function getCompletedNotificationBody(Import $import): string
     {
-        $body = 'Importazione subscribers completata: '.Number::format($import->successful_rows).' '.str('riga')->plural($import->successful_rows).' importate.';
+        $body = __('Subscriber import completed: :count row(s) imported.', [
+            'count' => Number::format($import->successful_rows),
+        ]);
 
         if ($failedRowsCount = $import->getFailedRowsCount()) {
-            $body .= ' '.Number::format($failedRowsCount).' '.str('riga')->plural($failedRowsCount).' fallite.';
+            $body .= ' '.__(':count row(s) failed.', [
+                'count' => Number::format($failedRowsCount),
+            ]);
         }
 
         return $body;

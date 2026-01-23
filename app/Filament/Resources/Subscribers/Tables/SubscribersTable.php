@@ -53,9 +53,11 @@ class SubscribersTable
             ])
             ->filters([
                 SelectFilter::make('status')
+                    ->label(__('Status'))
                     ->options(SubscriberStatus::class),
 
                 SelectFilter::make('tags')
+                    ->label(__('Tags'))
                     ->relationship('tags', 'name')
                     ->multiple()
                     ->preload(),

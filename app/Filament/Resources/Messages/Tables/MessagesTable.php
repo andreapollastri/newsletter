@@ -60,9 +60,11 @@ class MessagesTable
             ])
             ->filters([
                 SelectFilter::make('status')
+                    ->label(__('Status'))
                     ->options(MessageStatus::class),
 
                 SelectFilter::make('campaign')
+                    ->label(__('Campaign'))
                     ->relationship('campaign', 'name'),
             ])
             ->recordActions([

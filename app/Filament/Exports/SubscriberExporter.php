@@ -37,10 +37,14 @@ class SubscriberExporter extends Exporter
 
     public static function getCompletedNotificationBody(Export $export): string
     {
-        $body = 'Export subscribers completato: '.Number::format($export->successful_rows).' '.str('riga')->plural($export->successful_rows).' esportate.';
+        $body = __('Export subscribers completed: :count row(s) exported.', [
+            'count' => Number::format($export->successful_rows),
+        ]);
 
         if ($failedRowsCount = $export->getFailedRowsCount()) {
-            $body .= ' '.Number::format($failedRowsCount).' '.str('riga')->plural($failedRowsCount).' fallite.';
+            $body .= ' '.__(':count row(s) failed.', [
+                'count' => Number::format($failedRowsCount),
+            ]);
         }
 
         return $body;
