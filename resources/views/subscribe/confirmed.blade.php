@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Iscrizione confermata</title>
+    <title>{{ __('Subscription confirmed!') }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 min-h-screen flex items-center justify-center">
@@ -14,9 +14,9 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                 </svg>
             </div>
-            <h1 class="text-2xl font-bold text-gray-900 mb-4">Iscrizione confermata!</h1>
+            <h1 class="text-2xl font-bold text-gray-900 mb-4">{{ __('Subscription confirmed!') }}</h1>
             <p class="text-gray-600">
-                Grazie per esserti iscritto alla nostra newsletter. Riceverai presto i nostri aggiornamenti.
+                {{ __('Thank you for subscribing to our newsletter. You will receive our updates soon.') }}
             </p>
         </div>
     </div>

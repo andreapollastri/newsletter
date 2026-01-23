@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Disiscrizione completata</title>
+    <title>{{ __('Unsubscribe completed') }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 min-h-screen flex items-center justify-center">
@@ -14,9 +14,9 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                 </svg>
             </div>
-            <h1 class="text-2xl font-bold text-gray-900 mb-4">Disiscrizione completata</h1>
+            <h1 class="text-2xl font-bold text-gray-900 mb-4">{{ __('Unsubscribe completed') }}</h1>
             <p class="text-gray-600">
-                Sei stato rimosso dalla nostra newsletter. Non riceverai più i nostri aggiornamenti.
+                {{ __('You have been removed from our newsletter. You will no longer receive our updates.') }}
             </p>
         </div>
     </div>

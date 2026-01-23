@@ -11,7 +11,12 @@ class SendsRelationManager extends RelationManager
 {
     protected static string $relationship = 'sends';
 
-    protected static ?string $title = 'Invii';
+    protected static ?string $title = null;
+
+    public static function getTitle(\Illuminate\Database\Eloquent\Model $ownerRecord, string $pageClass): string
+    {
+        return __('Sends');
+    }
 
     public function form(Schema $schema): Schema
     {
@@ -27,26 +32,26 @@ class SendsRelationManager extends RelationManager
             ->recordTitleAttribute('subscriber.email')
             ->columns([
                 TextColumn::make('subscriber.email')
-                    ->label('Email')
+                    ->label(__('Email'))
                     ->searchable(),
 
                 TextColumn::make('sent_at')
-                    ->label('Inviato')
+                    ->label(__('Sent At'))
                     ->dateTime(),
 
                 TextColumn::make('opens_count')
-                    ->label('Aperture'),
+                    ->label(__('Opens')),
 
                 TextColumn::make('clicks_count')
-                    ->label('Click'),
+                    ->label(__('Clicks')),
 
                 TextColumn::make('failed_at')
-                    ->label('Fallito')
+                    ->label(__('Failed'))
                     ->dateTime()
                     ->toggleable(isToggledHiddenByDefault: true),
 
                 TextColumn::make('error_message')
-                    ->label('Errore')
+                    ->label(__('Error'))
                     ->limit(30)
                     ->toggleable(isToggledHiddenByDefault: true),
             ])

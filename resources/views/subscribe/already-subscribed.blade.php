@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Già iscritto</title>
+    <title>{{ __('Already subscribed') }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 min-h-screen flex items-center justify-center">
@@ -14,9 +14,9 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
             </div>
-            <h1 class="text-2xl font-bold text-gray-900 mb-4">Sei già iscritto</h1>
+            <h1 class="text-2xl font-bold text-gray-900 mb-4">{{ __('Already subscribed') }}</h1>
             <p class="text-gray-600">
-                Questo indirizzo email è già registrato alla nostra newsletter.
+                {{ __('You are already subscribed to our newsletter.') }}
             </p>
         </div>
     </div>

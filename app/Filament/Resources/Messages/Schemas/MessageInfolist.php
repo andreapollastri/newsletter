@@ -13,51 +13,53 @@ class MessageInfolist
     {
         return $schema
             ->components([
-                Section::make('Dettagli Messaggio')
+                Section::make(__('Message Details'))
                     ->columns(2)
                     ->schema([
                         TextEntry::make('subject')
-                            ->label('Oggetto'),
+                            ->label(__('Subject')),
 
                         TextEntry::make('campaign.name')
-                            ->label('Campagna'),
+                            ->label(__('Campaign')),
 
                         TextEntry::make('status')
+                            ->label(__('Status'))
                             ->badge(),
 
                         TextEntry::make('scheduled_at')
-                            ->label('Programmato per')
+                            ->label(__('Scheduled At'))
                             ->dateTime(),
 
                         TextEntry::make('sent_at')
-                            ->label('Inviato il')
+                            ->label(__('Sent At'))
                             ->dateTime(),
                     ]),
 
-                Section::make('Contenuto')
+                Section::make(__('Content'))
                     ->schema([
                         TextEntry::make('html_content')
+                            ->label(__('HTML Content'))
                             ->html()
                             ->columnSpanFull(),
                     ]),
 
-                Section::make('Statistiche Invio')
+                Section::make(__('Send Statistics'))
                     ->columns(4)
                     ->schema([
                         TextEntry::make('sends_count')
-                            ->label('Invii Totali')
+                            ->label(__('Total Sends'))
                             ->state(fn (Message $record) => $record->sends()->count()),
 
                         TextEntry::make('opens_sum')
-                            ->label('Aperture Totali')
+                            ->label(__('Total Opens'))
                             ->state(fn (Message $record) => $record->sends()->sum('opens_count')),
 
                         TextEntry::make('clicks_sum')
-                            ->label('Click Totali')
+                            ->label(__('Total Clicks'))
                             ->state(fn (Message $record) => $record->sends()->sum('clicks_count')),
 
                         TextEntry::make('failed_count')
-                            ->label('Falliti')
+                            ->label(__('Failed'))
                             ->state(fn (Message $record) => $record->sends()->whereNotNull('failed_at')->count()),
                     ]),
             ]);
