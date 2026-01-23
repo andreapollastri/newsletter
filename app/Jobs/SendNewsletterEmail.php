@@ -51,9 +51,6 @@ class SendNewsletterEmail implements ShouldQueue
             $subject = $this->replacePlaceholders($message->subject, $subscriber);
             $htmlContent = $this->replacePlaceholders($htmlContent, $subscriber);
 
-            // Add unsubscribe footer
-            $htmlContent = $this->addUnsubscribeFooter($htmlContent, $subscriber);
-
             // Add tracking pixel
             if (config('newsletter.tracking.enabled', true)) {
                 $trackingPixel = '<img src="'.route('tracking.open', $messageSend->id).'" width="1" height="1" style="display:none;" alt="" />';
@@ -143,28 +140,6 @@ class SendNewsletterEmail implements ShouldQueue
             [$subscriber->name ?? '', $subscriber->email, $unsubscribeUrl],
             $content
         );
-    }
-
-    protected function addUnsubscribeFooter(string $content, $subscriber): string
-    {
-        $unsubscribeUrl = route('unsubscribe', $subscriber->id);
-
-        $footer = <<<HTML
-<div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e5e5; text-align: center; font-size: 12px; color: #666;">
-    <p style="margin: 0;">
-        Non vuoi più ricevere queste email? 
-        <a href="{$unsubscribeUrl}" style="color: #666; text-decoration: underline;">Clicca qui per disiscriverti</a>
-    </p>
-</div>
-HTML;
-
-        // Try to insert before </body>
-        if (str_contains($content, '</body>')) {
-            return str_replace('</body>', $footer.'</body>', $content);
-        }
-
-        // Otherwise append at the end
-        return $content.$footer;
     }
 
     protected function wrapLinksForTracking(string $content, string $messageSendId): string
