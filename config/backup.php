@@ -15,7 +15,8 @@ return [
                  * The list of directories and files that will be included in the backup.
                  */
                 'include' => [
-                    base_path(),
+                    base_path('.env'),
+                    storage_path(),
                 ],
 
                 /*
@@ -173,7 +174,7 @@ return [
          * When set to 'default', we'll use ZipArchive::EM_AES_256 if it is
          * available on your system.
          */
-        'encryption' => 'default',
+        'encryption' => env('BACKUP_ARCHIVE_PASSWORD') ? 'default' : null,
 
         /*
          * The number of attempts, in case the backup command encounters an exception
