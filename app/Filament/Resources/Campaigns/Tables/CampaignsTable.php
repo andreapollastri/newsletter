@@ -42,49 +42,7 @@ class CampaignsTable
                 EditAction::make(),
             ])
             ->toolbarActions([
-                BulkActionGroup::make([
-                    DeleteBulkAction::make()
-                        ->action(function ($records) {
-                            $recordsWithMessages = $records->filter(fn ($record) => $record->messages()->exists());
-
-                            if ($recordsWithMessages->isNotEmpty()) {
-                                \Filament\Notifications\Notification::make()
-                                    ->title(__('Cannot delete campaigns with associated messages'))
-                                    ->danger()
-                                    ->send();
-
-                                return;
-                            }
-
-                            $records->each->delete();
-
-                            \Filament\Notifications\Notification::make()
-                                ->title(__('Campaigns deleted successfully'))
-                                ->success()
-                                ->send();
-                        }),
-                    ForceDeleteBulkAction::make()
-                        ->action(function ($records) {
-                            $recordsWithMessages = $records->filter(fn ($record) => $record->messages()->exists());
-
-                            if ($recordsWithMessages->isNotEmpty()) {
-                                \Filament\Notifications\Notification::make()
-                                    ->title(__('Cannot delete campaigns with associated messages'))
-                                    ->danger()
-                                    ->send();
-
-                                return;
-                            }
-
-                            $records->each->forceDelete();
-
-                            \Filament\Notifications\Notification::make()
-                                ->title(__('Campaigns permanently deleted'))
-                                ->success()
-                                ->send();
-                        }),
-                    RestoreBulkAction::make(),
-                ]),
+                //
             ]);
     }
 }
