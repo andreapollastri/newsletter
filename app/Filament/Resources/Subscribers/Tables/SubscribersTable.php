@@ -64,7 +64,13 @@ class SubscribersTable
             ])
             ->headerActions([
                 ImportAction::make()
-                    ->importer(SubscriberImporter::class),
+                    ->importer(SubscriberImporter::class)
+                    ->fileRules([
+                        'required',
+                        'file',
+                        'mimes:csv,txt',
+                        'max:10240', // 10MB
+                    ]),
                 ExportAction::make()
                     ->exporter(SubscriberExporter::class),
             ])

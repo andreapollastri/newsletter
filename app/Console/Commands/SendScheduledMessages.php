@@ -8,6 +8,8 @@ use App\Jobs\SendNewsletterEmail;
 use App\Models\Message;
 use App\Models\MessageSend;
 use App\Models\Subscriber;
+use App\Models\User;
+use Filament\Notifications\Notification;
 use Illuminate\Console\Command;
 
 class SendScheduledMessages extends Command
@@ -91,5 +93,19 @@ class SendScheduledMessages extends Command
         }
 
         $this->info("Queued {$created} job(s) for message: {$message->subject}");
+
+        // Send database notification to all users when scheduled sending starts
+        if ($created > 0) {
+            foreach (User::all() as $user) {
+                Notification::make()
+                    ->title(__('Sending started'))
+                    ->body(__('Message ":subject" is being sent to :count recipients.', [
+                        'subject' => $message->subject,
+                        'count' => $subscribers->count(),
+                    ]))
+                    ->success()
+                    ->sendToDatabase($user);
+            }
+        }
     }
 }

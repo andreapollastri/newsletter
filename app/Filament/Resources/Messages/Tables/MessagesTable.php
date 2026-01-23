@@ -8,6 +8,7 @@ use App\Jobs\SendNewsletterEmail;
 use App\Models\Message;
 use App\Models\MessageSend;
 use App\Models\Subscriber;
+use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\DeleteAction;
@@ -100,11 +101,17 @@ class MessagesTable
                                 SendNewsletterEmail::dispatch($messageSend->id);
                             }
 
-                            Notification::make()
-                                ->title(__('Sending started'))
-                                ->body(__('Sending in progress to :count recipients.', ['count' => $subscribers->count()]))
-                                ->success()
-                                ->send();
+                            // Send database notification to all users
+                            foreach (User::all() as $user) {
+                                Notification::make()
+                                    ->title(__('Sending started'))
+                                    ->body(__('Message ":subject" is being sent to :count recipients.', [
+                                        'subject' => $record->subject,
+                                        'count' => $subscribers->count(),
+                                    ]))
+                                    ->success()
+                                    ->sendToDatabase($user);
+                            }
                         }),
                     Action::make('sendTest')
                         ->label(__('Send Test'))

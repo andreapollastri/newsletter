@@ -4,6 +4,8 @@ namespace App\Jobs;
 
 use App\Mail\NewsletterMail;
 use App\Models\MessageSend;
+use App\Models\User;
+use Filament\Notifications\Notification;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Mail;
@@ -179,6 +181,23 @@ class SendNewsletterEmail implements ShouldQueue
                 'status' => \App\Enums\MessageStatus::Sent,
                 'sent_at' => now(),
             ]);
+
+            // Send database notification to all users when sending is completed
+            $totalSends = MessageSend::where('message_id', $message->id)->count();
+            $sentSends = MessageSend::where('message_id', $message->id)->whereNotNull('sent_at')->count();
+            $failedSends = MessageSend::where('message_id', $message->id)->whereNotNull('failed_at')->count();
+
+            foreach (User::all() as $user) {
+                Notification::make()
+                    ->title(__('Sending completed'))
+                    ->body(__('Message ":subject" sent to :sent recipients (:failed failed).', [
+                        'subject' => $message->subject,
+                        'sent' => $sentSends,
+                        'failed' => $failedSends,
+                    ]))
+                    ->success()
+                    ->sendToDatabase($user);
+            }
         }
     }
 }

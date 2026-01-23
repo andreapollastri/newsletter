@@ -5,6 +5,8 @@ namespace App\Jobs;
 use App\Enums\MessageStatus;
 use App\Models\Message;
 use App\Models\MessageSend;
+use App\Models\User;
+use Filament\Notifications\Notification;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 
@@ -69,11 +71,24 @@ class ProcessPendingEmails implements ShouldQueue
                 $sentSends = $message->sends()->whereNotNull('sent_at')->count();
                 $failedSends = $message->sends()->whereNotNull('failed_at')->count();
 
-                if ($sentSends > 0 && $failedSends === 0) {
+                if ($sentSends > 0 && $failedSends === 0 && $message->status !== MessageStatus::Sent) {
                     $message->update([
                         'status' => MessageStatus::Sent,
                         'sent_at' => now(),
                     ]);
+
+                    // Send database notification to all users when sending is completed
+                    foreach (User::all() as $user) {
+                        Notification::make()
+                            ->title(__('Sending completed'))
+                            ->body(__('Message ":subject" sent to :sent recipients (:failed failed).', [
+                                'subject' => $message->subject,
+                                'sent' => $sentSends,
+                                'failed' => $failedSends,
+                            ]))
+                            ->success()
+                            ->sendToDatabase($user);
+                    }
                 }
             }
         }
