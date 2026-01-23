@@ -22,9 +22,6 @@ class CampaignsTable
                     ->counts('messages')
                     ->label(__('Messages')),
 
-                TextColumn::make('user.name')
-                    ->label(__('Created By')),
-
                 TextColumn::make('created_at')
                     ->label(__('Created At'))
                     ->dateTime()

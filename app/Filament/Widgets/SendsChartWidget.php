@@ -2,6 +2,7 @@
 
 namespace App\Filament\Widgets;
 
+use App\Models\Message;
 use App\Models\MessageSend;
 use Carbon\Carbon;
 use Filament\Widgets\ChartWidget;
@@ -26,15 +27,21 @@ class SendsChartWidget extends ChartWidget
     protected function getData(): array
     {
         $period = $this->pageFilters['period'] ?? '1m';
+        $campaignId = $this->pageFilters['campaign'] ?? null;
         $startDate = $this->getStartDateForPeriod($period);
 
+        $messageIds = $campaignId
+            ? Message::where('campaign_id', $campaignId)->pluck('id')
+            : null;
+
         if ($period === '24h') {
-            return $this->getHourlyData($startDate);
+            return $this->getHourlyData($startDate, $messageIds);
         }
 
         $data = MessageSend::query()
             ->whereNotNull('sent_at')
             ->when($startDate, fn (Builder $query) => $query->where('sent_at', '>=', $startDate))
+            ->when($messageIds, fn (Builder $query) => $query->whereIn('message_id', $messageIds))
             ->select(DB::raw('DATE(sent_at) as date'), DB::raw('COUNT(*) as count'))
             ->groupBy('date')
             ->orderBy('date')
@@ -67,12 +74,13 @@ class SendsChartWidget extends ChartWidget
         ];
     }
 
-    protected function getHourlyData(Carbon $startDate): array
+    protected function getHourlyData(Carbon $startDate, ?\Illuminate\Support\Collection $messageIds = null): array
     {
         // Use database-agnostic approach: get all records and group in PHP
         $records = MessageSend::query()
             ->whereNotNull('sent_at')
             ->where('sent_at', '>=', $startDate)
+            ->when($messageIds, fn (Builder $query) => $query->whereIn('message_id', $messageIds))
             ->get();
 
         $data = [];

@@ -13,6 +13,7 @@ use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\HtmlString;
 
 class NewsletterStatsWidget extends StatsOverviewWidget
 {
@@ -21,6 +22,7 @@ class NewsletterStatsWidget extends StatsOverviewWidget
     protected function getStats(): array
     {
         $period = $this->pageFilters['period'] ?? '1m';
+        $campaignId = $this->pageFilters['campaign'] ?? null;
         $startDate = $this->getStartDateForPeriod($period);
 
         $newSubscribers = Subscriber::where('status', SubscriberStatus::Confirmed)
@@ -35,30 +37,42 @@ class NewsletterStatsWidget extends StatsOverviewWidget
 
         $sentCount = Message::where('status', \App\Enums\MessageStatus::Sent)
             ->when($startDate, fn (Builder $query) => $query->where('sent_at', '>=', $startDate))
+            ->when($campaignId, fn (Builder $query) => $query->where('campaign_id', $campaignId))
             ->count();
 
+        $messageIds = $campaignId
+            ? Message::where('campaign_id', $campaignId)->pluck('id')
+            : null;
+
         $sendsCount = MessageSend::when($startDate, fn (Builder $query) => $query->where('sent_at', '>=', $startDate))
+            ->when($messageIds, fn (Builder $query) => $query->whereIn('message_id', $messageIds))
             ->whereNotNull('sent_at')
             ->count();
 
         $uniqueOpensCount = MessageSend::when($startDate, fn (Builder $query) => $query->where('sent_at', '>=', $startDate))
+            ->when($messageIds, fn (Builder $query) => $query->whereIn('message_id', $messageIds))
             ->whereNotNull('sent_at')
             ->where('opens_count', '>', 0)
             ->count();
 
         $uniqueClicksCount = MessageSend::when($startDate, fn (Builder $query) => $query->where('sent_at', '>=', $startDate))
+            ->when($messageIds, fn (Builder $query) => $query->whereIn('message_id', $messageIds))
             ->whereNotNull('sent_at')
             ->where('clicks_count', '>', 0)
             ->count();
 
-        $messagesWithLinks = DB::table('message_clicks')
+        $messagesWithLinksQuery = DB::table('message_clicks')
             ->join('message_sends', 'message_clicks.message_send_id', '=', 'message_sends.id')
             ->when($startDate, fn ($query) => $query->where('message_sends.sent_at', '>=', $startDate))
-            ->whereNotNull('message_sends.sent_at')
+            ->when($messageIds, fn ($query) => $query->whereIn('message_sends.message_id', $messageIds))
+            ->whereNotNull('message_sends.sent_at');
+
+        $messagesWithLinks = $messagesWithLinksQuery
             ->distinct()
             ->pluck('message_sends.message_id');
 
         $sendsWithLinksCount = MessageSend::when($startDate, fn (Builder $query) => $query->where('sent_at', '>=', $startDate))
+            ->when($messageIds, fn (Builder $query) => $query->whereIn('message_id', $messageIds))
             ->whereNotNull('sent_at')
             ->whereIn('message_id', $messagesWithLinks)
             ->count();
@@ -72,15 +86,16 @@ class NewsletterStatsWidget extends StatsOverviewWidget
             : 'N/A';
 
         $bouncesCount = Bounce::when($startDate, fn (Builder $query) => $query->where('detected_at', '>=', $startDate))
+            ->when($messageIds, fn (Builder $query) => $query->whereHas('messageSend', fn (Builder $q) => $q->whereIn('message_id', $messageIds)))
             ->count();
 
         $periodLabel = $this->getPeriodLabel($period);
 
         return [
             Stat::make(__('New Subscribers').' ('.$periodLabel.')', $newSubscribers)
-                ->description(__('Total subscribers: :count', ['count' => $totalSubscribers]))
+                ->description(new HtmlString('<span class="text-danger-600 dark:text-danger-400">'.__('Total subscribers: :count', ['count' => $totalSubscribers]).'</span>'))
                 ->icon(Heroicon::Users)
-                ->color('danger'),
+                ->color('success'),
 
             Stat::make(__('Total Unsubscribes').' ('.$periodLabel.')', $unsubscribesCount)
                 ->icon(Heroicon::UserMinus)
