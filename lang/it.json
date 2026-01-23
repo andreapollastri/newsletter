@@ -104,6 +104,9 @@
     "You will no longer receive our updates and communications.": "Non riceverai più i nostri aggiornamenti e le nostre comunicazioni.",
     "Yes, unsubscribe me": "Sì, disiscrivimi",
     "No, stay subscribed": "No, rimani iscritto",
+    "We are sorry to see you go": "Ci dispiace vederti andar via",
+    "Do you confirm unsubscription from :app?": "Confermi la disiscrizione da :app?",
+    "Confirm unsubscription": "Conferma disiscrizione",
     "Invalid token": "Token non valido",
     "The confirmation link is invalid or has expired.": "Il link di conferma non è valido o è scaduto.",
     "Already subscribed": "Già iscritto",
@@ -112,5 +115,6 @@
     "Created By": "Creato da",
     "Enter the HTML code for the template. Use {{body}} to indicate where the message content will be inserted. Other placeholders: {{name}}, {{email}}, {{unsubscribe_url}}": "Inserisci il codice HTML del template. Usa {{body}} per indicare dove verrà inserito il contenuto del messaggio. Altri placeholders: {{name}}, {{email}}, {{unsubscribe_url}}",
     "Sends last 30 days": "Invii ultimi 30 giorni",
-    "Emails sent": "Email inviate"
+    "Emails sent": "Email inviate",
+    "Emails with links": "Email con link"
 }

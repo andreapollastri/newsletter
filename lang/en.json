@@ -103,11 +103,17 @@
     "You will no longer receive our updates and communications.": "You will no longer receive our updates and communications.",
     "Yes, unsubscribe me": "Yes, unsubscribe me",
     "No, stay subscribed": "No, stay subscribed",
+    "We are sorry to see you go": "We are sorry to see you go",
+    "Do you confirm unsubscription from :app?": "Do you confirm unsubscription from :app?",
+    "Confirm unsubscription": "Confirm unsubscription",
     "Invalid token": "Invalid token",
     "The confirmation link is invalid or has expired.": "The confirmation link is invalid or has expired.",
     "Already subscribed": "Already subscribed",
     "You are already subscribed to our newsletter.": "You are already subscribed to our newsletter.",
     "Back to subscription page": "Back to subscription page",
     "Created By": "Created By",
-    "Enter the HTML code for the template. Use {{body}} to indicate where the message content will be inserted. Other placeholders: {{name}}, {{email}}, {{unsubscribe_url}}": "Enter the HTML code for the template. Use {{body}} to indicate where the message content will be inserted. Other placeholders: {{name}}, {{email}}, {{unsubscribe_url}}"
+    "Enter the HTML code for the template. Use {{body}} to indicate where the message content will be inserted. Other placeholders: {{name}}, {{email}}, {{unsubscribe_url}}": "Enter the HTML code for the template. Use {{body}} to indicate where the message content will be inserted. Other placeholders: {{name}}, {{email}}, {{unsubscribe_url}}",
+    "Sends last 30 days": "Sends last 30 days",
+    "Emails sent": "Emails sent",
+    "Emails with links": "Emails with links"
 }

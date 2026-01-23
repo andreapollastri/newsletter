@@ -41,12 +41,23 @@ class NewsletterStatsWidget extends StatsOverviewWidget
             ->where('clicks_count', '>', 0)
             ->count();
 
+        // Conteggio email inviate per messaggi che hanno link tracciati
+        $messagesWithLinks = \DB::table('message_clicks')
+            ->distinct()
+            ->pluck('message_id');
+
+        $sendsWithLinksThisMonth = MessageSend::whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year)
+            ->whereNotNull('sent_at')
+            ->whereIn('message_id', $messagesWithLinks)
+            ->count();
+
         $openRate = $sendsThisMonth > 0
             ? round(($uniqueOpensThisMonth / $sendsThisMonth) * 100, 1).'%'
             : 'N/A';
 
-        $clickRate = $sendsThisMonth > 0
-            ? round(($uniqueClicksThisMonth / $sendsThisMonth) * 100, 1).'%'
+        $clickRate = $sendsWithLinksThisMonth > 0
+            ? round(($uniqueClicksThisMonth / $sendsWithLinksThisMonth) * 100, 1).'%'
             : 'N/A';
 
         $bouncesThisMonth = Bounce::whereMonth('detected_at', now()->month)
@@ -72,7 +83,7 @@ class NewsletterStatsWidget extends StatsOverviewWidget
                 ->color('warning'),
 
             Stat::make(__('Click Rate (month)'), $clickRate)
-                ->description(__('Clicks').': '.$uniqueClicksThisMonth)
+                ->description(__('Clicks').': '.$uniqueClicksThisMonth.' / '.__('Emails with links').': '.$sendsWithLinksThisMonth)
                 ->icon(Heroicon::CursorArrowRays)
                 ->color('info'),
 

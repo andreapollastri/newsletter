@@ -6,26 +6,27 @@
     <title>{{ __('Confirm Unsubscribe') }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 min-h-screen flex items-center justify-center">
-    <div class="max-w-md w-full mx-4">
-        <div class="bg-white rounded-lg shadow-md p-8">
-            <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg class="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+<body class="bg-gray-50 min-h-screen flex items-center justify-center px-4">
+    <div class="max-w-sm w-full">
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-10 text-center">
+            <div class="w-14 h-14 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <svg class="w-7 h-7 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                 </svg>
             </div>
-            <h1 class="text-2xl font-bold text-gray-900 mb-4 text-center">{{ __('Confirm Unsubscribe') }}</h1>
-            <p class="text-gray-600 mb-6 text-center">
-                {{ __('Are you sure you want to unsubscribe from our newsletter?') }}
-            </p>
-            <p class="text-gray-500 text-sm mb-8 text-center">
-                {{ __('You will no longer receive our updates and communications.') }}
+            
+            <h1 class="text-xl font-medium text-gray-900 mb-3">
+                {{ __('We are sorry to see you go') }}
+            </h1>
+            
+            <p class="text-gray-500 text-sm mb-8">
+                {{ __('Do you confirm unsubscription from :app?', ['app' => config('app.name')]) }}
             </p>
             
-            <form action="{{ route('unsubscribe.confirm', $subscriber) }}" method="POST" class="space-y-4">
+            <form action="{{ route('unsubscribe.confirm', $subscriber) }}" method="POST">
                 @csrf
-                <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-4 rounded-lg transition duration-200">
-                    {{ __('Yes, unsubscribe me') }}
+                <button type="submit" class="w-full bg-gray-600 hover:bg-gray-700 text-white font-medium py-2.5 px-4 rounded-lg transition duration-150 text-sm">
+                    {{ __('Confirm unsubscription') }}
                 </button>
             </form>
         </div>
