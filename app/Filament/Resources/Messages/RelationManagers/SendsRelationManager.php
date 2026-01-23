@@ -47,13 +47,11 @@ class SendsRelationManager extends RelationManager
 
                 TextColumn::make('failed_at')
                     ->label(__('Failed'))
-                    ->dateTime()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->dateTime(),
 
                 TextColumn::make('error_message')
                     ->label(__('Error'))
-                    ->limit(30)
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->limit(30),
             ])
             ->filters([
                 //
