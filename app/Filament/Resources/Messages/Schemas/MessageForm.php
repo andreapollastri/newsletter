@@ -33,6 +33,7 @@ class MessageForm
                             ->relationship('template', 'name')
                             ->searchable()
                             ->preload()
+                            ->required()
                             ->helperText(__('The template contains the HTML structure. The message content will be inserted in place of {{body}}')),
 
                         TextInput::make('subject')
