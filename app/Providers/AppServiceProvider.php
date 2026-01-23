@@ -24,11 +24,7 @@ class AppServiceProvider extends ServiceProvider
         }
 
         // Ensure Livewire temporary upload directory exists
-        // Livewire uses the default filesystem disk, which is 'local' pointing to storage/app/private
-        $defaultDisk = config('filesystems.default', 'local');
-        $diskRoot = config("filesystems.disks.{$defaultDisk}.root", storage_path('app'));
-        
-        $livewireTmpPath = $diskRoot.'/livewire-tmp';
+        $livewireTmpPath = storage_path('app/livewire-tmp');
         if (! is_dir($livewireTmpPath)) {
             mkdir($livewireTmpPath, 0755, true);
         }
