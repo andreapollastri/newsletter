@@ -48,6 +48,7 @@ class MessageForm
                             ->fileAttachmentsDisk('public')
                             ->fileAttachmentsDirectory('newsletter-images')
                             ->fileAttachmentsVisibility('public')
+                            ->resizableImages()
                             ->toolbarButtons([
                                 'attachFiles',
                                 'bold',

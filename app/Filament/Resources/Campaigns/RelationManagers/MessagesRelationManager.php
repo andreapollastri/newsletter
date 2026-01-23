@@ -30,7 +30,8 @@ class MessagesRelationManager extends RelationManager
 
                 RichEditor::make('html_content')
                     ->label(__('HTML Content'))
-                    ->required(),
+                    ->required()
+                    ->resizableImages(),
 
                 Select::make('status')
                     ->label(__('Status'))
