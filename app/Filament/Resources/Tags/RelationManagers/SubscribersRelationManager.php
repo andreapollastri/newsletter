@@ -32,18 +32,22 @@ class SubscribersRelationManager extends RelationManager
             ->recordTitleAttribute('email')
             ->columns([
                 TextColumn::make('name')
+                    ->label(__('Name'))
                     ->searchable()
                     ->sortable(),
 
                 TextColumn::make('email')
+                    ->label(__('Email'))
                     ->searchable()
                     ->sortable(),
 
                 TextColumn::make('status')
+                    ->label(__('Status'))
                     ->badge()
                     ->sortable(),
 
                 TextColumn::make('confirmed_at')
+                    ->label(__('Confirmed At'))
                     ->dateTime('d/m/Y H:i')
                     ->sortable()
                     ->placeholder('—'),

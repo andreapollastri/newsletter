@@ -15,13 +15,14 @@ class TagsTable
         return $table
             ->columns([
                 TextColumn::make('name')
+                    ->label(__('Name'))
                     ->searchable()
                     ->sortable(),
 
                 TextColumn::make('subscribers_count')
                     ->counts('subscribers')
                     ->sortable()
-                    ->label('Subscribers'),
+                    ->label(__('Subscribers')),
             ])
             ->filters([
                 //

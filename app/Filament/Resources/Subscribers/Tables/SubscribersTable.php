@@ -24,22 +24,27 @@ class SubscribersTable
         return $table
             ->columns([
                 TextColumn::make('email')
+                    ->label(__('Email'))
                     ->searchable()
                     ->sortable()
                     ->copyable(),
 
                 TextColumn::make('name')
+                    ->label(__('Name'))
                     ->searchable()
                     ->sortable(),
 
                 TextColumn::make('status')
+                    ->label(__('Status'))
                     ->badge(),
 
                 TextColumn::make('tags.name')
+                    ->label(__('Tags'))
                     ->badge()
                     ->separator(','),
 
                 TextColumn::make('created_at')
+                    ->label(__('Created At'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),

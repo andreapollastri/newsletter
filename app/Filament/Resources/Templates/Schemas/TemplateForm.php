@@ -14,15 +14,16 @@ class TemplateForm
             ->columns(1)
             ->components([
                 TextInput::make('name')
+                    ->label(__('Name'))
                     ->required()
                     ->unique(ignoreRecord: true)
                     ->maxLength(255),
 
                 Textarea::make('html_content')
-                    ->label('Codice HTML Template')
+                    ->label(__('HTML Content'))
                     ->required()
                     ->rows(20)
-                    ->helperText('Inserisci il codice HTML del template. Usa {{body}} per indicare dove verrà inserito il contenuto del messaggio. Altri placeholders: {{name}}, {{email}}, {{unsubscribe_url}}')
+                    ->helperText(__('Enter the HTML code for the template. Use {{body}} to indicate where the message content will be inserted. Other placeholders: {{name}}, {{email}}, {{unsubscribe_url}}'))
                     ->placeholder('<!DOCTYPE html>
 <html>
 <head>

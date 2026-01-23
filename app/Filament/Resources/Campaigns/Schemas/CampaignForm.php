@@ -13,10 +13,12 @@ class CampaignForm
         return $schema
             ->components([
                 TextInput::make('name')
+                    ->label(__('Name'))
                     ->required()
                     ->maxLength(255),
 
                 Textarea::make('description')
+                    ->label(__('Description'))
                     ->rows(3),
             ]);
     }

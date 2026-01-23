@@ -107,5 +107,7 @@
     "The confirmation link is invalid or has expired.": "The confirmation link is invalid or has expired.",
     "Already subscribed": "Already subscribed",
     "You are already subscribed to our newsletter.": "You are already subscribed to our newsletter.",
-    "Back to subscription page": "Back to subscription page"
+    "Back to subscription page": "Back to subscription page",
+    "Created By": "Created By",
+    "Enter the HTML code for the template. Use {{body}} to indicate where the message content will be inserted. Other placeholders: {{name}}, {{email}}, {{unsubscribe_url}}": "Enter the HTML code for the template. Use {{body}} to indicate where the message content will be inserted. Other placeholders: {{name}}, {{email}}, {{unsubscribe_url}}"
 }

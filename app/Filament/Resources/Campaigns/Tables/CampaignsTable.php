@@ -18,17 +18,19 @@ class CampaignsTable
         return $table
             ->columns([
                 TextColumn::make('name')
+                    ->label(__('Name'))
                     ->searchable()
                     ->sortable(),
 
                 TextColumn::make('messages_count')
                     ->counts('messages')
-                    ->label('Messaggi'),
+                    ->label(__('Messages')),
 
                 TextColumn::make('user.name')
-                    ->label('Creato da'),
+                    ->label(__('Created By')),
 
                 TextColumn::make('created_at')
+                    ->label(__('Created At'))
                     ->dateTime()
                     ->sortable(),
             ])
