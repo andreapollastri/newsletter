@@ -126,5 +126,21 @@
     "Create a draft copy of this message?": "Creare una copia in bozza di questo messaggio?",
     "Message duplicated": "Messaggio duplicato",
     "New draft created successfully": "Nuova bozza creata con successo",
-    "Copy": "Copia"
+    "Copy": "Copia",
+    "Time Period": "Periodo Temporale",
+    "Last 24 hours": "Ultime 24 ore",
+    "Last 7 days": "Ultimi 7 giorni",
+    "Last month": "Ultimo mese",
+    "Last 6 months": "Ultimi 6 mesi",
+    "Last year": "Ultimo Anno",
+    "Messages Sent": "Messaggi Inviati",
+    "Total Emails Sent": "Email Inviate Totali",
+    "Open Rate": "Tasso di Apertura",
+    "Click Rate": "Tasso di Click",
+    "Bounces": "Email Rimbalzate",
+    "Sends": "Invii",
+    "New Subscribers": "Nuovi Iscritti",
+    "Total subscribers: :count": "Totale iscritti: :count",
+    "Total messages: :count": "Totale messaggi: :count",
+    "Total Unsubscribes": "Totale Disiscrizioni"
 }
