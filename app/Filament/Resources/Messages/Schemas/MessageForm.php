@@ -59,9 +59,9 @@ class MessageForm
                                 'bulletList',
                                 'orderedList',
                                 'blockquote',
-                                'alignLeft',
+                                'alignStart',
                                 'alignCenter',
-                                'alignRight',
+                                'alignEnd',
                                 'undo',
                                 'redo',
                             ])
