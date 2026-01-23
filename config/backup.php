@@ -212,10 +212,10 @@ return [
         'notifiable' => \Spatie\Backup\Notifications\Notifiable::class,
 
         'mail' => [
-            'to' => env('BACKUP_MAIL_TO', env('MAIL_FROM_ADDRESS')),
+            'to' => env('BACKUP_MAIL_TO'),
 
             'from' => [
-                'address' => env('MAIL_FROM_ADDRESS', 'system@backup.newsletter.test'),
+                'address' => env('MAIL_FROM_ADDRESS', 'backup@newsletter.test'),
                 'name' => env('MAIL_FROM_NAME', 'Newsletter Backup'),
             ],
         ],
