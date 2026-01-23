@@ -16,7 +16,7 @@
             </div>
             <h1 class="text-2xl font-bold text-gray-900 mb-4">{{ __('Unsubscribe completed') }}</h1>
             <p class="text-gray-600">
-                {{ __('You have been removed from our newsletter. You will no longer receive our updates.') }}
+                {{ __('You will no longer receive our updates.') }}
             </p>
         </div>
     </div>
