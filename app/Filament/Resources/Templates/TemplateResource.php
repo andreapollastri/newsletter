@@ -39,6 +39,11 @@ class TemplateResource extends Resource
         return __('Templates');
     }
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false;
+    }
+
     public static function form(Schema $schema): Schema
     {
         return TemplateForm::configure($schema);

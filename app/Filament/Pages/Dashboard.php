@@ -21,7 +21,7 @@ class Dashboard extends BaseDashboard
                     ->schema([
                         Select::make('campaign')
                             ->label(__('Campaign'))
-                            ->options(fn() => Campaign::orderBy('name')->pluck('name', 'id'))
+                            ->options(fn () => Campaign::orderBy('name')->pluck('name', 'id'))
                             ->searchable()
                             ->preload()
                             ->placeholder(__('All campaigns'))

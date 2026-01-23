@@ -3,6 +3,9 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Pages\Dashboard;
+use App\Filament\Resources\Tags\TagResource;
+use App\Filament\Resources\Templates\TemplateResource;
+use Filament\Actions\Action;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -10,6 +13,7 @@ use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\Support\Icons\Heroicon;
 use Filament\Widgets\AccountWidget;
 use Filament\Widgets\FilamentInfoWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
@@ -57,6 +61,16 @@ class NewsletterPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
+            ])
+            ->userMenuItems([
+                Action::make('templates')
+                    ->label(__('Templates'))
+                    ->url(fn (): string => TemplateResource::getUrl('index'))
+                    ->icon(Heroicon::OutlinedDocumentText),
+                Action::make('tags')
+                    ->label(__('Tags'))
+                    ->url(fn (): string => TagResource::getUrl('index'))
+                    ->icon(Heroicon::OutlinedTag),
             ]);
     }
 }

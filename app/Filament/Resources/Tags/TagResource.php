@@ -40,6 +40,11 @@ class TagResource extends Resource
         return __('Tags');
     }
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false;
+    }
+
     public static function form(Schema $schema): Schema
     {
         return TagForm::configure($schema);
