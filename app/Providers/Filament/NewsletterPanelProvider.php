@@ -30,6 +30,7 @@ class NewsletterPanelProvider extends PanelProvider
             ->login()
             ->profile()
             ->topNavigation()
+            ->databaseNotifications()
             ->colors([
                 'primary' => Color::Slate,
             ])
