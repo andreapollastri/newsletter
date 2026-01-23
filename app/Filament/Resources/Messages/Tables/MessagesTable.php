@@ -119,10 +119,23 @@ class MessagesTable
                                 ->label(__('Test Email')),
                         ])
                         ->action(function (Message $record, array $data) {
+                            // Load template relationship if not already loaded
+                            $record->loadMissing('template');
+
+                            // Build the complete HTML with template
+                            $htmlContent = self::buildTestHtmlContent($record);
+
+                            // Convert relative URLs to absolute
+                            $htmlContent = self::convertToAbsoluteUrls($htmlContent);
+
+                            // Replace placeholders with test data
+                            $subject = self::replaceTestPlaceholders($record->subject);
+                            $htmlContent = self::replaceTestPlaceholders($htmlContent);
+
                             // Send test email directly without tracking
-                            Mail::html($record->html_content, function ($message) use ($record, $data) {
+                            Mail::html($htmlContent, function ($message) use ($subject, $data) {
                                 $message->to($data['test_email'])
-                                    ->subject('[TEST] '.$record->subject);
+                                    ->subject('[TEST] '.$subject);
                             });
 
                             Notification::make()
@@ -163,5 +176,62 @@ class MessagesTable
                         ->visible(fn (Message $record) => $record->status !== MessageStatus::Sent && $record->status !== MessageStatus::Sending),
                 ]),
             ]);
+    }
+
+    /**
+     * Build the complete HTML content with template for test emails.
+     */
+    protected static function buildTestHtmlContent(Message $message): string
+    {
+        $messageBody = $message->html_content;
+
+        // If there's a template, merge the body into it
+        if ($message->template) {
+            $templateHtml = $message->template->html_content;
+
+            // Replace {{body}} placeholder with message content
+            if (str_contains($templateHtml, '{{body}}')) {
+                return str_replace('{{body}}', $messageBody, $templateHtml);
+            }
+
+            // If no {{body}} placeholder, append message to template
+            return $templateHtml.$messageBody;
+        }
+
+        // No template, return message body wrapped in basic HTML
+        return $messageBody;
+    }
+
+    /**
+     * Convert relative URLs to absolute URLs for images.
+     */
+    protected static function convertToAbsoluteUrls(string $content): string
+    {
+        $baseUrl = config('app.url');
+
+        // Convert relative src attributes to absolute
+        $content = preg_replace_callback(
+            '/src=["\'](?!https?:\/\/)([^"\']+)["\']/i',
+            function ($matches) use ($baseUrl) {
+                $path = ltrim($matches[1], '/');
+
+                return 'src="'.$baseUrl.'/storage/'.$path.'"';
+            },
+            $content
+        );
+
+        return $content;
+    }
+
+    /**
+     * Replace placeholders with test data.
+     */
+    protected static function replaceTestPlaceholders(string $content): string
+    {
+        return str_replace(
+            ['{{name}}', '{{email}}', '{{unsubscribe_url}}'],
+            ['NAME', 'EMAIL', '#'],
+            $content
+        );
     }
 }
