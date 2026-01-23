@@ -54,7 +54,7 @@ class SubscriberResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            RelationManagers\MessageSendsRelationManager::class,
         ];
     }
 
