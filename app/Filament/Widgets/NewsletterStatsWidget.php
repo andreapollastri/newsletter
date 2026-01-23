@@ -43,8 +43,9 @@ class NewsletterStatsWidget extends StatsOverviewWidget
 
         // Conteggio email inviate per messaggi che hanno link tracciati
         $messagesWithLinks = \DB::table('message_clicks')
+            ->join('message_sends', 'message_clicks.message_send_id', '=', 'message_sends.id')
             ->distinct()
-            ->pluck('message_id');
+            ->pluck('message_sends.message_id');
 
         $sendsWithLinksThisMonth = MessageSend::whereMonth('created_at', now()->month)
             ->whereYear('created_at', now()->year)
