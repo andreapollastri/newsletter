@@ -7,6 +7,7 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
+use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
@@ -42,8 +43,46 @@ class CampaignsTable
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
-                    ForceDeleteBulkAction::make(),
+                    DeleteBulkAction::make()
+                        ->action(function ($records) {
+                            $recordsWithMessages = $records->filter(fn ($record) => $record->messages()->exists());
+
+                            if ($recordsWithMessages->isNotEmpty()) {
+                                \Filament\Notifications\Notification::make()
+                                    ->title(__('Cannot delete campaigns with associated messages'))
+                                    ->danger()
+                                    ->send();
+
+                                return;
+                            }
+
+                            $records->each->delete();
+
+                            \Filament\Notifications\Notification::make()
+                                ->title(__('Campaigns deleted successfully'))
+                                ->success()
+                                ->send();
+                        }),
+                    ForceDeleteBulkAction::make()
+                        ->action(function ($records) {
+                            $recordsWithMessages = $records->filter(fn ($record) => $record->messages()->exists());
+
+                            if ($recordsWithMessages->isNotEmpty()) {
+                                \Filament\Notifications\Notification::make()
+                                    ->title(__('Cannot delete campaigns with associated messages'))
+                                    ->danger()
+                                    ->send();
+
+                                return;
+                            }
+
+                            $records->each->forceDelete();
+
+                            \Filament\Notifications\Notification::make()
+                                ->title(__('Campaigns permanently deleted'))
+                                ->success()
+                                ->send();
+                        }),
                     RestoreBulkAction::make(),
                 ]),
             ]);

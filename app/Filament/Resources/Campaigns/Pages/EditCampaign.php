@@ -15,8 +15,16 @@ class EditCampaign extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            DeleteAction::make(),
-            ForceDeleteAction::make(),
+            DeleteAction::make()
+                ->disabled(fn () => $this->record->messages()->exists())
+                ->tooltip(fn () => $this->record->messages()->exists()
+                    ? __('Cannot delete campaign with associated messages')
+                    : null),
+            ForceDeleteAction::make()
+                ->disabled(fn () => $this->record->messages()->exists())
+                ->tooltip(fn () => $this->record->messages()->exists()
+                    ? __('Cannot delete campaign with associated messages')
+                    : null),
             RestoreAction::make(),
         ];
     }
