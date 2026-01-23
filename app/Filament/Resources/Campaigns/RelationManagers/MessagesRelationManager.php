@@ -26,13 +26,16 @@ class MessagesRelationManager extends RelationManager
             ->columns(1)
             ->components([
                 TextInput::make('subject')
+                    ->label(__('Subject'))
                     ->required()
                     ->maxLength(255),
 
                 RichEditor::make('html_content')
+                    ->label(__('HTML Content'))
                     ->required(),
 
                 Select::make('status')
+                    ->label(__('Status'))
                     ->options(MessageStatus::class)
                     ->default(MessageStatus::Draft)
                     ->required(),
@@ -45,16 +48,20 @@ class MessagesRelationManager extends RelationManager
             ->recordTitleAttribute('subject')
             ->columns([
                 TextColumn::make('subject')
+                    ->label(__('Subject'))
                     ->searchable()
                     ->limit(40),
 
                 TextColumn::make('status')
+                    ->label(__('Status'))
                     ->badge(),
 
                 TextColumn::make('scheduled_at')
+                    ->label(__('Scheduled At'))
                     ->dateTime(),
 
                 TextColumn::make('sent_at')
+                    ->label(__('Sent At'))
                     ->dateTime(),
             ])
             ->filters([

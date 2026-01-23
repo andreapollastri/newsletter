@@ -9,9 +9,12 @@ use Illuminate\Support\Facades\DB;
 
 class SendsChartWidget extends ChartWidget
 {
-    protected ?string $heading = 'Invii ultimi 30 giorni';
-
     protected int|string|array $columnSpan = 'full';
+
+    public function getHeading(): ?string
+    {
+        return __('Sends last 30 days');
+    }
 
     protected function getData(): array
     {
@@ -37,7 +40,7 @@ class SendsChartWidget extends ChartWidget
         return [
             'datasets' => [
                 [
-                    'label' => 'Email inviate',
+                    'label' => __('Emails sent'),
                     'data' => $values,
                     'borderColor' => '#3b82f6',
                     'backgroundColor' => 'rgba(59, 130, 246, 0.1)',

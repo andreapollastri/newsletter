@@ -110,5 +110,7 @@
     "You are already subscribed to our newsletter.": "Sei già iscritto alla nostra newsletter.",
     "Back to subscription page": "Torna alla pagina di iscrizione",
     "Created By": "Creato da",
-    "Enter the HTML code for the template. Use {{body}} to indicate where the message content will be inserted. Other placeholders: {{name}}, {{email}}, {{unsubscribe_url}}": "Inserisci il codice HTML del template. Usa {{body}} per indicare dove verrà inserito il contenuto del messaggio. Altri placeholders: {{name}}, {{email}}, {{unsubscribe_url}}"
+    "Enter the HTML code for the template. Use {{body}} to indicate where the message content will be inserted. Other placeholders: {{name}}, {{email}}, {{unsubscribe_url}}": "Inserisci il codice HTML del template. Usa {{body}} per indicare dove verrà inserito il contenuto del messaggio. Altri placeholders: {{name}}, {{email}}, {{unsubscribe_url}}",
+    "Sends last 30 days": "Invii ultimi 30 giorni",
+    "Emails sent": "Email inviate"
 }
