@@ -6,6 +6,8 @@ use App\Filament\Pages\Dashboard;
 use App\Filament\Resources\Tags\TagResource;
 use App\Filament\Resources\Templates\TemplateResource;
 use Filament\Actions\Action;
+use Filament\Auth\MultiFactor\App\AppAuthentication;
+use Filament\Auth\MultiFactor\Email\EmailAuthentication;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -35,6 +37,11 @@ class NewsletterPanelProvider extends PanelProvider
             ->profile()
             ->topNavigation()
             ->databaseNotifications()
+            ->multiFactorAuthentication([
+                AppAuthentication::make()
+                    ->recoverable(),
+                EmailAuthentication::make(),
+            ])
             ->colors([
                 'primary' => Color::Slate,
             ])
