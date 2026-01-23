@@ -33,25 +33,30 @@ class SendsRelationManager extends RelationManager
             ->columns([
                 TextColumn::make('subscriber.email')
                     ->label(__('Email'))
-                    ->searchable(),
+                    ->searchable()
+                    ->sortable(),
 
                 TextColumn::make('sent_at')
                     ->label(__('Sent At'))
                     ->dateTime(),
 
                 TextColumn::make('opens_count')
-                    ->label(__('Opens')),
+                    ->label(__('Opens'))
+                    ->sortable(),
 
                 TextColumn::make('clicks_count')
-                    ->label(__('Clicks')),
+                    ->label(__('Clicks'))
+                    ->sortable(),
 
                 TextColumn::make('failed_at')
                     ->label(__('Failed'))
-                    ->dateTime(),
+                    ->dateTime()
+                    ->sortable(),
 
                 TextColumn::make('error_message')
                     ->label(__('Error'))
-                    ->limit(30),
+                    ->limit(30)
+                    ->sortable(),
             ])
             ->filters([
                 //
