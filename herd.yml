@@ -1,0 +1,5 @@
+integrations:
+  forge:
+    newsletter.robebuone.it:
+      server-id: 1146487
+      site-id: 3011095
