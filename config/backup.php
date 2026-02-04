@@ -16,7 +16,7 @@ return [
                  */
                 'include' => [
                     base_path('.env'),
-                    storage_path(),
+                    storage_path('app/'),
                 ],
 
                 /*
@@ -32,7 +32,7 @@ return [
                 /*
                  * Determines if symlinks should be followed.
                  */
-                'follow_links' => false,
+                'follow_links' => true,
 
                 /*
                  * Determines if it should avoid unreadable folders.
