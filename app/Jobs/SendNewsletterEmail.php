@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Mail\NewsletterMail;
 use App\Models\MessageSend;
 use App\Models\User;
+use App\Services\EmailRateLimiter;
 use Filament\Notifications\Notification;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -31,11 +32,22 @@ class SendNewsletterEmail implements ShouldQueue
     /**
      * Execute the job.
      */
-    public function handle(): void
+    public function handle(EmailRateLimiter $rateLimiter): void
     {
         $messageSend = MessageSend::with(['message.template', 'subscriber'])->find($this->messageSendId);
 
         if (! $messageSend) {
+            return;
+        }
+
+        // Check rate limits before sending
+        $rateLimitCheck = $rateLimiter->attempt();
+
+        if (! $rateLimitCheck['allowed']) {
+            // Rate limit exceeded, release the job back to the queue
+            $retryAfter = $rateLimitCheck['retry_after'] ?? 60;
+            $this->release($retryAfter);
+
             return;
         }
 

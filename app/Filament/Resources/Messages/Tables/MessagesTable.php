@@ -38,7 +38,8 @@ class MessagesTable
 
                 TextColumn::make('status')
                     ->label(__('Status'))
-                    ->badge(),
+                    ->badge()
+                    ->description(fn (Message $record): ?string => $record->getEstimatedSendTime()),
 
                 TextColumn::make('scheduled_at')
                     ->label(__('Scheduled At'))

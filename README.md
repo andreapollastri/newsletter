@@ -11,6 +11,7 @@ Sistema completo di gestione newsletter per Laravel con Filament.
 - 📊 **Tracking Completo**: Aperture, click, unsubscribe
 - 🎯 **Targeting**: Filtri per tag e status
 - 📈 **Dashboard**: Statistiche e monitoraggio
+- 🚦 **Rate Limiting**: Limiti configurabili per minuto/ora/giorno
 
 ## 🚀 Quick Start
 
@@ -30,11 +31,13 @@ php artisan newsletter:seed-data
 ## 📧 Invio Newsletter
 
 ### Immediato
+
 1. **Newsletter > Messaggi** → Nuovo messaggio
 2. **Status = Pronto** → **"Invia Ora"**
 3. Email inviate automaticamente via coda
 
 ### Schedulato
+
 1. Imposta **"Data Programmata"**
 2. Il sistema invia automaticamente
 
@@ -43,6 +46,22 @@ php artisan newsletter:seed-data
 - **Dashboard**: KPI principali
 - **Messaggi**: Status e conteggi invii
 - **Dettagli**: Tracking individuale
+
+## 🚦 Rate Limiting
+
+Configura limiti di invio per rispettare i vincoli del provider SMTP:
+
+```env
+NEWSLETTER_RATE_LIMIT_PER_MINUTE=60    # Max email/minuto
+NEWSLETTER_RATE_LIMIT_PER_HOUR=1000    # Max email/ora
+NEWSLETTER_RATE_LIMIT_PER_DAY=10000    # Max email/giorno
+```
+
+Monitora i limiti correnti:
+
+```bash
+php artisan newsletter:rate-limits
+```
 
 ## 🔧 Troubleshooting
 
@@ -55,6 +74,9 @@ php artisan tinker --execute="DB::table('jobs')->count()"
 
 # Test email
 php artisan tinker --execute="Mail::raw('Test',fn(\$m)=>\$m->to('test@example.com'))"
+
+# Verifica rate limits
+php artisan newsletter:rate-limits
 ```
 
 ---

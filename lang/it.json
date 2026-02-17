@@ -156,5 +156,12 @@
     ":count row(s) failed.": ":count riga/e fallita/e.",
     "Subscriber import completed: :count row(s) imported.": "Importazione iscritti completata: :count riga/e importata/e.",
     "Cannot delete campaign with associated messages": "Impossibile eliminare la campagna con messaggi associati",
-    "Cannot delete template with associated messages": "Impossibile eliminare il template con messaggi associati"
+    "Cannot delete template with associated messages": "Impossibile eliminare il template con messaggi associati",
+    "Estimated send time: :time": "Tempo di invio previsto: :time",
+    "Estimated send time: immediate": "Tempo di invio previsto: immediato",
+    "Completing...": "Completamento in corso...",
+    "immediate": "immediato",
+    "{1} :count minute|[2,*] :count minutes": "{1} :count minuto|[2,*] :count minuti",
+    "{1} :count hour|[2,*] :count hours": "{1} :count ora|[2,*] :count ore",
+    "{1} :count day|[2,*] :count days": "{1} :count giorno|[2,*] :count giorni"
 }
