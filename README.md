@@ -1,142 +1,296 @@
-# 📰 Newsletter System
+# Newsletter System
 
-Sistema completo di gestione newsletter per Laravel con Filament.
+A complete newsletter management system for Laravel, built with Filament. Manage subscribers, campaigns, HTML templates, scheduled sending, and full tracking—all from a modern admin panel.
 
-## ✨ Funzionalità
+---
 
-- 👥 **Gestione Subscriber**: Import/Export CSV, tagging, status
-- 📧 **Campagne e Messaggi**: Organizzazione gerarchica
-- 🎨 **Template HTML**: Personalizzabili con placeholder
-- ⏰ **Invio Schedulato**: Automatico con cron
-- 📊 **Tracking Completo**: Aperture, click, unsubscribe
-- 🎯 **Targeting**: Filtri per tag e status
-- 📈 **Dashboard**: Statistiche e monitoraggio
-- 🚦 **Rate Limiting**: Limiti configurabili per minuto/ora/giorno
+## Table of Contents
 
-## 🚀 Quick Start
+- [Features](#features)
+- [Requirements](#requirements)
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [Quick Start](#quick-start)
+- [Sending Newsletters](#sending-newsletters)
+- [Monitoring & Analytics](#monitoring--analytics)
+- [Rate Limiting](#rate-limiting)
+- [Public Routes](#public-routes)
+- [Scheduled Tasks](#scheduled-tasks)
+- [Artisan Commands](#artisan-commands)
+- [Troubleshooting](#troubleshooting)
+
+---
+
+## Features
+
+| Feature                   | Description                                           |
+| ------------------------- | ----------------------------------------------------- |
+| **Subscriber Management** | Import/export CSV, tagging, status management         |
+| **Campaigns & Messages**  | Hierarchical organization of campaigns and messages   |
+| **HTML Templates**        | Customizable templates with placeholder support       |
+| **Scheduled Sending**     | Automatic delivery via cron                           |
+| **Full Tracking**         | Opens, clicks, and unsubscribe tracking               |
+| **Targeting**             | Filter recipients by tags and status                  |
+| **Dashboard**             | Statistics and monitoring widgets                     |
+| **Rate Limiting**         | Configurable per-minute, per-hour, and per-day limits |
+| **Bounce Detection**      | IMAP integration for bounce processing                |
+
+---
+
+## Requirements
+
+- PHP 8.2+
+- Laravel 12
+- Filament 5
+- Database (SQLite, MySQL, or PostgreSQL)
+- Queue driver (database, Redis, etc.)
+
+---
+
+## Installation
+
+1. **Clone the repository and install dependencies:**
 
 ```bash
-# 1. Popola con dati di esempio (opzionale ma consigliato)
-php artisan newsletter:seed-data
-
-# 2. Avvia il worker della coda
-./start-worker.sh
-
-# 3. Accedi al sistema
-# URL: https://newsletter.test
-# Email: admin@newsletter.test
-# Password: password
+git clone <repository-url> newsletter
+cd newsletter
+composer install
 ```
 
-## 📧 Invio Newsletter
+1. **Configure the environment:**
 
-### Immediato
+```bash
+cp .env.example .env
+php artisan key:generate
+```
 
-1. **Newsletter > Messaggi** → Nuovo messaggio
-2. **Status = Pronto** → **"Invia Ora"**
-3. Email inviate automaticamente via coda
+1. **Run migrations:**
 
-### Schedulato
+```bash
+php artisan migrate
+```
 
-1. Imposta **"Data Programmata"**
-2. Il sistema invia automaticamente
+1. **Build frontend assets:**
 
-## 📊 Monitoraggio
+```bash
+npm install
+npm run build
+```
 
-- **Dashboard**: KPI principali
-- **Messaggi**: Status e conteggi invii
-- **Dettagli**: Tracking individuale
+1. **Create an admin user** (if not using seed data):
 
-## 🚦 Rate Limiting
+```bash
+php artisan make:filament-user
+```
 
-Configura limiti di invio per rispettare i vincoli del provider SMTP:
+---
+
+## Configuration
+
+### Mail
+
+Configure your SMTP settings in `.env`:
 
 ```env
-NEWSLETTER_RATE_LIMIT_PER_MINUTE=60    # Max email/minuto
-NEWSLETTER_RATE_LIMIT_PER_HOUR=1000    # Max email/ora
-NEWSLETTER_RATE_LIMIT_PER_DAY=10000    # Max email/giorno
+MAIL_MAILER=smtp
+MAIL_HOST=your-smtp-host.com
+MAIL_PORT=587
+MAIL_USERNAME=your-username
+MAIL_PASSWORD=your-password
+MAIL_FROM_ADDRESS="newsletter@yourdomain.com"
+MAIL_FROM_NAME="${APP_NAME}"
 ```
 
-Monitora i limiti correnti:
+### Newsletter
 
-```bash
-php artisan newsletter:rate-limits
+| Variable                           | Description                           | Default |
+| ---------------------------------- | ------------------------------------- | ------- |
+| `NEWSLETTER_TRACKING_ENABLED`      | Enable open/click tracking            | `true`  |
+| `NEWSLETTER_RATE_LIMIT_PER_MINUTE` | Max emails per minute (0 = unlimited) | `0`     |
+| `NEWSLETTER_RATE_LIMIT_PER_HOUR`   | Max emails per hour (0 = unlimited)   | `0`     |
+| `NEWSLETTER_RATE_LIMIT_PER_DAY`    | Max emails per day (0 = unlimited)    | `0`     |
+
+### IMAP (Bounce Detection)
+
+Optional configuration for processing bounced emails:
+
+```env
+NEWSLETTER_IMAP_HOST=imap.yourdomain.com
+NEWSLETTER_IMAP_PORT=993
+NEWSLETTER_IMAP_USERNAME=your-username
+NEWSLETTER_IMAP_PASSWORD=your-password
+NEWSLETTER_IMAP_ENCRYPTION=ssl
+NEWSLETTER_IMAP_FOLDER=INBOX
 ```
 
-## 🔧 Troubleshooting
+---
+
+## Quick Start
+
+1. **Seed sample data** (optional, recommended for testing):
 
 ```bash
-# Se email non partono
-php artisan newsletter:process-pending
+php artisan newsletter:seed-data
+```
 
-# Controlla coda
-php artisan tinker --execute="DB::table('jobs')->count()"
+1. **Start the queue worker:**
 
-# Test email
-php artisan tinker --execute="Mail::raw('Test',fn(\$m)=>\$m->to('test@example.com'))"
+```bash
+./start-worker.sh
+```
 
-# Verifica rate limits
+Or manually:
+
+```bash
+php artisan queue:work --tries=3 --timeout=90
+```
+
+1. **Access the admin panel:**
+
+- **URL:** `https://newsletter.test` (Laravel Herd) or `http://localhost:8000`
+- **Default credentials** (after seeding): `admin@newsletter.test` / `password`
+
+---
+
+## Sending Newsletters
+
+### Immediate Sending
+
+1. Go to **Newsletter > Messages**
+2. Create a new message or select an existing one
+3. Set status to **Ready**
+4. Click **Send Now**
+5. Emails are queued and sent automatically via the queue worker
+
+### Scheduled Sending
+
+1. Create or edit a message
+2. Set the **Scheduled Date** field
+3. The system sends automatically at the scheduled time (requires cron—see [Scheduled Tasks](#scheduled-tasks))
+
+---
+
+## Monitoring & Analytics
+
+- **Dashboard:** Main KPIs and send statistics
+- **Messages:** Status and send counts per message
+- **Message Details:** Individual tracking (opens, clicks) per recipient
+
+---
+
+## Rate Limiting
+
+Configure sending limits to comply with your SMTP provider's constraints:
+
+```env
+NEWSLETTER_RATE_LIMIT_PER_MINUTE=60
+NEWSLETTER_RATE_LIMIT_PER_HOUR=1000
+NEWSLETTER_RATE_LIMIT_PER_DAY=10000
+```
+
+Limits are progressive: daily overrides hourly, hourly overrides per-minute.
+
+**Check current rate limits:**
+
+```bash
 php artisan newsletter:rate-limits
 ```
 
 ---
 
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+## Public Routes
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+The following routes are available for public use:
 
-## About Laravel
+| Route                               | Method | Description                          |
+| ----------------------------------- | ------ | ------------------------------------ |
+| `/subscribe`                        | GET    | Subscription form                    |
+| `/subscribe`                        | POST   | Process subscription                 |
+| `/subscribe/confirm/{token}`        | GET    | Confirm subscription (double opt-in) |
+| `/unsubscribe/{subscriber}`         | GET    | Unsubscribe form                     |
+| `/unsubscribe/{subscriber}/confirm` | POST   | Confirm unsubscribe                  |
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Scheduled Tasks
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+Add the Laravel scheduler to your crontab:
 
-## Learning Laravel
+```bash
+* * * * * cd /path-to-your-project && php artisan schedule:run >> /dev/null 2>&1
+```
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+| Task                         | Schedule         | Description                                    |
+| ---------------------------- | ---------------- | ---------------------------------------------- |
+| `newsletter:send-scheduled`  | Every minute     | Sends messages with scheduled date in the past |
+| `newsletter:process-bounces` | Every 15 minutes | Processes bounced emails via IMAP              |
+| `backup:run`                 | Daily at 03:00   | Runs application backup                        |
+| `backup:clean`               | Daily at 04:00   | Cleans old backups                             |
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+---
 
-## Laravel Sponsors
+## Artisan Commands
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+| Command                      | Description                                                        |
+| ---------------------------- | ------------------------------------------------------------------ |
+| `newsletter:seed-data`       | Populate database with sample subscribers, campaigns, and messages |
+| `newsletter:send-scheduled`  | Manually trigger scheduled message sending                         |
+| `newsletter:process-pending` | Process pending emails in the queue                                |
+| `newsletter:process-bounces` | Process bounced emails from IMAP                                   |
+| `newsletter:rate-limits`     | Display current rate limit status                                  |
 
-### Premium Partners
+---
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+## Take it to production — cipi.sh
 
-## Contributing
+Once your app is ready, deploy it to any Ubuntu VPS with [cipi.sh](https://cipi.sh) — an open-source CLI built exclusively for Laravel.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+- Full app isolation — own Linux user, PHP-FPM pool & database per app
+- Zero-downtime deploys with instant rollback via Deployer
+- Let's Encrypt SSL, Fail2ban, UFW firewall — all automated
+- Multi-PHP (7.4 → 8.5), queue workers, S3 backups, auto-deploy webhooks
+- AI Agent ready — any AI with SSH access can deploy & manage your server
 
-## Code of Conduct
+```bash
+wget -O - https://raw.githubusercontent.com/andreapollastri/cipi/refs/heads/latest/install.sh | bash
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+→ Learn more at [cipi.sh](https://cipi.sh)
 
-## Security Vulnerabilities
+---
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## Troubleshooting
+
+### Emails not sending
+
+1. Ensure the queue worker is running: `./start-worker.sh` or `php artisan queue:work`
+2. Manually process pending: `php artisan newsletter:process-pending`
+3. Check the jobs table: `php artisan tinker --execute="DB::table('jobs')->count()"`
+
+### Test email delivery
+
+```bash
+php artisan tinker --execute="Mail::raw('Test', fn(\$m) => \$m->to('test@example.com'))"
+```
+
+### Verify rate limits
+
+```bash
+php artisan newsletter:rate-limits
+```
+
+### Frontend changes not visible
+
+Run `npm run build` or `npm run dev` to compile assets.
+
+---
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+MIT
+
+---
+
+## Credits
+
+Created by [Andrea Pollastri](https://web.ap.it)
