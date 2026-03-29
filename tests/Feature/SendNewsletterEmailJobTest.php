@@ -32,7 +32,7 @@ class SendNewsletterEmailJobTest extends TestCase
 
         // Execute job directly instead of dispatching
         $job = new SendNewsletterEmail($messageSend->id);
-        $job->handle();
+        $this->app->call([$job, 'handle']);
 
         Mail::assertSent(NewsletterMail::class, function ($mail) use ($subscriber) {
             return $mail->hasTo($subscriber->email);
@@ -47,7 +47,7 @@ class SendNewsletterEmailJobTest extends TestCase
 
         // Execute job directly
         $job = new SendNewsletterEmail($messageSend->id);
-        $job->handle();
+        $this->app->call([$job, 'handle']);
 
         $messageSend->refresh();
         $this->assertNotNull($messageSend->sent_at);
@@ -72,7 +72,7 @@ class SendNewsletterEmailJobTest extends TestCase
 
         // Execute job directly
         $job = new SendNewsletterEmail($messageSend->id);
-        $job->handle();
+        $this->app->call([$job, 'handle']);
 
         Mail::assertSent(NewsletterMail::class, function ($mail) {
             return $mail->emailSubject === 'Hello John Doe'
@@ -89,7 +89,7 @@ class SendNewsletterEmailJobTest extends TestCase
 
         // Execute job directly
         $job = new SendNewsletterEmail($messageSend->id);
-        $job->handle();
+        $this->app->call([$job, 'handle']);
 
         Mail::assertSent(NewsletterMail::class, function ($mail) use ($messageSend) {
             return str_contains($mail->htmlContent, route('tracking.open', $messageSend->id));
@@ -109,7 +109,7 @@ class SendNewsletterEmailJobTest extends TestCase
 
         // Execute job directly
         $job = new SendNewsletterEmail($messageSend->id);
-        $job->handle();
+        $this->app->call([$job, 'handle']);
 
         $message->refresh();
         $this->assertEquals(MessageStatus::Sent, $message->status);

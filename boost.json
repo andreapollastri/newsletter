@@ -1,14 +1,15 @@
 {
     "agents": [
-        "cursor"
-    ],
-    "editors": [
         "cursor",
-        "vscode"
+        "claude_code",
+        "copilot"
     ],
-    "guidelines": [
+    "guidelines": true,
+    "herd_mcp": true,
+    "mcp": true,
+    "packages": [
         "filament/filament",
         "filament/blueprint"
     ],
-    "herd_mcp": true
+    "sail": false
 }

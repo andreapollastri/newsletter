@@ -119,7 +119,11 @@ class MessageEstimatedSendTimeTest extends TestCase
         $result = $this->message->getEstimatedSendTime();
 
         $this->assertStringContainsString('2', $result);
-        $this->assertStringContainsString('or', strtolower($result));
+        $lower = strtolower($result);
+        $this->assertTrue(
+            str_contains($lower, 'hour') || str_contains($lower, 'ore'),
+            "Expected hour/ore wording but got: {$result}"
+        );
     }
 
     public function test_calculates_estimate_based_on_daily_limit(): void
@@ -218,7 +222,11 @@ class MessageEstimatedSendTimeTest extends TestCase
         $result = $this->message->getEstimatedSendTime();
 
         $this->assertStringContainsString('1', $result);
-        $this->assertStringContainsString('or', strtolower($result));
+        $lower = strtolower($result);
+        $this->assertTrue(
+            str_contains($lower, 'hour') || str_contains($lower, 'ore'),
+            "Expected hour/ore wording but got: {$result}"
+        );
     }
 
     public function test_formats_days_correctly(): void

@@ -10,6 +10,7 @@ use App\Models\Campaign;
 use App\Models\Message;
 use App\Models\MessageSend;
 use App\Models\Tag;
+use App\Models\Template;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -43,10 +44,12 @@ class MessageResourceTest extends TestCase
     public function test_can_create_message(): void
     {
         $campaign = Campaign::factory()->create(['user_id' => $this->user->id]);
+        $template = Template::factory()->create();
 
         Livewire::test(CreateMessage::class)
             ->fillForm([
                 'campaign_id' => $campaign->id,
+                'template_id' => $template->id,
                 'subject' => 'Test Subject',
                 'html_content' => '<p>Test content</p>',
                 'status' => MessageStatus::Draft->value,
@@ -113,10 +116,11 @@ class MessageResourceTest extends TestCase
 
     public function test_can_edit_message(): void
     {
-        $message = Message::factory()->create();
+        $message = Message::factory()->withTemplate()->create();
 
         Livewire::test(EditMessage::class, ['record' => $message->id])
             ->fillForm([
+                'template_id' => $message->template_id,
                 'subject' => 'Updated Subject',
             ])
             ->call('save')

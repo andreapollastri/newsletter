@@ -6,6 +6,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Serializable Cache Classes
+    |--------------------------------------------------------------------------
+    |
+    | When storing PHP objects in cache, list the classes that may be
+    | unserialized. Set to false to disallow object unserialization.
+    |
+    */
+
+    'serializable_classes' => false,
+
+    /*
+    |--------------------------------------------------------------------------
     | Default Cache Store
     |--------------------------------------------------------------------------
     |
