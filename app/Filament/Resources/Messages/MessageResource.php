@@ -16,6 +16,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class MessageResource extends Resource
 {
@@ -55,6 +56,24 @@ class MessageResource extends Resource
     public static function table(Table $table): Table
     {
         return MessagesTable::configure($table);
+    }
+
+    /**
+     * @return Builder<Message>
+     */
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->with([
+                'tags',
+                'campaign',
+            ])
+            ->withCount([
+                'sends as emails_sent_count' => fn (Builder $query) => $query->whereNotNull('sent_at'),
+            ])
+            ->withSum([
+                'sends as opens_sum' => fn (Builder $query) => $query->whereNotNull('sent_at'),
+            ], 'opens_count');
     }
 
     public static function getRelations(): array

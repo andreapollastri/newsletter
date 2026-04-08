@@ -4,10 +4,12 @@ namespace App\Filament\Resources\Messages\Tables;
 
 use App\Enums\MessageStatus;
 use App\Enums\SubscriberStatus;
+use App\Filament\Resources\Messages\MessageResource;
 use App\Jobs\SendNewsletterEmail;
 use App\Models\Message;
 use App\Models\MessageSend;
 use App\Models\Subscriber;
+use App\Models\Tag;
 use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
@@ -21,6 +23,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\HtmlString;
 
 class MessagesTable
 {
@@ -28,6 +31,9 @@ class MessagesTable
     {
         return $table
             ->defaultSort('id', 'desc')
+            ->recordUrl(fn (Message $record): string => $record->status === MessageStatus::Sent
+                ? MessageResource::getUrl('view', ['record' => $record])
+                : MessageResource::getUrl('edit', ['record' => $record]))
             ->columns([
                 TextColumn::make('subject')
                     ->label(__('Message'))
@@ -35,6 +41,40 @@ class MessagesTable
                     ->sortable()
                     ->limit(50)
                     ->description(fn (Message $record): ?string => $record->campaign?->name),
+
+                TextColumn::make('audience_tags')
+                    ->label(__('Audience'))
+                    ->html()
+                    ->state(function (Message $record): HtmlString {
+                        if ($record->tags->isEmpty()) {
+                            return new HtmlString(
+                                '<span class="inline-flex items-center rounded-md bg-amber-50 px-2 py-1 text-xs font-medium text-amber-800 ring-1 ring-inset ring-amber-600/20 dark:bg-amber-400/10 dark:text-amber-400 dark:ring-amber-400/20">'
+                                .e(__('All subscribers'))
+                                .'</span>'
+                            );
+                        }
+
+                        return new HtmlString(
+                            $record->tags->map(function (Tag $tag): string {
+                                return '<span class="inline-flex items-center rounded-md bg-sky-50 px-2 py-1 text-xs font-medium text-sky-800 ring-1 ring-inset ring-sky-600/20 dark:bg-sky-400/10 dark:text-sky-400 dark:ring-sky-400/20">'
+                                    .e($tag->name)
+                                    .'</span>';
+                            })->implode(' ')
+                        );
+                    }),
+
+                TextColumn::make('emails_sent_count')
+                    ->label(__('Emails sent'))
+                    ->numeric()
+                    ->sortable()
+                    ->alignCenter(),
+
+                TextColumn::make('opens_sum')
+                    ->label(__('Opens (total)'))
+                    ->numeric()
+                    ->sortable()
+                    ->alignCenter()
+                    ->formatStateUsing(fn (?int $state): int => (int) ($state ?? 0)),
 
                 TextColumn::make('status')
                     ->label(__('Status'))

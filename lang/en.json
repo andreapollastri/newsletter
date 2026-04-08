@@ -208,5 +208,10 @@
     "Debug locally with:": "Debug locally with:",
     "Sent or sending messages cannot be modified via API.": "Sent or sending messages cannot be modified via API.",
     "Cannot change status while the message is sending.": "Cannot change status while the message is sending.",
-    "Creating messages in :status status is not allowed via API.": "Creating messages in :status status is not allowed via API."
+    "Creating messages in :status status is not allowed via API.": "Creating messages in :status status is not allowed via API.",
+    "Audience": "Audience",
+    "All subscribers": "All subscribers",
+    "Emails sent": "Emails sent",
+    "Opens (total)": "Opens (total)",
+    "Hide sends to test-only subscribers": "Hide sends to test-only subscribers"
 }

@@ -86,6 +86,19 @@ class Message extends Model
     }
 
     /**
+     * Exclude select aggregate aliases from replication (they are not database columns).
+     *
+     * @param  array<string>|null  $except
+     */
+    public function replicate(?array $except = null): static
+    {
+        return parent::replicate(array_merge($except ?? [], [
+            'emails_sent_count',
+            'opens_sum',
+        ]));
+    }
+
+    /**
      * Messages whose audience is defined only by "testing" tags (at least one tag, all testing).
      * These sends are excluded from dashboard statistics and removed from send history after completion.
      */

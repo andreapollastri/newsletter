@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.0.1] - 2026-04-08
+
+### Added
+
+- **OpenAPI coverage** extended for all authenticated REST routes: `GET /api/user`, `GET /api/reports/newsletter`, and full CRUD for tags, subscribers, and templates (in addition to campaigns and messages). `App\OpenApi\ApiUserEndpoint` documents the `/api/user` route implemented as a closure in `routes/api.php`.
+- **`L5SwaggerDocumentationTest`** — asserts `/docs` serves JSON and the Swagger UI page does not embed a bogus `?api-docs.json` query string on the spec URL.
+- Composer **`post-install-cmd`** runs `php artisan l5-swagger:generate` so `storage/api-docs/api-docs.json` is regenerated after `composer install` (helps production deployments).
+
+### Changed
+
+- **Filament Messages list** (`/messages`): table rows are **clickable** — **view** for sent messages, **edit** for other statuses (`recordUrl`). New **Audience** column shows selected tags as blue badges, or an amber **“All subscribers”** badge when the message has no tags. New columns **Emails sent** (count of completed sends) and **Opens (total)** (sum of opens on sent rows). `MessageResource::getEloquentQuery()` eager-loads tags/campaign and adds the aggregates.
+- **Filament Message → Sends** relation manager: optional filter **“Hide sends to test-only subscribers”** (enabled by default) hides rows where the recipient has tags but only testing tags; `subscriber.tags` is eager-loaded. Labels added for the messages table and filter in all six locales.
+- **`App\Http\Controllers\L5SwaggerController`** extends the package Swagger controller and fixes documentation file URL generation so Laravel does not append a spurious `?api-docs.json` query string to `/docs` (Swagger UI fetch error in production). Registered via container binding in `AppServiceProvider`.
+
+### Fixed
+
+- **Swagger / OpenAPI UI** could return **404** or fail to load the spec when the generated JSON was missing on the server, or when the UI requested `/docs?api-docs.json`; URL generation and deploy-time generation (see `post-install-cmd` above) address this.
+- **Duplicate message** action could fail after loading the list query with `withCount` / `withSum` — **`Message::replicate()`** now strips aggregate attributes (`emails_sent_count`, `opens_sum`) that are not real columns.
+
+---
+
 ## [2.0.0] - 2026-04-08
 
 ### Added

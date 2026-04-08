@@ -5,7 +5,10 @@ namespace App\Filament\Resources\Messages\RelationManagers;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Filter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 
 class SendsRelationManager extends RelationManager
 {
@@ -13,7 +16,7 @@ class SendsRelationManager extends RelationManager
 
     protected static ?string $title = null;
 
-    public static function getTitle(\Illuminate\Database\Eloquent\Model $ownerRecord, string $pageClass): string
+    public static function getTitle(Model $ownerRecord, string $pageClass): string
     {
         return __('Sends');
     }
@@ -29,6 +32,7 @@ class SendsRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn (Builder $query): Builder => $query->with(['subscriber.tags']))
             ->recordTitleAttribute('subscriber.email')
             ->columns([
                 TextColumn::make('subscriber.email')
@@ -60,7 +64,16 @@ class SendsRelationManager extends RelationManager
                     ->sortable(),
             ])
             ->filters([
-                //
+                Filter::make('hide_test_only_subscribers')
+                    ->label(__('Hide sends to test-only subscribers'))
+                    ->toggle()
+                    ->default(true)
+                    ->query(function (Builder $query, array $data): void {
+                        $query->whereDoesntHave('subscriber', function (Builder $q): void {
+                            $q->whereHas('tags')
+                                ->whereDoesntHave('tags', fn (Builder $tq) => $tq->where('is_testing', false));
+                        });
+                    }),
             ])
             ->headerActions([
                 // No create action - sends are created by jobs

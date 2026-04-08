@@ -67,6 +67,9 @@
         "post-update-cmd": [
             "@php artisan vendor:publish --tag=laravel-assets --ansi --force"
         ],
+        "post-install-cmd": [
+            "@php artisan l5-swagger:generate --no-interaction"
+        ],
         "post-root-package-install": [
             "@php -r \"file_exists('.env') || copy('.env.example', '.env');\""
         ],

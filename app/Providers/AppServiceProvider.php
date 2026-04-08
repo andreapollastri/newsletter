@@ -2,7 +2,9 @@
 
 namespace App\Providers;
 
+use App\Http\Controllers\L5SwaggerController;
 use Illuminate\Support\ServiceProvider;
+use L5Swagger\Http\Controllers\SwaggerController;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -11,7 +13,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->bind(SwaggerController::class, L5SwaggerController::class);
     }
 
     /**

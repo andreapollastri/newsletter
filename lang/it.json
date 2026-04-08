@@ -214,5 +214,10 @@
     "Debug locally with:": "Debug in locale con:",
     "Sent or sending messages cannot be modified via API.": "I messaggi inviati o in invio non possono essere modificati tramite API.",
     "Cannot change status while the message is sending.": "Impossibile modificare lo stato mentre il messaggio è in invio.",
-    "Creating messages in :status status is not allowed via API.": "Non è consentito creare messaggi nello stato :status tramite API."
+    "Creating messages in :status status is not allowed via API.": "Non è consentito creare messaggi nello stato :status tramite API.",
+    "Audience": "Destinatari",
+    "All subscribers": "Tutti gli iscritti",
+    "Emails sent": "Email inviate",
+    "Opens (total)": "Aperture (totale)",
+    "Hide sends to test-only subscribers": "Nascondi invii solo a iscritti di test"
 }

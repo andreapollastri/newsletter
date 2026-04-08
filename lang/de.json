@@ -208,5 +208,10 @@
     "Debug locally with:": "Lokal debuggen mit:",
     "Sent or sending messages cannot be modified via API.": "Gesendete oder sendende Nachrichten können nicht über die API geändert werden.",
     "Cannot change status while the message is sending.": "Status kann nicht geändert werden, während die Nachricht gesendet wird.",
-    "Creating messages in :status status is not allowed via API.": "Das Erstellen von Nachrichten im Status :status ist über die API nicht erlaubt."
+    "Creating messages in :status status is not allowed via API.": "Das Erstellen von Nachrichten im Status :status ist über die API nicht erlaubt.",
+    "Audience": "Zielgruppe",
+    "All subscribers": "Alle Abonnenten",
+    "Emails sent": "Gesendete E-Mails",
+    "Opens (total)": "Öffnungen (gesamt)",
+    "Hide sends to test-only subscribers": "Sendungen nur an Test-Abonnenten ausblenden"
 }
