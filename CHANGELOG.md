@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.0.5] - 2026-04-08
+
+### Changed
+
+- **Sent / sending messages are immutable** — `MessagePolicy::update` and `MessagePolicy::delete` now deny modifications and deletion when the message status is **sent** or **sending**, for every role (including administrators and managers). Editors remain limited to draft-only edits as before.
+- **Filament — Messages** — the delete action on the message **edit** page is shown only when `MessageResource::canDelete()` allows it (same policy rules). The messages table delete action already relied on policy-backed visibility.
+- **REST API** — `PUT` and `DELETE` on sent or sending messages align with the policy: **403 Forbidden** when authorization fails; partial updates to sent/sending messages with a body still fail validation with **422** and the existing *“Sent or sending messages cannot be modified via API.”* message (`UpdateMessageRequest`).
+
+---
+
 ## [2.0.4] - 2026-04-08
 
 ### Changed
