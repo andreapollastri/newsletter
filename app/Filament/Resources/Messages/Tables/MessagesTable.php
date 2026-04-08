@@ -22,6 +22,7 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\HtmlString;
 
@@ -111,14 +112,18 @@ class MessagesTable
             ->recordActions([
                 ActionGroup::make([
                     ViewAction::make()
-                        ->visible(fn (Message $record) => $record->status === MessageStatus::Sent),
+                        ->visible(fn (Message $record): bool => $record->status === MessageStatus::Sent
+                            && MessageResource::canView($record)),
                     EditAction::make()
-                        ->visible(fn (Message $record) => $record->status !== MessageStatus::Sent),
+                        ->visible(fn (Message $record): bool => $record->status !== MessageStatus::Sent
+                            && MessageResource::canEdit($record)),
                     Action::make('sendNow')
                         ->label(__('Send Now'))
                         ->icon(Heroicon::PaperAirplane)
                         ->color('success')
-                        ->visible(fn (Message $record) => $record->status === MessageStatus::Ready)
+                        ->visible(fn (Message $record): bool => $record->status === MessageStatus::Ready
+                            && Auth::user() !== null
+                            && ! Auth::user()->isEditor())
                         ->requiresConfirmation()
                         ->modalHeading(__('Send Message'))
                         ->modalDescription(__('Are you sure you want to send this message immediately?'))
@@ -160,7 +165,9 @@ class MessagesTable
                         ->label(__('Send Test'))
                         ->icon(Heroicon::Beaker)
                         ->color('warning')
-                        ->visible(fn (Message $record) => $record->status !== MessageStatus::Sent)
+                        ->visible(fn (Message $record): bool => $record->status !== MessageStatus::Sent
+                            && Auth::user() !== null
+                            && ! Auth::user()->isEditor())
                         ->form([
                             TextInput::make('test_email')
                                 ->email()

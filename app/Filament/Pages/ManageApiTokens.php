@@ -46,6 +46,11 @@ class ManageApiTokens extends Page implements HasTable
         return __('API tokens');
     }
 
+    public static function canAccess(): bool
+    {
+        return auth()->user()?->canManageApiTokens() ?? false;
+    }
+
     public function mount(): void
     {
         $this->bootedInteractsWithTable();

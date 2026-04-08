@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.0.2] - 2026-04-08
+
+### Added
+
+- **User roles** — `UserRole` enum (`Editor`, `Manager`, `Administrator`) stored on `users.role`; **Editor** focuses on drafting/sending campaigns; **Manager** and **Administrator** get dashboard, subscribers, templates, tags, and full campaign management.
+- **Filament Users** — CRUD resource for administrators (`UserPolicy`); role and locale on create/edit; user menu entry and navigation gated by `canManageUsers()`.
+- **Migrations** — `add_role_to_users_table`, `set_all_existing_users_to_legacy_administrator_role` so existing installs keep full access.
+- **Role-aware policies** — `CampaignPolicy`, `MessagePolicy`, `SubscriberPolicy`, `TagPolicy`, `TemplatePolicy`, and `UserPolicy` replace a blanket “allow all authenticated” gate: e.g. editors cannot view sent/sending messages, cannot update/delete except drafts; managers/admins retain broader access per resource.
+
+### Changed
+
+- **Panel home URL** — Editors land on campaigns; managers and administrators land on the dashboard (`NewsletterPanelProvider`).
+- **`ManageApiTokens`** — visible only to administrators (`canManageApiTokens()`).
+- **`GET /api/reports/newsletter`** — returns **403** for users without management features (e.g. **Editor**), consistent with Filament reporting access.
+- **Translations** — new strings for roles, user resource, and profile labels across supported locales.
+
+### Fixed
+
+- **Filament Messages list** (`/messages`) and **campaign → Messages** relation table — no longer apply `Message::forStatistics()` to the query. Messages whose audience is **only testing tags** were hidden even as **drafts**; they now appear like any other message. **Dashboard statistics and charts** still use `forStatistics()` so testing-only audiences stay out of aggregate metrics; **send history** for testing sends is still cleared after a completed testing send (existing job behaviour).
+
+---
+
 ## [2.0.1] - 2026-04-08
 
 ### Added
@@ -15,8 +37,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`L5SwaggerDocumentationTest`** — asserts `/docs` serves JSON and the Swagger UI page does not embed a bogus `?api-docs.json` query string on the spec URL.
 - Composer **`post-install-cmd`** runs `php artisan l5-swagger:generate` so `storage/api-docs/api-docs.json` is regenerated after `composer install` (helps production deployments).
 
+### Removed
+
+- **Per-model Laravel policies** (Campaign, Message, Subscriber, Tag, Template). Authorization no longer enforces ownership per resource.
+
 ### Changed
 
+- **Authorization model** — `Gate::before` in `AppServiceProvider` allows any `authorize()` check for **authenticated** users (shared admin / API access; no per-user isolation via policies).
+- **Filament Messages** — `MessageResource` lists **all** messages; the table query is not scoped to campaigns owned by the current user.
+- **`GET /api/campaigns`** — returns **all** campaigns (no `user_id` filter on the index). Creating a campaign still sets `user_id` to the authenticated user for attribution.
 - **Filament Messages list** (`/messages`): table rows are **clickable** — **view** for sent messages, **edit** for other statuses (`recordUrl`). New **Audience** column shows selected tags as blue badges, or an amber **“All subscribers”** badge when the message has no tags. New columns **Emails sent** (count of completed sends) and **Opens (total)** (sum of opens on sent rows). `MessageResource::getEloquentQuery()` eager-loads tags/campaign and adds the aggregates.
 - **Filament Message → Sends** relation manager: optional filter **“Hide sends to test-only subscribers”** (enabled by default) hides rows where the recipient has tags but only testing tags; `subscriber.tags` is eager-loaded. Labels added for the messages table and filter in all six locales.
 - **`App\Http\Controllers\L5SwaggerController`** extends the package Swagger controller and fixes documentation file URL generation so Laravel does not append a spurious `?api-docs.json` query string to `/docs` (Swagger UI fetch error in production). Registered via container binding in `AppServiceProvider`.
@@ -37,7 +66,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Newsletter report API** endpoint (`GET /api/reports/newsletter`) with per-campaign filtering, date range, per-message breakdown, and daily timeseries.
 - **OpenAPI / Swagger documentation** via `l5-swagger` — auto-generated spec available at `/api/documentation`.
 - **MCP server** (`/mcp/newsletter`) for AI integrations (Cursor, Claude Code, etc.) using `laravel/mcp`, authenticated with Sanctum Bearer tokens (`mcp` ability). Includes six tools: list campaigns, newsletter report, send history analysis, subscriber insights, generate email template HTML, and create newsletter message. Ships with a reusable `newsletter-assistant` prompt.
-- **Policies** for all API-exposed models (Campaign, Message, Subscriber, Tag, Template) enforcing ownership-based authorization.
+- **Policies** for all API-exposed models (Campaign, Message, Subscriber, Tag, Template) enforcing ownership-based authorization (removed in **2.0.1** in favor of shared access; see that release).
 - **Eloquent API Resources** for consistent JSON serialization (CampaignResource, MessageResource, SubscriberResource, TagResource, TemplateResource).
 - **Form request classes** for API validation (store/update for each resource, plus the newsletter report request).
 - **NewsletterReportingService** — dedicated service class for building report payloads (summary, per-message stats, timeseries), shared between the API and MCP tools.

@@ -2,7 +2,10 @@
 
 namespace App\Filament\Resources\Campaigns\Tables;
 
+use App\Filament\Resources\Campaigns\CampaignResource;
+use App\Models\Campaign;
 use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
@@ -36,8 +39,14 @@ class CampaignsTable
             ->filters([
                 TrashedFilter::make(),
             ])
+            ->recordUrl(fn (Campaign $record): string => CampaignResource::canEdit($record)
+                ? CampaignResource::getUrl('edit', ['record' => $record])
+                : CampaignResource::getUrl('view', ['record' => $record]))
             ->recordActions([
-                EditAction::make(),
+                ViewAction::make()
+                    ->visible(fn (Campaign $record): bool => CampaignResource::canView($record) && ! CampaignResource::canEdit($record)),
+                EditAction::make()
+                    ->visible(fn (Campaign $record): bool => CampaignResource::canEdit($record)),
             ])
             ->toolbarActions([
                 //

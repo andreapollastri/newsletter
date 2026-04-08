@@ -19,7 +19,7 @@ class ApiCampaignAndMessageApiTest extends TestCase
         $this->getJson('/api/campaigns')->assertUnauthorized();
     }
 
-    public function test_user_lists_only_own_campaigns(): void
+    public function test_user_lists_all_campaigns(): void
     {
         $user = User::factory()->create();
         Campaign::factory()->count(2)->create(['user_id' => $user->id]);
@@ -30,10 +30,10 @@ class ApiCampaignAndMessageApiTest extends TestCase
         $response = $this->withToken($token)->getJson('/api/campaigns');
 
         $response->assertOk();
-        $this->assertCount(2, $response->json('data'));
+        $this->assertCount(3, $response->json('data'));
     }
 
-    public function test_user_cannot_view_foreign_campaign(): void
+    public function test_authenticated_user_can_view_any_campaign_by_id(): void
     {
         $owner = User::factory()->create();
         $other = User::factory()->create();
@@ -42,7 +42,8 @@ class ApiCampaignAndMessageApiTest extends TestCase
         $token = $other->createToken('test', ['api'])->plainTextToken;
 
         $this->withToken($token)->getJson('/api/campaigns/'.$campaign->id)
-            ->assertForbidden();
+            ->assertOk()
+            ->assertJsonPath('data.id', $campaign->id);
     }
 
     public function test_user_can_create_update_and_delete_campaign(): void

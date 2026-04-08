@@ -18,7 +18,7 @@
                     "Campaigns"
                 ],
                 "summary": "List campaigns",
-                "description": "Returns all campaigns owned by the authenticated user.",
+                "description": "Returns all campaigns.",
                 "operationId": "campaignsIndex",
                 "responses": {
                     "200": {

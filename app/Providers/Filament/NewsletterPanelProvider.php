@@ -5,8 +5,10 @@ namespace App\Providers\Filament;
 use App\Filament\Pages\Auth\EditProfile;
 use App\Filament\Pages\Dashboard;
 use App\Filament\Pages\ManageApiTokens;
+use App\Filament\Resources\Campaigns\CampaignResource;
 use App\Filament\Resources\Tags\TagResource;
 use App\Filament\Resources\Templates\TemplateResource;
+use App\Filament\Resources\Users\UserResource;
 use App\Http\Middleware\SetFilamentLocale;
 use Filament\Actions\Action;
 use Filament\Auth\MultiFactor\App\AppAuthentication;
@@ -38,6 +40,15 @@ class NewsletterPanelProvider extends PanelProvider
             ->id('newsletter')
             ->path('/')
             ->login()
+            ->homeUrl(function (): string {
+                $user = auth()->user();
+
+                if ($user !== null && $user->canAccessManagementFeatures()) {
+                    return Dashboard::getUrl();
+                }
+
+                return CampaignResource::getUrl();
+            })
             ->profile(EditProfile::class)
             ->topNavigation()
             ->databaseNotifications()
@@ -84,15 +95,27 @@ class NewsletterPanelProvider extends PanelProvider
                 Action::make('templates')
                     ->label(__('Templates'))
                     ->url(fn (): string => TemplateResource::getUrl('index'))
-                    ->icon(Heroicon::OutlinedDocumentText),
+                    ->icon(Heroicon::OutlinedDocumentText)
+                    ->sort(10)
+                    ->visible(fn (): bool => TemplateResource::canViewAny()),
                 Action::make('tags')
                     ->label(__('Tags'))
                     ->url(fn (): string => TagResource::getUrl('index'))
-                    ->icon(Heroicon::OutlinedTag),
+                    ->icon(Heroicon::OutlinedTag)
+                    ->sort(20)
+                    ->visible(fn (): bool => TagResource::canViewAny()),
+                Action::make('users')
+                    ->label(__('Users'))
+                    ->url(fn (): string => UserResource::getUrl('index'))
+                    ->icon(Heroicon::OutlinedUsers)
+                    ->sort(30)
+                    ->visible(fn (): bool => UserResource::canViewAny()),
                 Action::make('apiTokens')
                     ->label(__('API tokens'))
                     ->url(fn (): string => ManageApiTokens::getUrl())
-                    ->icon(Heroicon::OutlinedKey),
+                    ->icon(Heroicon::OutlinedKey)
+                    ->sort(40)
+                    ->visible(fn (): bool => ManageApiTokens::canAccess()),
             ]);
     }
 }

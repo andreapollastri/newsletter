@@ -16,7 +16,7 @@ class CampaignController extends Controller
     #[OA\Get(
         path: '/api/campaigns',
         operationId: 'campaignsIndex',
-        description: 'Returns all campaigns owned by the authenticated user.',
+        description: 'Returns all campaigns.',
         summary: 'List campaigns',
         tags: ['Campaigns'],
         responses: [
@@ -47,7 +47,6 @@ class CampaignController extends Controller
         $this->authorize('viewAny', Campaign::class);
 
         $campaigns = Campaign::query()
-            ->where('user_id', auth()->id())
             ->orderBy('name')
             ->get();
 

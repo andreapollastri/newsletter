@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Messages;
 
+use App\Enums\MessageStatus;
 use App\Filament\Resources\Messages\Pages\CreateMessage;
 use App\Filament\Resources\Messages\Pages\EditMessage;
 use App\Filament\Resources\Messages\Pages\ListMessages;
@@ -59,9 +60,11 @@ class MessageResource extends Resource
     }
 
     /**
+     * Shared eager loads for message tables and record pages.
+     *
      * @return Builder<Message>
      */
-    public static function getEloquentQuery(): Builder
+    protected static function messageTableQuery(): Builder
     {
         return parent::getEloquentQuery()
             ->with([
@@ -74,6 +77,40 @@ class MessageResource extends Resource
             ->withSum([
                 'sends as opens_sum' => fn (Builder $query) => $query->whereNotNull('sent_at'),
             ], 'opens_count');
+    }
+
+    /**
+     * List/search query: show all messages (including testing-tag-only audiences).
+     * Testing-only sends are still excluded from dashboard statistics via `Message::scopeForStatistics()`
+     * on widgets/reporting; they disappear from send history only after a completed testing send (purge).
+     *
+     * @return Builder<Message>
+     */
+    public static function getEloquentQuery(): Builder
+    {
+        $query = static::messageTableQuery();
+
+        if (auth()->user()?->isEditor()) {
+            $query->whereNotIn('status', [MessageStatus::Sent, MessageStatus::Sending]);
+        }
+
+        return $query;
+    }
+
+    /**
+     * Resolve edit/view routes for any message (same visibility rules as the list, without global table scopes).
+     *
+     * @return Builder<Message>
+     */
+    public static function getRecordRouteBindingEloquentQuery(): Builder
+    {
+        $query = static::messageTableQuery();
+
+        if (auth()->user()?->isEditor()) {
+            $query->whereNotIn('status', [MessageStatus::Sent, MessageStatus::Sending]);
+        }
+
+        return $query;
     }
 
     public static function getRelations(): array

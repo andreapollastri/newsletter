@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\UserRole;
 use App\Support\UserLocale;
 use Database\Factories\UserFactory;
 use Filament\Auth\MultiFactor\App\Concerns\InteractsWithAppAuthentication;
@@ -37,6 +38,7 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
         'email',
         'locale',
         'password',
+        'role',
     ];
 
     /**
@@ -59,7 +61,41 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'role' => UserRole::class,
         ];
+    }
+
+    public function isEditor(): bool
+    {
+        return $this->role === UserRole::Editor;
+    }
+
+    public function isManager(): bool
+    {
+        return $this->role === UserRole::Manager;
+    }
+
+    public function isAdministrator(): bool
+    {
+        return $this->role === UserRole::Administrator;
+    }
+
+    /**
+     * Dashboard, subscribers, templates, tags, and full campaign management.
+     */
+    public function canAccessManagementFeatures(): bool
+    {
+        return $this->isManager() || $this->isAdministrator();
+    }
+
+    public function canManageUsers(): bool
+    {
+        return $this->isAdministrator();
+    }
+
+    public function canManageApiTokens(): bool
+    {
+        return $this->isAdministrator();
     }
 
     /**

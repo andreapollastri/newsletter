@@ -35,6 +35,18 @@ class MessageResourceTest extends TestCase
             ->assertSuccessful();
     }
 
+    public function test_list_messages_includes_testing_audience_only_messages(): void
+    {
+        $campaign = Campaign::factory()->create(['user_id' => $this->user->id]);
+        $normalMessage = Message::factory()->for($campaign)->create(['subject' => 'Normal broadcast']);
+        $testingTag = Tag::factory()->testing()->create();
+        $testingMessage = Message::factory()->for($campaign)->create(['subject' => 'Testing send']);
+        $testingMessage->tags()->attach($testingTag->id);
+
+        Livewire::test(ListMessages::class)
+            ->assertCanSeeTableRecords([$normalMessage, $testingMessage]);
+    }
+
     public function test_can_render_create_page(): void
     {
         Livewire::test(CreateMessage::class)
@@ -134,8 +146,9 @@ class MessageResourceTest extends TestCase
 
     public function test_can_filter_by_status(): void
     {
-        $draftMessage = Message::factory()->create(['status' => MessageStatus::Draft]);
-        $sentMessage = Message::factory()->sent()->create();
+        $campaign = Campaign::factory()->create(['user_id' => $this->user->id]);
+        $draftMessage = Message::factory()->for($campaign)->create(['status' => MessageStatus::Draft]);
+        $sentMessage = Message::factory()->for($campaign)->sent()->create();
 
         Livewire::test(ListMessages::class)
             ->assertCanSeeTableRecords([$draftMessage, $sentMessage])
@@ -193,7 +206,8 @@ class MessageResourceTest extends TestCase
 
     public function test_duplicate_resets_scheduled_and_sent_dates(): void
     {
-        $message = Message::factory()->create([
+        $campaign = Campaign::factory()->create(['user_id' => $this->user->id]);
+        $message = Message::factory()->for($campaign)->create([
             'scheduled_at' => now()->addDay(),
             'sent_at' => now(),
         ]);
@@ -210,7 +224,8 @@ class MessageResourceTest extends TestCase
 
     public function test_duplicate_copies_tag_relationships(): void
     {
-        $message = Message::factory()->create();
+        $campaign = Campaign::factory()->create(['user_id' => $this->user->id]);
+        $message = Message::factory()->for($campaign)->create();
         $tag1 = Tag::factory()->create();
         $tag2 = Tag::factory()->create();
 

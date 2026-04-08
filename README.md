@@ -7,6 +7,7 @@ A complete newsletter management system for Laravel, built with Filament. Manage
 ## Table of Contents
 
 - [Features](#features)
+- [User Management & Roles](#user-management--roles)
 - [Requirements](#requirements)
 - [Installation](#installation)
 - [Configuration](#configuration)
@@ -27,28 +28,84 @@ A complete newsletter management system for Laravel, built with Filament. Manage
 
 ## Features
 
-| Feature                   | Description                                                       |
-| ------------------------- | ----------------------------------------------------------------- |
-| **Subscriber Management** | Import/export CSV, tagging, status management                     |
-| **Campaigns & Messages**  | Hierarchical organization of campaigns and messages               |
-| **HTML Templates**        | Customizable templates with placeholder support                   |
-| **Scheduled Sending**     | Automatic delivery via cron                                       |
-| **Full Tracking**         | Opens, clicks, and unsubscribe tracking                           |
-| **Targeting**             | Filter recipients by tags and status                              |
-| **Dashboard**             | Statistics and monitoring widgets                                 |
-| **Rate Limiting**         | Configurable per-minute, per-hour, and per-day limits             |
-| **Bounce Detection**      | IMAP integration for bounce processing                            |
-| **REST API**              | Full CRUD API with Sanctum authentication and OpenAPI docs        |
-| **MCP Server**            | AI integration endpoint for Cursor, Claude Code, and other clients |
-| **Testing Tags**          | Mark tags as testing to exclude sends from production statistics   |
+| Feature                   | Description                                                          |
+| ------------------------- | -------------------------------------------------------------------- |
+| **Subscriber Management** | Import/export CSV, tagging, status management                        |
+| **Campaigns & Messages**  | Hierarchical organization of campaigns and messages                  |
+| **HTML Templates**        | Customizable templates with placeholder support                      |
+| **Scheduled Sending**     | Automatic delivery via cron                                          |
+| **Full Tracking**         | Opens, clicks, and unsubscribe tracking                              |
+| **Targeting**             | Filter recipients by tags and status                                 |
+| **Dashboard**             | Statistics and monitoring widgets                                    |
+| **Rate Limiting**         | Configurable per-minute, per-hour, and per-day limits                |
+| **Bounce Detection**      | IMAP integration for bounce processing                               |
+| **REST API**              | Full CRUD API with Sanctum authentication and OpenAPI docs           |
+| **MCP Server**            | AI integration endpoint for Cursor, Claude Code, and other clients   |
+| **Testing Tags**          | Mark tags as testing to exclude sends from production statistics     |
 | **Multilingual**          | Admin panel in Italian, English, German, French, Spanish, Portuguese |
-| **UTM Tracking**          | Automatic UTM parameters on outbound newsletter links             |
+| **UTM Tracking**          | Automatic UTM parameters on outbound newsletter links                |
+| **User Roles**            | Three permission levels: Editor, Manager, Administrator              |
+
+---
+
+## User Management & Roles
+
+The application supports three user roles with progressively broader permissions. Every user is assigned exactly one role, stored in the `role` column of the `users` table.
+
+### Roles
+
+| Role              | Description                                                                                       |
+| ----------------- | ------------------------------------------------------------------------------------------------- |
+| **Editor**        | Focused on content creation. Can create and manage **draft** messages within existing campaigns.  |
+| **Manager**       | Full operational access. Manages campaigns, subscribers, tags, templates, and all message states. |
+| **Administrator** | Everything a Manager can do, plus **user management** and **API token management**.               |
+
+### Permission Matrix
+
+| Area                                  | Editor | Manager | Administrator |
+| ------------------------------------- | :----: | :-----: | :-----------: |
+| **Dashboard**                         |   —    |    ✓    |       ✓       |
+| **Campaigns** (view)                  |   ✓    |    ✓    |       ✓       |
+| **Campaigns** (create/edit/delete)    |   —    |    ✓    |       ✓       |
+| **Messages** (create)                 |   ✓    |    ✓    |       ✓       |
+| **Messages** (view/edit/delete draft) |   ✓    |    ✓    |       ✓       |
+| **Messages** (view sent/sending)      |   —    |    ✓    |       ✓       |
+| **Subscribers**                       |   —    |    ✓    |       ✓       |
+| **Tags**                              |   —    |    ✓    |       ✓       |
+| **Templates**                         |   —    |    ✓    |       ✓       |
+| **Users**                             |   —    |    —    |       ✓       |
+| **API Tokens**                        |   —    |    —    |       ✓       |
+| **Newsletter Report API**             |   —    |    ✓    |       ✓       |
+
+### Navigation
+
+- **Editor** — lands on the **Campaigns** page after login; the dashboard is not shown in navigation.
+- **Manager / Administrator** — lands on the **Dashboard**; all navigation items are visible according to the matrix above.
+- **User menu** — the **API Tokens** and **Users** links appear only for Administrators.
+
+### Managing Users
+
+Administrators can create, edit, and delete users from the **Users** page in the admin panel. When creating or editing a user, the following fields are available:
+
+- **Name** and **Email** (required)
+- **Password** (required on create, optional on edit — leave blank to keep unchanged)
+- **Role** — select Editor, Manager, or Administrator
+- **Locale** — preferred language for the admin panel UI
+
+An administrator cannot delete their own account.
+
+### Migrations
+
+When upgrading from a version without roles, two migrations handle the transition:
+
+1. `add_role_to_users_table` — adds the `role` column (defaults to `editor`).
+2. `set_all_existing_users_to_legacy_administrator_role` — promotes all pre-existing users to `administrator` so they retain full access.
 
 ---
 
 ## Requirements
 
-- PHP 8.2+
+- PHP 8.3+
 - Laravel 13
 - Filament 5
 - Database (SQLite, MySQL, or PostgreSQL)
@@ -118,12 +175,12 @@ MAIL_FROM_NAME="${APP_NAME}"
 
 ### Newsletter
 
-| Variable                             | Description                                      | Default |
-| ------------------------------------ | ------------------------------------------------ | ------- |
-| `NEWSLETTER_TRACKING_ENABLED`        | Enable open/click tracking                       | `true`  |
-| `NEWSLETTER_RATE_LIMIT_PER_MINUTE`   | Max sends per rolling minute (`0` = no cap)      | `0`     |
-| `NEWSLETTER_RATE_LIMIT_PER_HOUR`     | Max sends per rolling hour (`0` = no cap)        | `0`     |
-| `NEWSLETTER_RATE_LIMIT_PER_DAY`      | Max sends per rolling day (`0` = no cap)         | `0`     |
+| Variable                           | Description                                 | Default |
+| ---------------------------------- | ------------------------------------------- | ------- |
+| `NEWSLETTER_TRACKING_ENABLED`      | Enable open/click tracking                  | `true`  |
+| `NEWSLETTER_RATE_LIMIT_PER_MINUTE` | Max sends per rolling minute (`0` = no cap) | `0`     |
+| `NEWSLETTER_RATE_LIMIT_PER_HOUR`   | Max sends per rolling hour (`0` = no cap)   | `0`     |
+| `NEWSLETTER_RATE_LIMIT_PER_DAY`    | Max sends per rolling day (`0` = no cap)    | `0`     |
 
 See [Rate limiting](#rate-limiting) for behaviour and tuning.
 
@@ -209,11 +266,11 @@ php artisan queue:work --tries=3 --timeout=90
 
 Configure how many emails the queue may send using rolling windows (stored in the app cache). Set a variable to **`0`** to turn off that cap; the other caps still apply.
 
-| Env variable                         | Window | Typical use |
-| ------------------------------------ | ------ | ----------- |
-| `NEWSLETTER_RATE_LIMIT_PER_MINUTE`   | ~1 min | Burst control; low values cause jobs to `release()` often (short delays). |
-| `NEWSLETTER_RATE_LIMIT_PER_HOUR`     | ~1 h   | Provider hourly quotas. |
-| `NEWSLETTER_RATE_LIMIT_PER_DAY`      | ~24 h  | Daily provider caps. |
+| Env variable                       | Window | Typical use                                                               |
+| ---------------------------------- | ------ | ------------------------------------------------------------------------- |
+| `NEWSLETTER_RATE_LIMIT_PER_MINUTE` | ~1 min | Burst control; low values cause jobs to `release()` often (short delays). |
+| `NEWSLETTER_RATE_LIMIT_PER_HOUR`   | ~1 h   | Provider hourly quotas.                                                   |
+| `NEWSLETTER_RATE_LIMIT_PER_DAY`    | ~24 h  | Daily provider caps.                                                      |
 
 **How sending works:** for each queued send, `SendNewsletterEmail` checks **daily**, then **hourly**, then **per-minute** (`App\Services\EmailRateLimiter`). The send proceeds only if it fits under every enabled limit; otherwise the job is **released** with a delay and no quota is consumed for that attempt.
 
@@ -259,35 +316,35 @@ Authorization: Bearer <your-token>
 
 All endpoints are prefixed with `/api` and require a valid Bearer token with the `api` ability.
 
-| Method   | Endpoint                                     | Description                    |
-| -------- | -------------------------------------------- | ------------------------------ |
-| `GET`    | `/api/user`                                  | Authenticated user info        |
-| `GET`    | `/api/reports/newsletter`                    | Newsletter report (filterable) |
-| `GET`    | `/api/tags`                                  | List all tags                  |
-| `POST`   | `/api/tags`                                  | Create a tag                   |
-| `GET`    | `/api/tags/{tag}`                            | Show a tag                     |
-| `PUT`    | `/api/tags/{tag}`                            | Update a tag                   |
-| `DELETE` | `/api/tags/{tag}`                            | Delete a tag                   |
-| `GET`    | `/api/subscribers`                           | List subscribers               |
-| `POST`   | `/api/subscribers`                           | Create a subscriber            |
-| `GET`    | `/api/subscribers/{subscriber}`              | Show a subscriber              |
-| `PUT`    | `/api/subscribers/{subscriber}`              | Update a subscriber            |
-| `DELETE` | `/api/subscribers/{subscriber}`              | Delete a subscriber            |
-| `GET`    | `/api/templates`                             | List templates                 |
-| `POST`   | `/api/templates`                             | Create a template              |
-| `GET`    | `/api/templates/{template}`                  | Show a template                |
-| `PUT`    | `/api/templates/{template}`                  | Update a template              |
-| `DELETE` | `/api/templates/{template}`                  | Delete a template              |
-| `GET`    | `/api/campaigns`                             | List campaigns                 |
-| `POST`   | `/api/campaigns`                             | Create a campaign              |
-| `GET`    | `/api/campaigns/{campaign}`                  | Show a campaign                |
-| `PUT`    | `/api/campaigns/{campaign}`                  | Update a campaign              |
-| `DELETE` | `/api/campaigns/{campaign}`                  | Delete a campaign              |
-| `GET`    | `/api/campaigns/{campaign}/messages`         | List messages in a campaign    |
-| `POST`   | `/api/campaigns/{campaign}/messages`         | Create a message               |
-| `GET`    | `/api/campaigns/{campaign}/messages/{message}` | Show a message               |
-| `PUT`    | `/api/campaigns/{campaign}/messages/{message}` | Update a message             |
-| `DELETE` | `/api/campaigns/{campaign}/messages/{message}` | Delete a message             |
+| Method   | Endpoint                                       | Description                    |
+| -------- | ---------------------------------------------- | ------------------------------ |
+| `GET`    | `/api/user`                                    | Authenticated user info        |
+| `GET`    | `/api/reports/newsletter`                      | Newsletter report (filterable) |
+| `GET`    | `/api/tags`                                    | List all tags                  |
+| `POST`   | `/api/tags`                                    | Create a tag                   |
+| `GET`    | `/api/tags/{tag}`                              | Show a tag                     |
+| `PUT`    | `/api/tags/{tag}`                              | Update a tag                   |
+| `DELETE` | `/api/tags/{tag}`                              | Delete a tag                   |
+| `GET`    | `/api/subscribers`                             | List subscribers               |
+| `POST`   | `/api/subscribers`                             | Create a subscriber            |
+| `GET`    | `/api/subscribers/{subscriber}`                | Show a subscriber              |
+| `PUT`    | `/api/subscribers/{subscriber}`                | Update a subscriber            |
+| `DELETE` | `/api/subscribers/{subscriber}`                | Delete a subscriber            |
+| `GET`    | `/api/templates`                               | List templates                 |
+| `POST`   | `/api/templates`                               | Create a template              |
+| `GET`    | `/api/templates/{template}`                    | Show a template                |
+| `PUT`    | `/api/templates/{template}`                    | Update a template              |
+| `DELETE` | `/api/templates/{template}`                    | Delete a template              |
+| `GET`    | `/api/campaigns`                               | List campaigns                 |
+| `POST`   | `/api/campaigns`                               | Create a campaign              |
+| `GET`    | `/api/campaigns/{campaign}`                    | Show a campaign                |
+| `PUT`    | `/api/campaigns/{campaign}`                    | Update a campaign              |
+| `DELETE` | `/api/campaigns/{campaign}`                    | Delete a campaign              |
+| `GET`    | `/api/campaigns/{campaign}/messages`           | List messages in a campaign    |
+| `POST`   | `/api/campaigns/{campaign}/messages`           | Create a message               |
+| `GET`    | `/api/campaigns/{campaign}/messages/{message}` | Show a message                 |
+| `PUT`    | `/api/campaigns/{campaign}/messages/{message}` | Update a message               |
+| `DELETE` | `/api/campaigns/{campaign}/messages/{message}` | Delete a message               |
 
 ### OpenAPI Documentation
 
@@ -313,14 +370,14 @@ Authenticated with a Sanctum Bearer token that has the **`mcp`** ability.
 
 ### Available Tools
 
-| Tool                         | Description                                                          |
-| ---------------------------- | -------------------------------------------------------------------- |
-| `list-campaigns`             | Lists campaigns owned by the authenticated user                      |
-| `newsletter-report`          | Delivery report with summary, per-message stats, and daily timeseries |
-| `send-history-analysis`      | Highlights and trends from recent send history                       |
-| `subscriber-insights`        | Audience breakdown by tags and statuses                              |
-| `generate-email-template-html` | Generates responsive HTML email template from a description        |
-| `create-newsletter-message`  | Creates a draft or ready message inside a campaign                   |
+| Tool                           | Description                                                           |
+| ------------------------------ | --------------------------------------------------------------------- |
+| `list-campaigns`               | Lists campaigns owned by the authenticated user                       |
+| `newsletter-report`            | Delivery report with summary, per-message stats, and daily timeseries |
+| `send-history-analysis`        | Highlights and trends from recent send history                        |
+| `subscriber-insights`          | Audience breakdown by tags and statuses                               |
+| `generate-email-template-html` | Generates responsive HTML email template from a description           |
+| `create-newsletter-message`    | Creates a draft or ready message inside a campaign                    |
 
 ### Prompt
 

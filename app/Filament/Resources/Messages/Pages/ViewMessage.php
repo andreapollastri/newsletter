@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\Messages\Pages;
 
-use App\Enums\MessageStatus;
 use App\Filament\Resources\Messages\MessageResource;
 use Filament\Actions\EditAction;
 use Filament\Resources\Pages\ViewRecord;
@@ -15,7 +14,7 @@ class ViewMessage extends ViewRecord
     {
         return [
             EditAction::make()
-                ->visible(fn () => $this->record->status !== MessageStatus::Sent),
+                ->visible(fn (): bool => MessageResource::canEdit($this->record)),
         ];
     }
 }

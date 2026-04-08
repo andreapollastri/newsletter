@@ -94,6 +94,8 @@ class NewsletterReportController extends Controller
     )]
     public function __invoke(NewsletterReportRequest $request): JsonResponse
     {
+        abort_unless($request->user()?->canAccessManagementFeatures(), 403);
+
         $this->authorize('viewAny', Campaign::class);
 
         $campaignId = $request->validated('campaign_id');

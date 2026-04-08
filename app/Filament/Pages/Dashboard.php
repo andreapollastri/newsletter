@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Resources\Campaigns\CampaignResource;
 use App\Models\Campaign;
 use Filament\Forms\Components\Select;
 use Filament\Pages\Dashboard as BaseDashboard;
@@ -12,6 +13,18 @@ use Filament\Schemas\Schema;
 class Dashboard extends BaseDashboard
 {
     use HasFiltersForm;
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->user()?->canAccessManagementFeatures() ?? false;
+    }
+
+    public function mount(): void
+    {
+        if (auth()->user()?->isEditor()) {
+            $this->redirect(CampaignResource::getUrl());
+        }
+    }
 
     public function filtersForm(Schema $schema): Schema
     {

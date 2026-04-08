@@ -10,6 +10,8 @@ use Filament\Actions\ViewAction;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 
 class MessagesRelationManager extends RelationManager
 {
@@ -18,6 +20,13 @@ class MessagesRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(function (Builder $query): Builder {
+                if (Auth::user()?->isEditor()) {
+                    $query->whereNotIn('status', [MessageStatus::Sent, MessageStatus::Sending]);
+                }
+
+                return $query;
+            })
             ->recordTitleAttribute('subject')
             ->columns([
                 TextColumn::make('subject')
@@ -45,12 +54,13 @@ class MessagesRelationManager extends RelationManager
             ])
             ->recordActions([
                 ViewAction::make()
-                    ->url(fn ($record) => MessageResource::getUrl('view', ['record' => $record])),
+                    ->url(fn ($record) => MessageResource::getUrl('view', ['record' => $record]))
+                    ->visible(fn ($record): bool => MessageResource::canView($record)),
                 EditAction::make()
                     ->url(fn ($record) => MessageResource::getUrl('edit', ['record' => $record]))
-                    ->visible(fn ($record) => $record->status === MessageStatus::Draft || $record->status === MessageStatus::Ready),
+                    ->visible(fn ($record): bool => MessageResource::canEdit($record)),
                 DeleteAction::make()
-                    ->visible(fn ($record) => $record->status === MessageStatus::Draft || $record->status === MessageStatus::Ready),
+                    ->visible(fn ($record): bool => MessageResource::canDelete($record)),
             ])
             ->toolbarActions([
                 //

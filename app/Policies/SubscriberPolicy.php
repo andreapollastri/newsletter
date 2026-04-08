@@ -9,36 +9,36 @@ class SubscriberPolicy
 {
     public function viewAny(User $user): bool
     {
-        return true;
+        return $user->canAccessManagementFeatures();
     }
 
     public function view(User $user, Subscriber $subscriber): bool
     {
-        return true;
+        return $user->canAccessManagementFeatures();
     }
 
     public function create(User $user): bool
     {
-        return true;
+        return $user->canAccessManagementFeatures();
     }
 
     public function update(User $user, Subscriber $subscriber): bool
     {
-        return true;
+        return $user->canAccessManagementFeatures();
     }
 
     public function delete(User $user, Subscriber $subscriber): bool
     {
-        return true;
+        return $user->canAccessManagementFeatures();
     }
 
     public function restore(User $user, Subscriber $subscriber): bool
     {
-        return true;
+        return $user->canAccessManagementFeatures();
     }
 
     public function forceDelete(User $user, Subscriber $subscriber): bool
     {
-        return true;
+        return $user->canAccessManagementFeatures();
     }
 }

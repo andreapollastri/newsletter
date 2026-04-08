@@ -109,6 +109,7 @@ class MessageForm
                             ->default(MessageStatus::Draft)
                             ->required()
                             ->live()
+                            ->visible(fn (): bool => ! auth()->user()?->isEditor())
                             ->disabled(fn (?Message $record) => $record?->status === MessageStatus::Sent || $record?->status === MessageStatus::Sending)
                             ->helperText(fn (?Message $record) => match ($record?->status) {
                                 MessageStatus::Sent => __('Message already sent, cannot modify status'),
@@ -121,6 +122,7 @@ class MessageForm
                             ->minDate(now())
                             ->seconds(false)
                             ->native(false)
+                            ->visible(fn (): bool => ! auth()->user()?->isEditor())
                             ->helperText(__('Optional: schedule automatic sending. Set status to "Ready" to activate scheduled sending.'))
                             ->disabled(fn (?Message $record) => $record?->status === MessageStatus::Sent || $record?->status === MessageStatus::Sending),
                     ]),

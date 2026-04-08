@@ -14,31 +14,31 @@ class CampaignPolicy
 
     public function view(User $user, Campaign $campaign): bool
     {
-        return $campaign->user_id === $user->id;
+        return true;
     }
 
     public function create(User $user): bool
     {
-        return true;
+        return $user->canAccessManagementFeatures();
     }
 
     public function update(User $user, Campaign $campaign): bool
     {
-        return $campaign->user_id === $user->id;
+        return $user->canAccessManagementFeatures();
     }
 
     public function delete(User $user, Campaign $campaign): bool
     {
-        return $campaign->user_id === $user->id;
+        return $user->canAccessManagementFeatures();
     }
 
     public function restore(User $user, Campaign $campaign): bool
     {
-        return $campaign->user_id === $user->id;
+        return $user->canAccessManagementFeatures();
     }
 
     public function forceDelete(User $user, Campaign $campaign): bool
     {
-        return $campaign->user_id === $user->id;
+        return $user->canAccessManagementFeatures();
     }
 }
