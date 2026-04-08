@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - When a message targets recipients **only via testing tags** (at least one tag, all marked as testing), its sends are **excluded from dashboard statistics** (emails sent, opens, clicks, bounces, send chart).
 - After a testing-audience send **completes**, per-recipient `MessageSend` rows (and related bounces) are **removed**, so they no longer appear in message send history or in a subscriber’s “messages received” list.
 - **Validation** on messages: testing tags and normal tags cannot be mixed on the same message.
+- **User language** (`locale` on users): Italian, English, German, French, Spanish, or Portuguese selectable in the Filament **profile**; panel UI and notifications use the chosen locale (`HasLocalePreference` on `User`). JSON translations in `lang/de.json`, `lang/fr.json`, `lang/es.json`, and `lang/pt.json`.
+- **Locale before login**: the Filament login (and guest panel) uses `Accept-Language` when it matches a supported code (primary subtag, e.g. `pt-BR` → `pt`); otherwise **English**. New users get `locale` from the browser on create when not set, with **English** as fallback (`UserLocale::negotiateFromRequest`).
 
 ---
 

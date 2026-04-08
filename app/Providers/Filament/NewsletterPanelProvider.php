@@ -2,9 +2,11 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Pages\Auth\EditProfile;
 use App\Filament\Pages\Dashboard;
 use App\Filament\Resources\Tags\TagResource;
 use App\Filament\Resources\Templates\TemplateResource;
+use App\Http\Middleware\SetFilamentLocale;
 use Filament\Actions\Action;
 use Filament\Auth\MultiFactor\App\AppAuthentication;
 use Filament\Auth\MultiFactor\Email\EmailAuthentication;
@@ -34,7 +36,7 @@ class NewsletterPanelProvider extends PanelProvider
             ->id('newsletter')
             ->path('/')
             ->login()
-            ->profile()
+            ->profile(EditProfile::class)
             ->topNavigation()
             ->databaseNotifications()
             ->multiFactorAuthentication([
@@ -66,6 +68,9 @@ class NewsletterPanelProvider extends PanelProvider
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
             ])
+            ->middleware([
+                SetFilamentLocale::class,
+            ], isPersistent: true)
             ->authMiddleware([
                 Authenticate::class,
             ])
