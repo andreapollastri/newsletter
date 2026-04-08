@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.2] - 2026-04-08
+
+### Fixed
+
+- Env issue while Composer installing
+
+## Deleted
+
+- MCP configurations
+
+---
+
 ## [1.0.1] - 2026-04-08
 
 ### Fixed
