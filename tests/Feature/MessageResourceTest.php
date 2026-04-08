@@ -108,7 +108,8 @@ class MessageResourceTest extends TestCase
 
     public function test_can_render_edit_page(): void
     {
-        $message = Message::factory()->create();
+        $campaign = Campaign::factory()->create(['user_id' => $this->user->id]);
+        $message = Message::factory()->for($campaign)->create();
 
         Livewire::test(EditMessage::class, ['record' => $message->id])
             ->assertSuccessful();
@@ -116,7 +117,8 @@ class MessageResourceTest extends TestCase
 
     public function test_can_edit_message(): void
     {
-        $message = Message::factory()->withTemplate()->create();
+        $campaign = Campaign::factory()->create(['user_id' => $this->user->id]);
+        $message = Message::factory()->for($campaign)->withTemplate()->create();
 
         Livewire::test(EditMessage::class, ['record' => $message->id])
             ->fillForm([
@@ -226,7 +228,8 @@ class MessageResourceTest extends TestCase
 
     public function test_can_delete_draft_message(): void
     {
-        $message = Message::factory()->create(['status' => MessageStatus::Draft]);
+        $campaign = Campaign::factory()->create(['user_id' => $this->user->id]);
+        $message = Message::factory()->for($campaign)->create(['status' => MessageStatus::Draft]);
 
         Livewire::test(ListMessages::class)
             ->callTableAction('delete', $message);
@@ -238,7 +241,8 @@ class MessageResourceTest extends TestCase
 
     public function test_can_delete_ready_message(): void
     {
-        $message = Message::factory()->create(['status' => MessageStatus::Ready]);
+        $campaign = Campaign::factory()->create(['user_id' => $this->user->id]);
+        $message = Message::factory()->for($campaign)->create(['status' => MessageStatus::Ready]);
 
         Livewire::test(ListMessages::class)
             ->callTableAction('delete', $message);
@@ -250,7 +254,8 @@ class MessageResourceTest extends TestCase
 
     public function test_cannot_see_delete_action_for_sending_message(): void
     {
-        $message = Message::factory()->create(['status' => MessageStatus::Sending]);
+        $campaign = Campaign::factory()->create(['user_id' => $this->user->id]);
+        $message = Message::factory()->for($campaign)->create(['status' => MessageStatus::Sending]);
 
         Livewire::test(ListMessages::class)
             ->assertTableActionHidden('delete', $message);
@@ -258,7 +263,8 @@ class MessageResourceTest extends TestCase
 
     public function test_cannot_see_delete_action_for_sent_message(): void
     {
-        $message = Message::factory()->sent()->create();
+        $campaign = Campaign::factory()->create(['user_id' => $this->user->id]);
+        $message = Message::factory()->for($campaign)->sent()->create();
 
         Livewire::test(ListMessages::class)
             ->assertTableActionHidden('delete', $message);
@@ -266,7 +272,8 @@ class MessageResourceTest extends TestCase
 
     public function test_deleting_message_cascades_to_message_sends(): void
     {
-        $message = Message::factory()->create(['status' => MessageStatus::Draft]);
+        $campaign = Campaign::factory()->create(['user_id' => $this->user->id]);
+        $message = Message::factory()->for($campaign)->create(['status' => MessageStatus::Draft]);
         $messageSend1 = MessageSend::factory()->create(['message_id' => $message->id]);
         $messageSend2 = MessageSend::factory()->create(['message_id' => $message->id]);
 

@@ -1,6 +1,6 @@
 # Newsletter System
 
-A complete newsletter management system for Laravel, built with Filament. Manage subscribers, campaigns, HTML templates, scheduled sending, and full tracking—all from a modern admin panel.
+A complete newsletter management system for Laravel, built with Filament. Manage subscribers, campaigns, HTML templates, scheduled sending, and full tracking — all from a modern admin panel. Includes a REST API, OpenAPI documentation, and an MCP server for AI integrations.
 
 ---
 
@@ -14,6 +14,10 @@ A complete newsletter management system for Laravel, built with Filament. Manage
 - [Sending Newsletters](#sending-newsletters)
 - [Monitoring & Analytics](#monitoring--analytics)
 - [Rate Limiting](#rate-limiting)
+- [REST API](#rest-api)
+- [MCP Server (AI Integrations)](#mcp-server-ai-integrations)
+- [Testing Tags](#testing-tags)
+- [Multilingual Support](#multilingual-support)
 - [Public Routes](#public-routes)
 - [Scheduled Tasks](#scheduled-tasks)
 - [Artisan Commands](#artisan-commands)
@@ -23,24 +27,29 @@ A complete newsletter management system for Laravel, built with Filament. Manage
 
 ## Features
 
-| Feature                   | Description                                           |
-| ------------------------- | ----------------------------------------------------- |
-| **Subscriber Management** | Import/export CSV, tagging, status management         |
-| **Campaigns & Messages**  | Hierarchical organization of campaigns and messages   |
-| **HTML Templates**        | Customizable templates with placeholder support       |
-| **Scheduled Sending**     | Automatic delivery via cron                           |
-| **Full Tracking**         | Opens, clicks, and unsubscribe tracking               |
-| **Targeting**             | Filter recipients by tags and status                  |
-| **Dashboard**             | Statistics and monitoring widgets                     |
-| **Rate Limiting**         | Configurable per-minute, per-hour, and per-day limits |
-| **Bounce Detection**      | IMAP integration for bounce processing                |
+| Feature                   | Description                                                       |
+| ------------------------- | ----------------------------------------------------------------- |
+| **Subscriber Management** | Import/export CSV, tagging, status management                     |
+| **Campaigns & Messages**  | Hierarchical organization of campaigns and messages               |
+| **HTML Templates**        | Customizable templates with placeholder support                   |
+| **Scheduled Sending**     | Automatic delivery via cron                                       |
+| **Full Tracking**         | Opens, clicks, and unsubscribe tracking                           |
+| **Targeting**             | Filter recipients by tags and status                              |
+| **Dashboard**             | Statistics and monitoring widgets                                 |
+| **Rate Limiting**         | Configurable per-minute, per-hour, and per-day limits             |
+| **Bounce Detection**      | IMAP integration for bounce processing                            |
+| **REST API**              | Full CRUD API with Sanctum authentication and OpenAPI docs        |
+| **MCP Server**            | AI integration endpoint for Cursor, Claude Code, and other clients |
+| **Testing Tags**          | Mark tags as testing to exclude sends from production statistics   |
+| **Multilingual**          | Admin panel in Italian, English, German, French, Spanish, Portuguese |
+| **UTM Tracking**          | Automatic UTM parameters on outbound newsletter links             |
 
 ---
 
 ## Requirements
 
 - PHP 8.2+
-- Laravel 12
+- Laravel 13
 - Filament 5
 - Database (SQLite, MySQL, or PostgreSQL)
 - Queue driver (database, Redis, etc.)
@@ -81,6 +90,12 @@ npm run build
 
 ```bash
 php artisan make:filament-user
+```
+
+1. **Generate API documentation** (optional):
+
+```bash
+php artisan l5-swagger:generate
 ```
 
 ---
@@ -125,6 +140,16 @@ NEWSLETTER_IMAP_ENCRYPTION=ssl
 NEWSLETTER_IMAP_FOLDER=INBOX
 ```
 
+### API Documentation (Swagger)
+
+To auto-generate the OpenAPI spec on every request in local development:
+
+```env
+L5_SWAGGER_GENERATE_ALWAYS=true
+```
+
+For production, run `php artisan l5-swagger:generate` during deploy.
+
 ---
 
 ## Quick Start
@@ -168,7 +193,7 @@ php artisan queue:work --tries=3 --timeout=90
 
 1. Create or edit a message
 2. Set the **Scheduled Date** field
-3. The system sends automatically at the scheduled time (requires cron—see [Scheduled Tasks](#scheduled-tasks))
+3. The system sends automatically at the scheduled time (requires cron — see [Scheduled Tasks](#scheduled-tasks))
 
 ---
 
@@ -216,6 +241,121 @@ php artisan newsletter:rate-limits
 
 ---
 
+## REST API
+
+The application exposes a full REST API authenticated via **Laravel Sanctum** personal access tokens.
+
+### Authentication
+
+1. Go to the admin panel **user menu > API tokens** (or navigate to `/api-tokens`)
+2. Create a token with the **API** ability enabled
+3. Use the token in the `Authorization` header:
+
+```
+Authorization: Bearer <your-token>
+```
+
+### Endpoints
+
+All endpoints are prefixed with `/api` and require a valid Bearer token with the `api` ability.
+
+| Method   | Endpoint                                     | Description                    |
+| -------- | -------------------------------------------- | ------------------------------ |
+| `GET`    | `/api/user`                                  | Authenticated user info        |
+| `GET`    | `/api/reports/newsletter`                    | Newsletter report (filterable) |
+| `GET`    | `/api/tags`                                  | List all tags                  |
+| `POST`   | `/api/tags`                                  | Create a tag                   |
+| `GET`    | `/api/tags/{tag}`                            | Show a tag                     |
+| `PUT`    | `/api/tags/{tag}`                            | Update a tag                   |
+| `DELETE` | `/api/tags/{tag}`                            | Delete a tag                   |
+| `GET`    | `/api/subscribers`                           | List subscribers               |
+| `POST`   | `/api/subscribers`                           | Create a subscriber            |
+| `GET`    | `/api/subscribers/{subscriber}`              | Show a subscriber              |
+| `PUT`    | `/api/subscribers/{subscriber}`              | Update a subscriber            |
+| `DELETE` | `/api/subscribers/{subscriber}`              | Delete a subscriber            |
+| `GET`    | `/api/templates`                             | List templates                 |
+| `POST`   | `/api/templates`                             | Create a template              |
+| `GET`    | `/api/templates/{template}`                  | Show a template                |
+| `PUT`    | `/api/templates/{template}`                  | Update a template              |
+| `DELETE` | `/api/templates/{template}`                  | Delete a template              |
+| `GET`    | `/api/campaigns`                             | List campaigns                 |
+| `POST`   | `/api/campaigns`                             | Create a campaign              |
+| `GET`    | `/api/campaigns/{campaign}`                  | Show a campaign                |
+| `PUT`    | `/api/campaigns/{campaign}`                  | Update a campaign              |
+| `DELETE` | `/api/campaigns/{campaign}`                  | Delete a campaign              |
+| `GET`    | `/api/campaigns/{campaign}/messages`         | List messages in a campaign    |
+| `POST`   | `/api/campaigns/{campaign}/messages`         | Create a message               |
+| `GET`    | `/api/campaigns/{campaign}/messages/{message}` | Show a message               |
+| `PUT`    | `/api/campaigns/{campaign}/messages/{message}` | Update a message             |
+| `DELETE` | `/api/campaigns/{campaign}/messages/{message}` | Delete a message             |
+
+### OpenAPI Documentation
+
+Interactive Swagger UI is available at `/api/documentation`. Generate or update the spec with:
+
+```bash
+php artisan l5-swagger:generate
+```
+
+---
+
+## MCP Server (AI Integrations)
+
+The application includes a **Model Context Protocol (MCP)** server that allows AI clients (Cursor, Claude Code, Windsurf, etc.) to interact with your newsletter data.
+
+### Endpoint
+
+```
+/mcp/newsletter
+```
+
+Authenticated with a Sanctum Bearer token that has the **`mcp`** ability.
+
+### Available Tools
+
+| Tool                         | Description                                                          |
+| ---------------------------- | -------------------------------------------------------------------- |
+| `list-campaigns`             | Lists campaigns owned by the authenticated user                      |
+| `newsletter-report`          | Delivery report with summary, per-message stats, and daily timeseries |
+| `send-history-analysis`      | Highlights and trends from recent send history                       |
+| `subscriber-insights`        | Audience breakdown by tags and statuses                              |
+| `generate-email-template-html` | Generates responsive HTML email template from a description        |
+| `create-newsletter-message`  | Creates a draft or ready message inside a campaign                   |
+
+### Prompt
+
+The server ships with a `newsletter-assistant` prompt — a reusable skill template that guides AI assistants through campaign planning, report interpretation, content drafting, and message creation.
+
+### Setup in Your AI Client
+
+1. Create a token in the admin panel with the **MCP** ability
+2. Configure your AI client to connect to the MCP endpoint with the token as Bearer auth
+3. Debug locally with: `php artisan mcp:inspector mcp/newsletter`
+
+---
+
+## Testing Tags
+
+Tags can be marked as **testing** (`is_testing` flag) in the Filament admin panel. When a message targets recipients **only** through testing tags:
+
+- Sends are **excluded from dashboard statistics** (emails sent, opens, clicks, bounces, charts)
+- After the send completes, per-recipient send rows and related bounces are **removed** from the database
+- Testing tags and normal tags **cannot be mixed** on the same message
+
+This allows safe end-to-end testing of the sending pipeline without polluting production metrics.
+
+---
+
+## Multilingual Support
+
+The admin panel supports six languages: **Italian**, **English**, **German**, **French**, **Spanish**, and **Portuguese**.
+
+- Logged-in users can choose their language from the **Profile** page
+- Before login, the panel detects the browser `Accept-Language` header and uses the closest supported language (defaults to English)
+- New users automatically inherit the browser language on account creation
+
+---
+
 ## Public Routes
 
 The following routes are available for public use:
@@ -249,13 +389,15 @@ Add the Laravel scheduler to your crontab:
 
 ## Artisan Commands
 
-| Command                      | Description                                                        |
-| ---------------------------- | ------------------------------------------------------------------ |
-| `newsletter:seed-data`       | Populate database with sample subscribers, campaigns, and messages |
-| `newsletter:send-scheduled`  | Manually trigger scheduled message sending                         |
-| `newsletter:process-pending` | Process pending emails in the queue                                |
-| `newsletter:process-bounces` | Process bounced emails from IMAP                                   |
-| `newsletter:rate-limits`     | Display current rate limit status                                  |
+| Command                        | Description                                                        |
+| ------------------------------ | ------------------------------------------------------------------ |
+| `newsletter:seed-data`         | Populate database with sample subscribers, campaigns, and messages |
+| `newsletter:send-scheduled`    | Manually trigger scheduled message sending                         |
+| `newsletter:process-pending`   | Process pending emails in the queue                                |
+| `newsletter:process-bounces`   | Process bounced emails from IMAP                                   |
+| `newsletter:rate-limits`       | Display current rate limit status                                  |
+| `l5-swagger:generate`          | Generate or update the OpenAPI specification                       |
+| `mcp:inspector mcp/newsletter` | Debug the MCP server locally                                       |
 
 ---
 
@@ -300,6 +442,12 @@ php artisan newsletter:rate-limits
 ### Frontend changes not visible
 
 Run `npm run build` or `npm run dev` to compile assets.
+
+### API issues
+
+1. Verify the token is valid: check the **API tokens** page in the admin panel
+2. Ensure the token has the correct ability (`api` for REST endpoints, `mcp` for the MCP server)
+3. Check the OpenAPI docs at `/api/documentation` for request/response format
 
 ---
 

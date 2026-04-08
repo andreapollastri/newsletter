@@ -7,20 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [1.0.4] - 2026-04-08
-
-### Changed
-
-- **Newsletter rate limits:** `NEWSLETTER_RATE_LIMIT_PER_MINUTE` is read from the environment again (with `NEWSLETTER_RATE_LIMIT_PER_HOUR` / `_PER_DAY`). Config and README describe rolling windows, queue `release()` behaviour, estimated send time, and worker/`retry_after` tuning.
+## [2.0.0] - 2026-04-08
 
 ### Added
 
+- **REST API** powered by **Laravel Sanctum**: full CRUD endpoints for subscribers, tags, templates, campaigns, and campaign messages (`/api/*`), protected by personal access tokens with fine-grained abilities.
+- **API token management** page in the Filament admin panel — create, list, and revoke Sanctum tokens with selectable abilities (`api`, `mcp`).
+- **Newsletter report API** endpoint (`GET /api/reports/newsletter`) with per-campaign filtering, date range, per-message breakdown, and daily timeseries.
+- **OpenAPI / Swagger documentation** via `l5-swagger` — auto-generated spec available at `/api/documentation`.
+- **MCP server** (`/mcp/newsletter`) for AI integrations (Cursor, Claude Code, etc.) using `laravel/mcp`, authenticated with Sanctum Bearer tokens (`mcp` ability). Includes six tools: list campaigns, newsletter report, send history analysis, subscriber insights, generate email template HTML, and create newsletter message. Ships with a reusable `newsletter-assistant` prompt.
+- **Policies** for all API-exposed models (Campaign, Message, Subscriber, Tag, Template) enforcing ownership-based authorization.
+- **Eloquent API Resources** for consistent JSON serialization (CampaignResource, MessageResource, SubscriberResource, TagResource, TemplateResource).
+- **Form request classes** for API validation (store/update for each resource, plus the newsletter report request).
+- **NewsletterReportingService** — dedicated service class for building report payloads (summary, per-message stats, timeseries), shared between the API and MCP tools.
 - **Testing tags** (`is_testing` on tags): optional flag in Filament when creating or editing a tag; indicator column in the tags table.
-- When a message targets recipients **only via testing tags** (at least one tag, all marked as testing), its sends are **excluded from dashboard statistics** (emails sent, opens, clicks, bounces, send chart).
-- After a testing-audience send **completes**, per-recipient `MessageSend` rows (and related bounces) are **removed**, so they no longer appear in message send history or in a subscriber’s “messages received” list.
+- When a message targets recipients **only via testing tags** (all tags marked as testing), its sends are **excluded from dashboard statistics** (emails sent, opens, clicks, bounces, send chart).
+- After a testing-audience send **completes**, per-recipient `MessageSend` rows (and related bounces) are **removed**, so they no longer appear in send history.
 - **Validation** on messages: testing tags and normal tags cannot be mixed on the same message.
-- **User language** (`locale` on users): Italian, English, German, French, Spanish, or Portuguese selectable in the Filament **profile**; panel UI and notifications use the chosen locale (`HasLocalePreference` on `User`). JSON translations in `lang/de.json`, `lang/fr.json`, `lang/es.json`, and `lang/pt.json`.
-- **Locale before login**: the Filament login (and guest panel) uses `Accept-Language` when it matches a supported code (primary subtag, e.g. `pt-BR` → `pt`); otherwise **English**. New users get `locale` from the browser on create when not set, with **English** as fallback (`UserLocale::negotiateFromRequest`).
+- **User language** (`locale` on users): Italian, English, German, French, Spanish, or Portuguese selectable in the Filament **profile**; panel UI and notifications use the chosen locale.
+- **Locale before login**: the Filament login page uses the browser `Accept-Language` header when it matches a supported code; otherwise defaults to English. New users inherit locale from the browser on creation.
+- Full **translations** for all six supported languages (`de`, `en`, `es`, `fr`, `it`, `pt`) — including all new API token and MCP labels.
+
+### Changed
+
+- **Newsletter rate limits:** `NEWSLETTER_RATE_LIMIT_PER_MINUTE` is read from the environment again (alongside `NEWSLETTER_RATE_LIMIT_PER_HOUR` / `_PER_DAY`). Config and README describe rolling windows, queue `release()` behaviour, estimated send time, and worker/`retry_after` tuning.
+- `Controller` base class now uses `AuthorizesRequests` trait for policy-based authorization in API controllers.
+- `User` model updated with `HasApiTokens` trait (Sanctum) and locale support.
+- Application routing now includes `api.php` and `ai.php` route files; Sanctum `abilities` middleware registered.
+
+### New Dependencies
+
+- `laravel/sanctum` ^4.0
+- `laravel/mcp` ^0.6.5
+- `darkaonline/l5-swagger` ^11.0
 
 ---
 

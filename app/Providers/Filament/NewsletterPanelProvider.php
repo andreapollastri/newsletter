@@ -4,6 +4,7 @@ namespace App\Providers\Filament;
 
 use App\Filament\Pages\Auth\EditProfile;
 use App\Filament\Pages\Dashboard;
+use App\Filament\Pages\ManageApiTokens;
 use App\Filament\Resources\Tags\TagResource;
 use App\Filament\Resources\Templates\TemplateResource;
 use App\Http\Middleware\SetFilamentLocale;
@@ -18,6 +19,7 @@ use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
 use Filament\Support\Icons\Heroicon;
+use Filament\View\PanelsRenderHook;
 use Filament\Widgets\AccountWidget;
 use Filament\Widgets\FilamentInfoWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
@@ -74,6 +76,10 @@ class NewsletterPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
             ])
+            ->renderHook(
+                PanelsRenderHook::CONTENT_END,
+                fn (): string => view('filament.components.credit-footer')->render(),
+            )
             ->userMenuItems([
                 Action::make('templates')
                     ->label(__('Templates'))
@@ -83,6 +89,10 @@ class NewsletterPanelProvider extends PanelProvider
                     ->label(__('Tags'))
                     ->url(fn (): string => TagResource::getUrl('index'))
                     ->icon(Heroicon::OutlinedTag),
+                Action::make('apiTokens')
+                    ->label(__('API tokens'))
+                    ->url(fn (): string => ManageApiTokens::getUrl())
+                    ->icon(Heroicon::OutlinedKey),
             ]);
     }
 }
