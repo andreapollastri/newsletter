@@ -5,11 +5,13 @@
         "copilot"
     ],
     "guidelines": true,
-    "herd_mcp": true,
     "mcp": true,
+    "nightwatch_mcp": false,
     "packages": [
-        "filament/filament",
-        "filament/blueprint"
+        "filament/filament"
     ],
-    "sail": false
+    "sail": false,
+    "skills": [
+        "laravel-best-practices"
+    ]
 }
