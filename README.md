@@ -410,7 +410,7 @@ Point the URL at your app’s origin plus `/mcp/newsletter`, and send the Sanctu
 
 Replace `your-domain.example` with your deployment host (for local development, something like `http://127.0.0.1:8000/mcp/newsletter`). Replace `YOUR_SANCTUM_TOKEN` with the plaintext token string from the admin panel (treat it like a password).
 
-### Example requests (English)
+### Example requests
 
 You can phrase tasks in natural English; the assistant maps them to MCP tools. Examples:
 
