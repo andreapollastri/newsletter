@@ -7,9 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [1.1.0] - 2026-03-14
+## [1.0.1] - 2026-04-08
 
-Wip...
+### Fixed
+
+- Issue related to Composer dependecies
 
 ---
 
