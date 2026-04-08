@@ -66,6 +66,15 @@ class CampaignResource extends Resource
         ];
     }
 
+    /**
+     * @return Builder<Campaign>
+     */
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->withCount(['messages as messages_count' => fn (Builder $q) => $q->excludeSentTestingOnly()]);
+    }
+
     public static function getPages(): array
     {
         return [

@@ -128,6 +128,22 @@ class Message extends Model
     }
 
     /**
+     * Hide sent messages whose audience consists entirely of testing tags.
+     * Non-sent testing messages remain visible for management.
+     *
+     * @param  Builder<Message>  $query
+     * @return Builder<Message>
+     */
+    public function scopeExcludeSentTestingOnly(Builder $query): Builder
+    {
+        return $query->where(function (Builder $q): void {
+            $q->where('status', '!=', MessageStatus::Sent)
+                ->orWhereDoesntHave('tags')
+                ->orWhereHas('tags', fn (Builder $tq) => $tq->where('is_testing', false));
+        });
+    }
+
+    /**
      * After a testing-audience send completes, remove per-recipient rows so history and subscriber timelines stay clean.
      */
     public function purgeSendsForTestingAudience(): void

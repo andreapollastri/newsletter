@@ -12,7 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - **Messages list** — sent messages whose audience consists entirely of testing tags are now hidden from the table. Non-sent testing messages (draft, ready, sending) remain visible for management.
+- **Campaign detail** — messages relation table inside a campaign now also hides sent testing-only messages.
+- **Campaign list** — messages count per campaign excludes sent testing-only messages.
 - **Audience column** — recipient groups now render as native Filament badges instead of custom HTML spans; "All subscribers" shown as a warning badge, tag names as info badges.
+- **`Message::scopeExcludeSentTestingOnly()`** — new reusable Eloquent scope centralising the filtering logic.
 
 ---
 

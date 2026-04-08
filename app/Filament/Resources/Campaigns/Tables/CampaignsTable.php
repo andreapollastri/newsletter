@@ -28,7 +28,6 @@ class CampaignsTable
                     ->toggleable(),
 
                 TextColumn::make('messages_count')
-                    ->counts('messages')
                     ->label(__('Messages')),
 
                 TextColumn::make('created_at')

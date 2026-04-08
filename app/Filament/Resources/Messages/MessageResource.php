@@ -93,7 +93,7 @@ class MessageResource extends Resource
             $query->whereNotIn('status', [MessageStatus::Sent, MessageStatus::Sending]);
         }
 
-        static::excludeSentTestingOnly($query);
+        $query->excludeSentTestingOnly();
 
         return $query;
     }
@@ -111,23 +111,9 @@ class MessageResource extends Resource
             $query->whereNotIn('status', [MessageStatus::Sent, MessageStatus::Sending]);
         }
 
-        static::excludeSentTestingOnly($query);
+        $query->excludeSentTestingOnly();
 
         return $query;
-    }
-
-    /**
-     * Exclude sent messages whose audience consists entirely of testing tags.
-     *
-     * @param  Builder<Message>  $query
-     */
-    protected static function excludeSentTestingOnly(Builder $query): void
-    {
-        $query->where(function (Builder $q): void {
-            $q->where('status', '!=', MessageStatus::Sent)
-                ->orWhereDoesntHave('tags')
-                ->orWhereHas('tags', fn (Builder $tq) => $tq->where('is_testing', false));
-        });
     }
 
     public static function getRelations(): array

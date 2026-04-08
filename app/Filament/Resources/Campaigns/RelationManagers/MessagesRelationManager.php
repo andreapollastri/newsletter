@@ -25,6 +25,8 @@ class MessagesRelationManager extends RelationManager
                     $query->whereNotIn('status', [MessageStatus::Sent, MessageStatus::Sending]);
                 }
 
+                $query->excludeSentTestingOnly();
+
                 return $query;
             })
             ->recordTitleAttribute('subject')
