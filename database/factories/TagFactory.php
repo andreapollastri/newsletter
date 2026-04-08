@@ -2,10 +2,11 @@
 
 namespace Database\Factories;
 
+use App\Models\Tag;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Tag>
+ * @extends Factory<Tag>
  */
 class TagFactory extends Factory
 {
@@ -18,6 +19,17 @@ class TagFactory extends Factory
     {
         return [
             'name' => fake()->unique()->word(),
+            'is_testing' => false,
         ];
+    }
+
+    /**
+     * Mark the tag as a testing tag (excluded from statistics; sends purged after completion).
+     */
+    public function testing(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'is_testing' => true,
+        ]);
     }
 }

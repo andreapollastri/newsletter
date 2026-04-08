@@ -4,6 +4,8 @@ namespace App\Filament\Resources\Messages\Schemas;
 
 use App\Enums\MessageStatus;
 use App\Models\Message;
+use App\Models\Tag;
+use Closure;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
@@ -80,7 +82,23 @@ class MessageForm
                             ->searchable()
                             ->preload()
                             ->columnSpanFull()
-                            ->helperText(__('Select recipient tags. If empty, send to all confirmed.')),
+                            ->helperText(__('Select recipient tags. If empty, send to all confirmed. Messages that use only testing tags do not affect dashboard statistics and send rows are removed from history after the send completes.'))
+                            ->rules([
+                                fn (): Closure => function (string $attribute, mixed $value, Closure $fail): void {
+                                    if (! is_array($value) || $value === []) {
+                                        return;
+                                    }
+                                    $tags = Tag::query()->whereIn('id', $value)->get();
+                                    if ($tags->isEmpty()) {
+                                        return;
+                                    }
+                                    $hasTesting = $tags->contains(fn (Tag $tag): bool => $tag->is_testing);
+                                    $hasNonTesting = $tags->contains(fn (Tag $tag): bool => ! $tag->is_testing);
+                                    if ($hasTesting && $hasNonTesting) {
+                                        $fail(__('You cannot mix testing tags with normal tags on the same message.'));
+                                    }
+                                },
+                            ]),
 
                         Select::make('status')
                             ->label(__('Status'))

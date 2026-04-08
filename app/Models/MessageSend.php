@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Database\Factories\MessageSendFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -11,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class MessageSend extends Model
 {
-    /** @use HasFactory<\Database\Factories\MessageSendFactory> */
+    /** @use HasFactory<MessageSendFactory> */
     use HasFactory;
 
     use HasUuids;
@@ -77,5 +79,16 @@ class MessageSend extends Model
     public function bounce(): HasOne
     {
         return $this->hasOne(Bounce::class);
+    }
+
+    /**
+     * Sends that count toward newsletter statistics (excludes testing-tag-only message audiences).
+     *
+     * @param  Builder<MessageSend>  $query
+     * @return Builder<MessageSend>
+     */
+    public function scopeForStatistics(Builder $query): Builder
+    {
+        return $query->whereHas('message', fn (Builder $mq) => $mq->forStatistics());
     }
 }

@@ -57,6 +57,11 @@
     "Message already sent, cannot modify status": "Messaggio già inviato, impossibile modificare lo status",
     "Message sending, cannot modify status": "Messaggio in invio, impossibile modificare lo status",
     "Select recipient tags. If empty, send to all confirmed.": "Seleziona i tag dei destinatari. Se vuoto, invia a tutti i confermati.",
+    "Select recipient tags. If empty, send to all confirmed. Messages that use only testing tags do not affect dashboard statistics and send rows are removed from history after the send completes.": "Seleziona i tag dei destinatari. Se vuoto, invia a tutti i confermati. Se usi solo tag di test, le statistiche della dashboard non ne tengono conto e le righe di invio vengono rimosse dallo storico al termine dell'invio.",
+    "You cannot mix testing tags with normal tags on the same message.": "Non puoi combinare tag di test e tag normali nello stesso messaggio.",
+    "Testing tag": "Tag di test",
+    "Recipients reached only through testing tags do not appear in newsletter statistics; individual sends are removed from history after the send finishes.": "I destinatari raggiunti solo tramite tag di test non compaiono nelle statistiche della newsletter; gli invii per destinatario vengono rimossi dallo storico al termine dell'invio.",
+    "Testing": "Test",
     "Placeholders: {{name}}, {{email}}": "Placeholders: {{name}}, {{email}}",
     "This content will be inserted into the template in place of {{body}}. Placeholders: {{name}}, {{email}}": "Questo contenuto verrà inserito nel template al posto di {{body}}. Placeholders: {{name}}, {{email}}",
     "The template contains the HTML structure. The message content will be inserted in place of {{body}}": "Il template contiene la struttura HTML. Il contenuto del messaggio verrà inserito al posto di {{body}}",
@@ -163,5 +168,8 @@
     "immediate": "immediato",
     "{1} :count minute|[2,*] :count minutes": "{1} :count minuto|[2,*] :count minuti",
     "{1} :count hour|[2,*] :count hours": "{1} :count ora|[2,*] :count ore",
-    "{1} :count day|[2,*] :count days": "{1} :count giorno|[2,*] :count giorni"
+    "{1} :count day|[2,*] :count days": "{1} :count giorno|[2,*] :count giorni",
+    "Slug": "Slug",
+    "Campaign slug": "Slug campagna",
+    "Used for UTM tracking on outbound links (utm_campaign). Pre-filled from the name when the slug is empty.": "Usato per il tracciamento UTM sui link in uscita (utm_campaign). Precompilato dal nome quando lo slug è vuoto."
 }

@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.4] - 2026-04-08
+
+### Added
+
+- **Testing tags** (`is_testing` on tags): optional flag in Filament when creating or editing a tag; indicator column in the tags table.
+- When a message targets recipients **only via testing tags** (at least one tag, all marked as testing), its sends are **excluded from dashboard statistics** (emails sent, opens, clicks, bounces, send chart).
+- After a testing-audience send **completes**, per-recipient `MessageSend` rows (and related bounces) are **removed**, so they no longer appear in message send history or in a subscriber’s “messages received” list.
+- **Validation** on messages: testing tags and normal tags cannot be mixed on the same message.
+
+---
+
 ## [1.0.3] - 2026-04-08
 
 ### Added

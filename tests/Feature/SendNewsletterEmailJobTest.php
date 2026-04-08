@@ -8,6 +8,7 @@ use App\Mail\NewsletterMail;
 use App\Models\Message;
 use App\Models\MessageSend;
 use App\Models\Subscriber;
+use App\Models\Tag;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
@@ -113,5 +114,27 @@ class SendNewsletterEmailJobTest extends TestCase
 
         $message->refresh();
         $this->assertEquals(MessageStatus::Sent, $message->status);
+    }
+
+    public function test_job_purges_message_sends_after_completion_for_testing_audience_only(): void
+    {
+        Mail::fake();
+
+        $tag = Tag::factory()->testing()->create();
+        $message = Message::factory()->create([
+            'status' => MessageStatus::Sending,
+        ]);
+        $message->tags()->attach($tag->id);
+
+        $messageSend = MessageSend::factory()->create([
+            'message_id' => $message->id,
+        ]);
+
+        $job = new SendNewsletterEmail($messageSend->id);
+        $this->app->call([$job, 'handle']);
+
+        $message->refresh();
+        $this->assertEquals(MessageStatus::Sent, $message->status);
+        $this->assertEmpty(MessageSend::where('message_id', $message->id)->get());
     }
 }

@@ -89,6 +89,9 @@ class ProcessPendingEmails implements ShouldQueue
                             ->success()
                             ->sendToDatabase($user);
                     }
+
+                    $message->refresh();
+                    $message->purgeSendsForTestingAudience();
                 }
             }
         }

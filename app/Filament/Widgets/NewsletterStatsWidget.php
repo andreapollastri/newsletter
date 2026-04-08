@@ -2,6 +2,7 @@
 
 namespace App\Filament\Widgets;
 
+use App\Enums\MessageStatus;
 use App\Enums\SubscriberStatus;
 use App\Models\Bounce;
 use App\Models\Message;
@@ -12,6 +13,7 @@ use Filament\Widgets\Concerns\InteractsWithPageFilters;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\HtmlString;
 
@@ -35,7 +37,9 @@ class NewsletterStatsWidget extends StatsOverviewWidget
             ->when($startDate, fn (Builder $query) => $query->where('unsubscribed_at', '>=', $startDate))
             ->count();
 
-        $sentCount = Message::where('status', \App\Enums\MessageStatus::Sent)
+        $sentCount = Message::query()
+            ->forStatistics()
+            ->where('status', MessageStatus::Sent)
             ->when($startDate, fn (Builder $query) => $query->where('sent_at', '>=', $startDate))
             ->when($campaignId, fn (Builder $query) => $query->where('campaign_id', $campaignId))
             ->count();
@@ -44,18 +48,29 @@ class NewsletterStatsWidget extends StatsOverviewWidget
             ? Message::where('campaign_id', $campaignId)->pluck('id')
             : null;
 
-        $sendsCount = MessageSend::when($startDate, fn (Builder $query) => $query->where('sent_at', '>=', $startDate))
+        $statsMessageIds = Message::query()
+            ->forStatistics()
+            ->when($campaignId, fn (Builder $query) => $query->where('campaign_id', $campaignId))
+            ->pluck('id');
+
+        $sendsCount = MessageSend::query()
+            ->forStatistics()
+            ->when($startDate, fn (Builder $query) => $query->where('sent_at', '>=', $startDate))
             ->when($messageIds, fn (Builder $query) => $query->whereIn('message_id', $messageIds))
             ->whereNotNull('sent_at')
             ->count();
 
-        $uniqueOpensCount = MessageSend::when($startDate, fn (Builder $query) => $query->where('sent_at', '>=', $startDate))
+        $uniqueOpensCount = MessageSend::query()
+            ->forStatistics()
+            ->when($startDate, fn (Builder $query) => $query->where('sent_at', '>=', $startDate))
             ->when($messageIds, fn (Builder $query) => $query->whereIn('message_id', $messageIds))
             ->whereNotNull('sent_at')
             ->where('opens_count', '>', 0)
             ->count();
 
-        $uniqueClicksCount = MessageSend::when($startDate, fn (Builder $query) => $query->where('sent_at', '>=', $startDate))
+        $uniqueClicksCount = MessageSend::query()
+            ->forStatistics()
+            ->when($startDate, fn (Builder $query) => $query->where('sent_at', '>=', $startDate))
             ->when($messageIds, fn (Builder $query) => $query->whereIn('message_id', $messageIds))
             ->whereNotNull('sent_at')
             ->where('clicks_count', '>', 0)
@@ -65,13 +80,16 @@ class NewsletterStatsWidget extends StatsOverviewWidget
             ->join('message_sends', 'message_clicks.message_send_id', '=', 'message_sends.id')
             ->when($startDate, fn ($query) => $query->where('message_sends.sent_at', '>=', $startDate))
             ->when($messageIds, fn ($query) => $query->whereIn('message_sends.message_id', $messageIds))
+            ->whereIn('message_sends.message_id', $statsMessageIds)
             ->whereNotNull('message_sends.sent_at');
 
         $messagesWithLinks = $messagesWithLinksQuery
             ->distinct()
             ->pluck('message_sends.message_id');
 
-        $sendsWithLinksCount = MessageSend::when($startDate, fn (Builder $query) => $query->where('sent_at', '>=', $startDate))
+        $sendsWithLinksCount = MessageSend::query()
+            ->forStatistics()
+            ->when($startDate, fn (Builder $query) => $query->where('sent_at', '>=', $startDate))
             ->when($messageIds, fn (Builder $query) => $query->whereIn('message_id', $messageIds))
             ->whereNotNull('sent_at')
             ->whereIn('message_id', $messagesWithLinks)
@@ -85,8 +103,14 @@ class NewsletterStatsWidget extends StatsOverviewWidget
             ? round(($uniqueClicksCount / $sendsWithLinksCount) * 100, 1).'%'
             : 'N/A';
 
-        $bouncesCount = Bounce::when($startDate, fn (Builder $query) => $query->where('detected_at', '>=', $startDate))
-            ->when($messageIds, fn (Builder $query) => $query->whereHas('messageSend', fn (Builder $q) => $q->whereIn('message_id', $messageIds)))
+        $bouncesCount = Bounce::query()
+            ->when($startDate, fn (Builder $query) => $query->where('detected_at', '>=', $startDate))
+            ->whereHas('messageSend', function (Builder $q) use ($messageIds): void {
+                $q->forStatistics();
+                if ($messageIds !== null) {
+                    $q->whereIn('message_id', $messageIds);
+                }
+            })
             ->count();
 
         $periodLabel = $this->getPeriodLabel($period);
@@ -122,7 +146,7 @@ class NewsletterStatsWidget extends StatsOverviewWidget
         ];
     }
 
-    protected function getStartDateForPeriod(?string $period): ?\Illuminate\Support\Carbon
+    protected function getStartDateForPeriod(?string $period): ?Carbon
     {
         return match ($period) {
             '24h' => now()->subHours(24),

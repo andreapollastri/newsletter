@@ -3,16 +3,19 @@
 namespace App\Models;
 
 use App\Enums\MessageStatus;
+use Database\Factories\MessageFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\DB;
 
 class Message extends Model
 {
-    /** @use HasFactory<\Database\Factories\MessageFactory> */
+    /** @use HasFactory<MessageFactory> */
     use HasFactory;
 
     use HasUuids;
@@ -80,6 +83,55 @@ class Message extends Model
     public function tags(): BelongsToMany
     {
         return $this->belongsToMany(Tag::class);
+    }
+
+    /**
+     * Messages whose audience is defined only by "testing" tags (at least one tag, all testing).
+     * These sends are excluded from dashboard statistics and removed from send history after completion.
+     */
+    public function hasTestingAudienceOnly(): bool
+    {
+        if ($this->relationLoaded('tags')) {
+            return $this->tags->isNotEmpty()
+                && $this->tags->every(fn (Tag $t): bool => $t->is_testing);
+        }
+
+        return $this->tags()->exists()
+            && ! $this->tags()->where('is_testing', false)->exists();
+    }
+
+    /**
+     * Limit to messages that count toward newsletter statistics (excludes testing-tag-only audiences).
+     *
+     * @param  Builder<Message>  $query
+     * @return Builder<Message>
+     */
+    public function scopeForStatistics(Builder $query): Builder
+    {
+        return $query->where(function (Builder $q): void {
+            $q->whereDoesntHave('tags')
+                ->orWhereHas('tags', fn (Builder $tq) => $tq->where('is_testing', false));
+        });
+    }
+
+    /**
+     * After a testing-audience send completes, remove per-recipient rows so history and subscriber timelines stay clean.
+     */
+    public function purgeSendsForTestingAudience(): void
+    {
+        if (! $this->hasTestingAudienceOnly()) {
+            return;
+        }
+
+        DB::transaction(function (): void {
+            $sendIds = $this->sends()->pluck('id');
+            if ($sendIds->isEmpty()) {
+                return;
+            }
+
+            Bounce::whereIn('message_send_id', $sendIds)->delete();
+            $this->sends()->delete();
+        });
     }
 
     /**

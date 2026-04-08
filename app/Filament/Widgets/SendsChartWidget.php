@@ -8,6 +8,7 @@ use Carbon\Carbon;
 use Filament\Widgets\ChartWidget;
 use Filament\Widgets\Concerns\InteractsWithPageFilters;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class SendsChartWidget extends ChartWidget
@@ -39,6 +40,7 @@ class SendsChartWidget extends ChartWidget
         }
 
         $data = MessageSend::query()
+            ->forStatistics()
             ->whereNotNull('sent_at')
             ->when($startDate, fn (Builder $query) => $query->where('sent_at', '>=', $startDate))
             ->when($messageIds, fn (Builder $query) => $query->whereIn('message_id', $messageIds))
@@ -74,10 +76,11 @@ class SendsChartWidget extends ChartWidget
         ];
     }
 
-    protected function getHourlyData(Carbon $startDate, ?\Illuminate\Support\Collection $messageIds = null): array
+    protected function getHourlyData(Carbon $startDate, ?Collection $messageIds = null): array
     {
         // Use database-agnostic approach: get all records and group in PHP
         $records = MessageSend::query()
+            ->forStatistics()
             ->whereNotNull('sent_at')
             ->where('sent_at', '>=', $startDate)
             ->when($messageIds, fn (Builder $query) => $query->whereIn('message_id', $messageIds))
