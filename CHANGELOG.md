@@ -7,13 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.0.6] - 2026-04-08
+
+### Added
+
+- **Password rules** - Added Password::defaults() rules to manage secure passwords.
+
+### Changed
+
+- **Click / open tracking after testing-only sends** — when per-recipient `MessageSend` rows are removed after a testing-audience send completes, tracking URLs still resolve: clicks redirect to the original link (without recording a click) and the open pixel still returns a transparent GIF (without recording an open). Invalid non-UUID path segments continue to return **404**.
+
+---
+
 ## [2.0.5] - 2026-04-08
 
 ### Changed
 
 - **Sent / sending messages are immutable** — `MessagePolicy::update` and `MessagePolicy::delete` now deny modifications and deletion when the message status is **sent** or **sending**, for every role (including administrators and managers). Editors remain limited to draft-only edits as before.
 - **Filament — Messages** — the delete action on the message **edit** page is shown only when `MessageResource::canDelete()` allows it (same policy rules). The messages table delete action already relied on policy-backed visibility.
-- **REST API** — `PUT` and `DELETE` on sent or sending messages align with the policy: **403 Forbidden** when authorization fails; partial updates to sent/sending messages with a body still fail validation with **422** and the existing *“Sent or sending messages cannot be modified via API.”* message (`UpdateMessageRequest`).
+- **REST API** — `PUT` and `DELETE` on sent or sending messages align with the policy: **403 Forbidden** when authorization fails; partial updates to sent/sending messages with a body still fail validation with **422** and the existing _“Sent or sending messages cannot be modified via API.”_ message (`UpdateMessageRequest`).
 
 ---
 

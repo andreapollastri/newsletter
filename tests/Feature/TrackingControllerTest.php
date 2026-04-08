@@ -91,4 +91,36 @@ class TrackingControllerTest extends TestCase
             'url' => base64_encode('not-a-valid-url'),
         ]))->assertStatus(400);
     }
+
+    public function test_click_tracking_redirects_when_message_send_row_was_removed(): void
+    {
+        $url = 'https://example.com/after-testing-purge';
+
+        $this->get(route('tracking.click', [
+            'messageSend' => '019d6d6a-7303-71e5-b451-c303271926a5',
+            'url' => base64_encode($url),
+        ]))->assertRedirect($url);
+
+        $this->assertDatabaseCount('message_clicks', 0);
+    }
+
+    public function test_open_tracking_returns_pixel_when_message_send_row_was_removed(): void
+    {
+        $this->get(route('tracking.open', ['messageSend' => '019d6d6a-7303-71e5-b451-c303271926a5']))
+            ->assertSuccessful()
+            ->assertHeader('Content-Type', 'image/gif');
+
+        $this->assertDatabaseCount('message_opens', 0);
+    }
+
+    public function test_tracking_returns_404_for_non_uuid_message_send_parameter(): void
+    {
+        $this->get(route('tracking.open', ['messageSend' => 'not-a-uuid']))
+            ->assertNotFound();
+
+        $this->get(route('tracking.click', [
+            'messageSend' => 'not-a-uuid',
+            'url' => base64_encode('https://example.com'),
+        ]))->assertNotFound();
+    }
 }

@@ -8,24 +8,33 @@ use App\Models\MessageSend;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Str;
 
 class TrackingController extends Controller
 {
     /**
      * Track email open via pixel.
+     *
+     * When the send row no longer exists (e.g. testing-audience purge after completion), the pixel still loads so images do not break.
      */
-    public function open(MessageSend $messageSend, Request $request): Response
+    public function open(string $messageSend, Request $request): Response
     {
-        // Create open record
-        MessageOpen::create([
-            'message_send_id' => $messageSend->id,
-            'opened_at' => now(),
-            'ip_address' => $request->ip(),
-            'user_agent' => $request->userAgent(),
-        ]);
+        if (! Str::isUuid($messageSend)) {
+            abort(404);
+        }
 
-        // Increment counter
-        $messageSend->increment('opens_count');
+        $record = MessageSend::find($messageSend);
+
+        if ($record) {
+            MessageOpen::create([
+                'message_send_id' => $record->id,
+                'opened_at' => now(),
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+            ]);
+
+            $record->increment('opens_count');
+        }
 
         // Return 1x1 transparent GIF
         $pixel = base64_decode('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7');
@@ -38,9 +47,15 @@ class TrackingController extends Controller
 
     /**
      * Track email click and redirect.
+     *
+     * When the send row no longer exists (e.g. testing-audience purge after completion), the destination URL is still applied so links in archived mail remain usable.
      */
-    public function click(MessageSend $messageSend, Request $request): RedirectResponse
+    public function click(string $messageSend, Request $request): RedirectResponse
     {
+        if (! Str::isUuid($messageSend)) {
+            abort(404);
+        }
+
         $url = $request->query('url');
 
         if (! $url) {
@@ -54,19 +69,20 @@ class TrackingController extends Controller
             abort(400, 'Invalid URL');
         }
 
-        // Create click record
-        MessageClick::create([
-            'message_send_id' => $messageSend->id,
-            'url' => $decodedUrl,
-            'clicked_at' => now(),
-            'ip_address' => $request->ip(),
-            'user_agent' => $request->userAgent(),
-        ]);
+        $record = MessageSend::find($messageSend);
 
-        // Increment counter
-        $messageSend->increment('clicks_count');
+        if ($record) {
+            MessageClick::create([
+                'message_send_id' => $record->id,
+                'url' => $decodedUrl,
+                'clicked_at' => now(),
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+            ]);
 
-        // Redirect to original URL
+            $record->increment('clicks_count');
+        }
+
         return redirect()->away($decodedUrl);
     }
 }

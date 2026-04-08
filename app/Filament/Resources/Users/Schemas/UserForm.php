@@ -9,6 +9,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Illuminate\Validation\Rules\Password;
 
 class UserForm
 {
@@ -69,6 +70,11 @@ class UserForm
                             ->required(fn (): bool => $record === null)
                             ->dehydrated(fn (?string $state): bool => filled($state))
                             ->maxLength(255)
+                            ->rules(
+                                $record === null
+                                    ? [Password::default()]
+                                    : ['nullable', Password::default()]
+                            )
                             ->helperText($record !== null ? __('Leave blank to keep the current password.') : null)
                             ->columnSpanFull(),
                     ]),
