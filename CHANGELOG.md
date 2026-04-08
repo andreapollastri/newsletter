@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.3] - 2026-04-08
+
+### Added
+
+- Campaign **slug** field (unique), pre-filled from the campaign name in the Filament form; automatic numeric suffix when the slug collides with an existing one.
+- **UTM parameters** on outbound newsletter links (`utm_source=nl`, `utm_medium=newsletter`, `utm_campaign=<campaign slug>`, `utm_content=<message id>`), merged onto HTTP(S) URLs before click tracking.
+
+---
+
 ## [1.0.2] - 2026-04-08
 
 ### Fixed
@@ -88,5 +97,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Spatie Laravel Backup integration
     - SFTP backup destination support
     - Daily backup schedule
-
-[1.0.0]: https://github.com/andreapollastri/newsletter/releases/tag/v1.0.0

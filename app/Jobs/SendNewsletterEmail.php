@@ -2,10 +2,12 @@
 
 namespace App\Jobs;
 
+use App\Enums\MessageStatus;
 use App\Mail\NewsletterMail;
 use App\Models\MessageSend;
 use App\Models\User;
 use App\Services\EmailRateLimiter;
+use App\Support\NewsletterUrlUtm;
 use Filament\Notifications\Notification;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -34,7 +36,7 @@ class SendNewsletterEmail implements ShouldQueue
      */
     public function handle(EmailRateLimiter $rateLimiter): void
     {
-        $messageSend = MessageSend::with(['message.template', 'subscriber'])->find($this->messageSendId);
+        $messageSend = MessageSend::with(['message.template', 'message.campaign', 'subscriber'])->find($this->messageSendId);
 
         if (! $messageSend) {
             return;
@@ -75,8 +77,13 @@ class SendNewsletterEmail implements ShouldQueue
                     $htmlContent .= $trackingPixel;
                 }
 
-                // Wrap links for tracking
-                $htmlContent = $this->wrapLinksForTracking($htmlContent, $messageSend->id);
+                // Wrap links for tracking (UTM params are applied to the destination URL before encoding)
+                $htmlContent = $this->wrapLinksForTracking(
+                    $htmlContent,
+                    $messageSend->id,
+                    (string) ($message->campaign?->slug ?? ''),
+                    (string) $message->id
+                );
             }
 
             // Send email
@@ -161,11 +168,11 @@ class SendNewsletterEmail implements ShouldQueue
         );
     }
 
-    protected function wrapLinksForTracking(string $content, string $messageSendId): string
+    protected function wrapLinksForTracking(string $content, string $messageSendId, string $campaignSlug, string $messageId): string
     {
         return preg_replace_callback(
             '/<a\s+([^>]*?)href=["\']([^"\']+)["\']([^>]*)>/i',
-            function ($matches) use ($messageSendId) {
+            function ($matches) use ($messageSendId, $campaignSlug, $messageId) {
                 $url = $matches[2];
 
                 // Skip tracking URLs and unsubscribe URLs
@@ -173,7 +180,9 @@ class SendNewsletterEmail implements ShouldQueue
                     return $matches[0];
                 }
 
-                $trackingUrl = route('tracking.click', ['messageSend' => $messageSendId, 'url' => base64_encode($url)]);
+                $urlWithUtm = NewsletterUrlUtm::append($url, $campaignSlug, $messageId);
+
+                $trackingUrl = route('tracking.click', ['messageSend' => $messageSendId, 'url' => base64_encode($urlWithUtm)]);
 
                 return '<a '.$matches[1].'href="'.$trackingUrl.'"'.$matches[3].'>';
             },
@@ -188,9 +197,9 @@ class SendNewsletterEmail implements ShouldQueue
             ->whereNull('failed_at')
             ->count();
 
-        if ($pendingSends === 0 && $message->status !== \App\Enums\MessageStatus::Sent) {
+        if ($pendingSends === 0 && $message->status !== MessageStatus::Sent) {
             $message->update([
-                'status' => \App\Enums\MessageStatus::Sent,
+                'status' => MessageStatus::Sent,
                 'sent_at' => now(),
             ]);
 

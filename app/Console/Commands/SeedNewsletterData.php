@@ -102,12 +102,12 @@ class SeedNewsletterData extends Command
         // Create campaigns
         $campaign1 = Campaign::firstOrCreate(
             ['name' => 'Newsletter Gennaio 2026'],
-            ['user_id' => $user->id, 'description' => 'Newsletter mensile di gennaio']
+            ['user_id' => $user->id, 'description' => 'Newsletter mensile di gennaio', 'slug' => 'newsletter-gennaio-2026']
         );
 
         $campaign2 = Campaign::firstOrCreate(
             ['name' => 'Promo Speciale'],
-            ['user_id' => $user->id, 'description' => 'Campagna promozionale']
+            ['user_id' => $user->id, 'description' => 'Campagna promozionale', 'slug' => 'promo-speciale']
         );
         $this->info('✅ Created 2 campaigns');
 

@@ -18,6 +18,12 @@ class CampaignsTable
                     ->searchable()
                     ->sortable(),
 
+                TextColumn::make('slug')
+                    ->label(__('Slug'))
+                    ->searchable()
+                    ->sortable()
+                    ->toggleable(),
+
                 TextColumn::make('messages_count')
                     ->counts('messages')
                     ->label(__('Messages')),
