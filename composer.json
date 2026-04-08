@@ -19,7 +19,6 @@
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
-        "filament/blueprint": "^2.0",
         "laravel/boost": "^2.4",
         "laravel/pail": "^1.2.2",
         "laravel/pint": "^1.24",
@@ -92,12 +91,5 @@
         }
     },
     "minimum-stability": "stable",
-    "prefer-stable": true,
-    "repositories": [
-        {
-            "name": "filament",
-            "type": "composer",
-            "url": "https://packages.filamentphp.com/composer"
-        }
-    ]
+    "prefer-stable": true
 }
