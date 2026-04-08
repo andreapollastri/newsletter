@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.4] - 2026-04-08
 
+### Changed
+
+- **Newsletter rate limits:** `NEWSLETTER_RATE_LIMIT_PER_MINUTE` is read from the environment again (with `NEWSLETTER_RATE_LIMIT_PER_HOUR` / `_PER_DAY`). Config and README describe rolling windows, queue `release()` behaviour, estimated send time, and worker/`retry_after` tuning.
+
 ### Added
 
 - **Testing tags** (`is_testing` on tags): optional flag in Filament when creating or editing a tag; indicator column in the tags table.

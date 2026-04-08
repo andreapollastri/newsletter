@@ -46,8 +46,8 @@ class SendNewsletterEmail implements ShouldQueue
         $rateLimitCheck = $rateLimiter->attempt();
 
         if (! $rateLimitCheck['allowed']) {
-            // Rate limit exceeded, release the job back to the queue
-            $retryAfter = $rateLimitCheck['retry_after'] ?? 60;
+            // Rate limit exceeded: requeue with delay (no send, counters not incremented for this attempt).
+            $retryAfter = max(1, (int) ($rateLimitCheck['retry_after'] ?? 60));
             $this->release($retryAfter);
 
             return;

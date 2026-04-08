@@ -101,6 +101,27 @@ class MessageEstimatedSendTimeTest extends TestCase
         $this->assertStringContainsString('minut', strtolower($result));
     }
 
+    public function test_calculates_fractional_hour_from_hourly_limit(): void
+    {
+        Config::set('newsletter.rate_limits.per_minute', 0);
+        Config::set('newsletter.rate_limits.per_hour', 100);
+        Config::set('newsletter.rate_limits.per_day', 0);
+
+        // 50 sends at 100/hour = 30 minutes (not a full hour)
+        $subscribers = Subscriber::factory()->count(50)->create();
+        foreach ($subscribers as $subscriber) {
+            MessageSend::factory()->create([
+                'message_id' => $this->message->id,
+                'subscriber_id' => $subscriber->id,
+            ]);
+        }
+
+        $result = $this->message->getEstimatedSendTime();
+
+        $this->assertStringContainsString('30', $result);
+        $this->assertStringContainsString('minut', strtolower($result));
+    }
+
     public function test_calculates_estimate_based_on_hourly_limit(): void
     {
         Config::set('newsletter.rate_limits.per_minute', 0);

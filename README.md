@@ -103,12 +103,14 @@ MAIL_FROM_NAME="${APP_NAME}"
 
 ### Newsletter
 
-| Variable                           | Description                           | Default |
-| ---------------------------------- | ------------------------------------- | ------- |
-| `NEWSLETTER_TRACKING_ENABLED`      | Enable open/click tracking            | `true`  |
-| `NEWSLETTER_RATE_LIMIT_PER_MINUTE` | Max emails per minute (0 = unlimited) | `0`     |
-| `NEWSLETTER_RATE_LIMIT_PER_HOUR`   | Max emails per hour (0 = unlimited)   | `0`     |
-| `NEWSLETTER_RATE_LIMIT_PER_DAY`    | Max emails per day (0 = unlimited)    | `0`     |
+| Variable                             | Description                                      | Default |
+| ------------------------------------ | ------------------------------------------------ | ------- |
+| `NEWSLETTER_TRACKING_ENABLED`        | Enable open/click tracking                       | `true`  |
+| `NEWSLETTER_RATE_LIMIT_PER_MINUTE`   | Max sends per rolling minute (`0` = no cap)      | `0`     |
+| `NEWSLETTER_RATE_LIMIT_PER_HOUR`     | Max sends per rolling hour (`0` = no cap)        | `0`     |
+| `NEWSLETTER_RATE_LIMIT_PER_DAY`      | Max sends per rolling day (`0` = no cap)         | `0`     |
+
+See [Rate limiting](#rate-limiting) for behaviour and tuning.
 
 ### IMAP (Bounce Detection)
 
@@ -180,17 +182,33 @@ php artisan queue:work --tries=3 --timeout=90
 
 ## Rate Limiting
 
-Configure sending limits to comply with your SMTP provider's constraints:
+Configure how many emails the queue may send using rolling windows (stored in the app cache). Set a variable to **`0`** to turn off that cap; the other caps still apply.
+
+| Env variable                         | Window | Typical use |
+| ------------------------------------ | ------ | ----------- |
+| `NEWSLETTER_RATE_LIMIT_PER_MINUTE`   | ~1 min | Burst control; low values cause jobs to `release()` often (short delays). |
+| `NEWSLETTER_RATE_LIMIT_PER_HOUR`     | ~1 h   | Provider hourly quotas. |
+| `NEWSLETTER_RATE_LIMIT_PER_DAY`      | ~24 h  | Daily provider caps. |
+
+**How sending works:** for each queued send, `SendNewsletterEmail` checks **daily**, then **hourly**, then **per-minute** (`App\Services\EmailRateLimiter`). The send proceeds only if it fits under every enabled limit; otherwise the job is **released** with a delay and no quota is consumed for that attempt.
+
+**Throughput:** in practice the **tightest** of your enabled limits dominates (e.g. high hourly but low per-minute still throttles bursts).
+
+**Estimated time:** while a message is in **Sending**, the UI uses the same three env-driven values to approximate completion (`Message::getEstimatedSendTime()`).
+
+**Example** (adjust to your SMTP limits):
 
 ```env
-NEWSLETTER_RATE_LIMIT_PER_MINUTE=60
+NEWSLETTER_RATE_LIMIT_PER_MINUTE=0
 NEWSLETTER_RATE_LIMIT_PER_HOUR=1000
 NEWSLETTER_RATE_LIMIT_PER_DAY=10000
 ```
 
-Limits are progressive: daily overrides hourly, hourly overrides per-minute.
+Keeping `PER_MINUTE=0` and using only hourly/daily is a common choice for large campaigns to avoid many small queue delays.
 
-**Check current rate limits:**
+**Queue / worker:** ensure the worker `--timeout` stays a few seconds **below** your database queue `retry_after` (see `config/queue.php`, `DB_QUEUE_RETRY_AFTER`) so jobs are not processed twice.
+
+**Check current counters:**
 
 ```bash
 php artisan newsletter:rate-limits

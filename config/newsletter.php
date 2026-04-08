@@ -38,16 +38,29 @@ return [
     | Email Rate Limiting
     |--------------------------------------------------------------------------
     |
-    | Configure rate limits for sending emails. Set to 0 to disable a specific limit.
-    | Limits are progressive: daily limit takes precedence over hourly,
-    | and hourly takes precedence over per-minute.
+    | All limits use rolling windows in cache (minute / hour / day). Set any value
+    | to 0 to disable that window; the others still apply.
+    |
+    | Sending checks limits in this order: daily → hourly → per-minute. A send is
+    | allowed only if it fits under every enabled cap. The tightest cap determines
+    | throughput in practice.
+    |
+    | When a cap is exceeded, SendNewsletterEmail calls release() with a delay
+    | (retry_after); no email is sent and counters are not incremented for that
+    | attempt. A low per-minute cap causes frequent short delays; for large blasts,
+    | many deployments set per-minute to 0 and rely on per-hour / per-day only.
+    |
+    | Estimated completion time for messages in "Sending" status (see Message::
+    | getEstimatedSendTime) uses the same three values.
+    |
+    | Env keys: NEWSLETTER_RATE_LIMIT_PER_MINUTE, _PER_HOUR, _PER_DAY
     |
     */
 
     'rate_limits' => [
-        'per_minute' => env('NEWSLETTER_RATE_LIMIT_PER_MINUTE', 0),
-        'per_hour' => env('NEWSLETTER_RATE_LIMIT_PER_HOUR', 0),
-        'per_day' => env('NEWSLETTER_RATE_LIMIT_PER_DAY', 0),
+        'per_minute' => (int) env('NEWSLETTER_RATE_LIMIT_PER_MINUTE', 0),
+        'per_hour' => (int) env('NEWSLETTER_RATE_LIMIT_PER_HOUR', 0),
+        'per_day' => (int) env('NEWSLETTER_RATE_LIMIT_PER_DAY', 0),
     ],
 
 ];

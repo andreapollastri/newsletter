@@ -135,7 +135,9 @@ class Message extends Model
     }
 
     /**
-     * Calculate estimated time to complete sending based on rate limits.
+     * Estimate time to drain pending sends using `config('newsletter.rate_limits')`
+     * (same values as `NEWSLETTER_RATE_LIMIT_PER_MINUTE`, `_PER_HOUR`, `_PER_DAY`).
+     * Takes the maximum of per-window durations when multiple caps are enabled.
      */
     public function getEstimatedSendTime(): ?string
     {
@@ -153,32 +155,38 @@ class Message extends Model
             return __('Completing...');
         }
 
-        // Get rate limits
-        $perMinute = (int) config('newsletter.rate_limits.per_minute', 0);
-        $perHour = (int) config('newsletter.rate_limits.per_hour', 0);
-        $perDay = (int) config('newsletter.rate_limits.per_day', 0);
+        /** @var array{per_minute: int, per_hour: int, per_day: int} $limits */
+        $limits = config('newsletter.rate_limits', [
+            'per_minute' => 0,
+            'per_hour' => 0,
+            'per_day' => 0,
+        ]);
+
+        $perMinute = (int) ($limits['per_minute'] ?? 0);
+        $perHour = (int) ($limits['per_hour'] ?? 0);
+        $perDay = (int) ($limits['per_day'] ?? 0);
 
         // If no limits, send is immediate
         if ($perMinute === 0 && $perHour === 0 && $perDay === 0) {
             return __('Estimated send time: immediate');
         }
 
-        // Calculate minutes needed based on each limit
+        // Minutes needed if each limit applied alone (same knobs as EmailRateLimiter / .env).
         $minutesNeeded = [];
 
         if ($perMinute > 0) {
-            $minutesNeeded[] = ceil($pendingSends / $perMinute);
+            $minutesNeeded[] = (int) ceil($pendingSends / $perMinute);
         }
 
         if ($perHour > 0) {
-            $minutesNeeded[] = ceil($pendingSends / $perHour) * 60;
+            $minutesNeeded[] = (int) ceil(($pendingSends * 60) / $perHour);
         }
 
         if ($perDay > 0) {
-            $minutesNeeded[] = ceil($pendingSends / $perDay) * 1440;
+            $minutesNeeded[] = (int) ceil(($pendingSends * 1440) / $perDay);
         }
 
-        // Take the maximum (most restrictive limit)
+        // Most restrictive window dominates total duration.
         $totalMinutes = max($minutesNeeded);
 
         return __('Estimated send time: :time', [
