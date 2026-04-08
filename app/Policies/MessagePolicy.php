@@ -29,6 +29,10 @@ class MessagePolicy
 
     public function update(User $user, Message $message): bool
     {
+        if (in_array($message->status, [MessageStatus::Sent, MessageStatus::Sending], true)) {
+            return false;
+        }
+
         if ($user->isEditor()) {
             return $message->status === MessageStatus::Draft;
         }
@@ -38,6 +42,10 @@ class MessagePolicy
 
     public function delete(User $user, Message $message): bool
     {
+        if (in_array($message->status, [MessageStatus::Sent, MessageStatus::Sending], true)) {
+            return false;
+        }
+
         if ($user->isEditor()) {
             return $message->status === MessageStatus::Draft;
         }

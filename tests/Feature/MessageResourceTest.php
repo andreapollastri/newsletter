@@ -159,6 +159,15 @@ class MessageResourceTest extends TestCase
             ->assertSuccessful();
     }
 
+    public function test_cannot_open_edit_page_for_sent_message(): void
+    {
+        $campaign = Campaign::factory()->create(['user_id' => $this->user->id]);
+        $message = Message::factory()->for($campaign)->sent()->create();
+
+        Livewire::test(EditMessage::class, ['record' => $message->id])
+            ->assertForbidden();
+    }
+
     public function test_can_edit_message(): void
     {
         $campaign = Campaign::factory()->create(['user_id' => $this->user->id]);

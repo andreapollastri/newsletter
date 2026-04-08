@@ -215,7 +215,7 @@ class MessagesTable
                                 ->send();
                         }),
                     DeleteAction::make()
-                        ->visible(fn (Message $record) => $record->status !== MessageStatus::Sent && $record->status !== MessageStatus::Sending),
+                        ->visible(fn (Message $record): bool => MessageResource::canDelete($record)),
                 ]),
             ]);
     }

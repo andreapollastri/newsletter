@@ -116,4 +116,31 @@ class ApiCampaignAndMessageApiTest extends TestCase
         $this->withToken($token)->getJson('/api/campaigns/'.$campaign->id.'/messages/'.$message->id)
             ->assertNotFound();
     }
+
+    public function test_cannot_update_sent_message_via_api(): void
+    {
+        $user = User::factory()->create();
+        $campaign = Campaign::factory()->create(['user_id' => $user->id]);
+        $message = Message::factory()->for($campaign)->sent()->create();
+        $token = $user->createToken('test', ['api'])->plainTextToken;
+
+        $this->withToken($token)->putJson('/api/campaigns/'.$campaign->id.'/messages/'.$message->id, [
+            'subject' => 'Updated',
+        ])->assertUnprocessable()
+            ->assertJsonPath('errors.status.0', __('Sent or sending messages cannot be modified via API.'));
+
+        $this->withToken($token)->putJson('/api/campaigns/'.$campaign->id.'/messages/'.$message->id, [])
+            ->assertForbidden();
+    }
+
+    public function test_cannot_delete_sent_message_via_api(): void
+    {
+        $user = User::factory()->create();
+        $campaign = Campaign::factory()->create(['user_id' => $user->id]);
+        $message = Message::factory()->for($campaign)->sent()->create();
+        $token = $user->createToken('test', ['api'])->plainTextToken;
+
+        $this->withToken($token)->deleteJson('/api/campaigns/'.$campaign->id.'/messages/'.$message->id)
+            ->assertForbidden();
+    }
 }

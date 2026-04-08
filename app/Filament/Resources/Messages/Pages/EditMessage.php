@@ -30,7 +30,8 @@ class EditMessage extends EditRecord
     {
         return [
             ViewAction::make(),
-            DeleteAction::make(),
+            DeleteAction::make()
+                ->visible(fn (): bool => MessageResource::canDelete($this->record)),
         ];
     }
 }
