@@ -35,7 +35,7 @@ class MessageResourceTest extends TestCase
             ->assertSuccessful();
     }
 
-    public function test_list_messages_includes_testing_audience_only_messages(): void
+    public function test_draft_testing_only_messages_are_visible(): void
     {
         $campaign = Campaign::factory()->create(['user_id' => $this->user->id]);
         $normalMessage = Message::factory()->for($campaign)->create(['subject' => 'Normal broadcast']);
@@ -45,6 +45,38 @@ class MessageResourceTest extends TestCase
 
         Livewire::test(ListMessages::class)
             ->assertCanSeeTableRecords([$normalMessage, $testingMessage]);
+    }
+
+    public function test_sent_testing_only_messages_are_hidden(): void
+    {
+        $campaign = Campaign::factory()->create(['user_id' => $this->user->id]);
+        $testingTag = Tag::factory()->testing()->create();
+        $sentTestingMessage = Message::factory()->for($campaign)->sent()->create(['subject' => 'Sent test']);
+        $sentTestingMessage->tags()->attach($testingTag->id);
+
+        Livewire::test(ListMessages::class)
+            ->assertCanNotSeeTableRecords([$sentTestingMessage]);
+    }
+
+    public function test_sent_messages_with_mixed_tags_are_visible(): void
+    {
+        $campaign = Campaign::factory()->create(['user_id' => $this->user->id]);
+        $testingTag = Tag::factory()->testing()->create();
+        $normalTag = Tag::factory()->create();
+        $sentMessage = Message::factory()->for($campaign)->sent()->create(['subject' => 'Mixed audience']);
+        $sentMessage->tags()->attach([$testingTag->id, $normalTag->id]);
+
+        Livewire::test(ListMessages::class)
+            ->assertCanSeeTableRecords([$sentMessage]);
+    }
+
+    public function test_sent_messages_without_tags_are_visible(): void
+    {
+        $campaign = Campaign::factory()->create(['user_id' => $this->user->id]);
+        $sentMessage = Message::factory()->for($campaign)->sent()->create(['subject' => 'All subscribers']);
+
+        Livewire::test(ListMessages::class)
+            ->assertCanSeeTableRecords([$sentMessage]);
     }
 
     public function test_can_render_create_page(): void

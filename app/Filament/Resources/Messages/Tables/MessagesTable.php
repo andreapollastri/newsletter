@@ -9,7 +9,6 @@ use App\Jobs\SendNewsletterEmail;
 use App\Models\Message;
 use App\Models\MessageSend;
 use App\Models\Subscriber;
-use App\Models\Tag;
 use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
@@ -24,7 +23,6 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\HtmlString;
 
 class MessagesTable
 {
@@ -45,24 +43,11 @@ class MessagesTable
 
                 TextColumn::make('audience_tags')
                     ->label(__('Audience'))
-                    ->html()
-                    ->state(function (Message $record): HtmlString {
-                        if ($record->tags->isEmpty()) {
-                            return new HtmlString(
-                                '<span class="inline-flex items-center rounded-md bg-amber-50 px-2 py-1 text-xs font-medium text-amber-800 ring-1 ring-inset ring-amber-600/20 dark:bg-amber-400/10 dark:text-amber-400 dark:ring-amber-400/20">'
-                                .e(__('All subscribers'))
-                                .'</span>'
-                            );
-                        }
-
-                        return new HtmlString(
-                            $record->tags->map(function (Tag $tag): string {
-                                return '<span class="inline-flex items-center rounded-md bg-sky-50 px-2 py-1 text-xs font-medium text-sky-800 ring-1 ring-inset ring-sky-600/20 dark:bg-sky-400/10 dark:text-sky-400 dark:ring-sky-400/20">'
-                                    .e($tag->name)
-                                    .'</span>';
-                            })->implode(' ')
-                        );
-                    }),
+                    ->badge()
+                    ->state(fn (Message $record): array => $record->tags->isEmpty()
+                        ? [__('All subscribers')]
+                        : $record->tags->pluck('name')->toArray())
+                    ->color(fn (string $state): string => $state === __('All subscribers') ? 'warning' : 'info'),
 
                 TextColumn::make('emails_sent_count')
                     ->label(__('Emails sent'))

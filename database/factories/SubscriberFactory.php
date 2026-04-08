@@ -3,11 +3,12 @@
 namespace Database\Factories;
 
 use App\Enums\SubscriberStatus;
+use App\Models\Subscriber;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Subscriber>
+ * @extends Factory<Subscriber>
  */
 class SubscriberFactory extends Factory
 {

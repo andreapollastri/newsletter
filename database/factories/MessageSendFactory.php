@@ -3,11 +3,12 @@
 namespace Database\Factories;
 
 use App\Models\Message;
+use App\Models\MessageSend;
 use App\Models\Subscriber;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\MessageSend>
+ * @extends Factory<MessageSend>
  */
 class MessageSendFactory extends Factory
 {

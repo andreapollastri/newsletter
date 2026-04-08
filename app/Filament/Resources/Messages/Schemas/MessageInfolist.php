@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Messages\Schemas;
 
 use App\Models\Message;
+use App\Models\Subscriber;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -48,7 +49,7 @@ class MessageInfolist
 
                         TextEntry::make('unsubscribes')
                             ->label(__('Unsubscribes'))
-                            ->state(fn (Message $record) => \App\Models\Subscriber::where('unsubscribed_from_message_id', $record->id)->count())
+                            ->state(fn (Message $record) => Subscriber::where('unsubscribed_from_message_id', $record->id)->count())
                             ->numeric(),
                     ])
                     ->columnSpanFull(),

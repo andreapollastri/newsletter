@@ -80,9 +80,8 @@ class MessageResource extends Resource
     }
 
     /**
-     * List/search query: show all messages (including testing-tag-only audiences).
-     * Testing-only sends are still excluded from dashboard statistics via `Message::scopeForStatistics()`
-     * on widgets/reporting; they disappear from send history only after a completed testing send (purge).
+     * List/search query: hides sent messages whose audience is testing-only.
+     * Non-sent testing messages remain visible so they can still be managed.
      *
      * @return Builder<Message>
      */
@@ -93,6 +92,8 @@ class MessageResource extends Resource
         if (auth()->user()?->isEditor()) {
             $query->whereNotIn('status', [MessageStatus::Sent, MessageStatus::Sending]);
         }
+
+        static::excludeSentTestingOnly($query);
 
         return $query;
     }
@@ -110,7 +111,23 @@ class MessageResource extends Resource
             $query->whereNotIn('status', [MessageStatus::Sent, MessageStatus::Sending]);
         }
 
+        static::excludeSentTestingOnly($query);
+
         return $query;
+    }
+
+    /**
+     * Exclude sent messages whose audience consists entirely of testing tags.
+     *
+     * @param  Builder<Message>  $query
+     */
+    protected static function excludeSentTestingOnly(Builder $query): void
+    {
+        $query->where(function (Builder $q): void {
+            $q->where('status', '!=', MessageStatus::Sent)
+                ->orWhereDoesntHave('tags')
+                ->orWhereHas('tags', fn (Builder $tq) => $tq->where('is_testing', false));
+        });
     }
 
     public static function getRelations(): array

@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.0.3] - 2026-04-08
+
+### Changed
+
+- **Messages list** — sent messages whose audience consists entirely of testing tags are now hidden from the table. Non-sent testing messages (draft, ready, sending) remain visible for management.
+- **Audience column** — recipient groups now render as native Filament badges instead of custom HTML spans; "All subscribers" shown as a warning badge, tag names as info badges.
+
+---
+
 ## [2.0.2] - 2026-04-08
 
 ### Added

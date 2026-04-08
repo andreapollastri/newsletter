@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\MessageClick;
 use App\Models\MessageOpen;
 use App\Models\MessageSend;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
@@ -38,7 +39,7 @@ class TrackingController extends Controller
     /**
      * Track email click and redirect.
      */
-    public function click(MessageSend $messageSend, Request $request): \Illuminate\Http\RedirectResponse
+    public function click(MessageSend $messageSend, Request $request): RedirectResponse
     {
         $url = $request->query('url');
 

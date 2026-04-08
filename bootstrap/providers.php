@@ -1,6 +1,9 @@
 <?php
 
+use App\Providers\AppServiceProvider;
+use App\Providers\Filament\NewsletterPanelProvider;
+
 return [
-    App\Providers\AppServiceProvider::class,
-    App\Providers\Filament\NewsletterPanelProvider::class,
+    AppServiceProvider::class,
+    NewsletterPanelProvider::class,
 ];

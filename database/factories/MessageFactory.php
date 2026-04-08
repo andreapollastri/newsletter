@@ -4,10 +4,12 @@ namespace Database\Factories;
 
 use App\Enums\MessageStatus;
 use App\Models\Campaign;
+use App\Models\Message;
+use App\Models\Template;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Message>
+ * @extends Factory<Message>
  */
 class MessageFactory extends Factory
 {
@@ -65,7 +67,7 @@ class MessageFactory extends Factory
     public function withTemplate(): static
     {
         return $this->state(fn (array $attributes) => [
-            'template_id' => \App\Models\Template::factory(),
+            'template_id' => Template::factory(),
         ]);
     }
 }

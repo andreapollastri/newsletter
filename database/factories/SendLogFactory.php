@@ -8,7 +8,7 @@ use App\Models\Subscriber;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\SendLog>
+ * @extends Factory<SendLog>
  */
 class SendLogFactory extends Factory
 {
