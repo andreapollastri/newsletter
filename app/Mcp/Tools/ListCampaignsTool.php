@@ -10,7 +10,7 @@ use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Attributes\Description;
 use Laravel\Mcp\Server\Tool;
 
-#[Description('Lists newsletter campaigns owned by the authenticated user (id, name, slug, description).')]
+#[Description('Lists newsletter campaigns: all campaigns for managers/administrators; only campaigns created by the user for editors (id, name, slug, description).')]
 class ListCampaignsTool extends Tool
 {
     public function handle(Request $request): Response
@@ -21,7 +21,7 @@ class ListCampaignsTool extends Tool
         }
 
         $campaigns = Campaign::query()
-            ->where('user_id', $user->id)
+            ->when(! $user->canAccessManagementFeatures(), fn ($query) => $query->where('user_id', $user->id))
             ->orderBy('name')
             ->get(['id', 'name', 'slug', 'description', 'created_at', 'updated_at']);
 

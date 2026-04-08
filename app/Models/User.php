@@ -99,6 +99,19 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
     }
 
     /**
+     * Whether the user may use this campaign in API/MCP operations (reports, listing, creating messages).
+     * Managers and administrators may use any campaign; editors only those they created.
+     */
+    public function canAccessCampaign(Campaign $campaign): bool
+    {
+        if ($this->canAccessManagementFeatures()) {
+            return true;
+        }
+
+        return $campaign->user_id === $this->id;
+    }
+
+    /**
      * Determine if the user can access the Filament panel.
      */
     public function canAccessPanel(Panel $panel): bool

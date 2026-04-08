@@ -33,8 +33,8 @@ class SendHistoryAnalysisTool extends Tool
         ]);
 
         if (! empty($validated['campaign_id'])) {
-            $owns = $user->id === Campaign::query()->whereKey($validated['campaign_id'])->value('user_id');
-            if (! $owns) {
+            $campaign = Campaign::query()->findOrFail($validated['campaign_id']);
+            if (! $user->canAccessCampaign($campaign)) {
                 return Response::text('You do not have access to that campaign.');
             }
         }

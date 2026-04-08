@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.0.7] - 2026-04-08
+
+### Added
+
+- **README (MCP)** — Cursor `mcp.json` HTTP example, English example prompts for AI clients, and a note that Manager/Administrator tokens see all campaigns in MCP reports (aligned with the admin panel).
+
+### Changed
+
+- **Newsletter reporting & MCP** — `NewsletterReportingService`, `list-campaigns`, `newsletter-report`, `send-history-analysis`, and `create-newsletter-message` scope campaigns like Filament: **Managers** and **Administrators** use all campaigns; **Editors** remain limited to campaigns they own (`User::canAccessCampaign()`).
+
+---
+
 ## [2.0.6] - 2026-04-08
 
 ### Added

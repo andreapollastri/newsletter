@@ -1,5 +1,7 @@
 # Newsletter System
 
+**Version 2.0.7** — [Changelog](CHANGELOG.md)
+
 A complete newsletter management system for Laravel, built with Filament. Manage subscribers, campaigns, HTML templates, scheduled sending, and full tracking — all from a modern admin panel. Includes a REST API, OpenAPI documentation, and an MCP server for AI integrations.
 
 ---
@@ -370,14 +372,14 @@ Authenticated with a Sanctum Bearer token that has the **`mcp`** ability.
 
 ### Available Tools
 
-| Tool                           | Description                                                           |
-| ------------------------------ | --------------------------------------------------------------------- |
-| `list-campaigns`               | Lists campaigns owned by the authenticated user                       |
-| `newsletter-report`            | Delivery report with summary, per-message stats, and daily timeseries |
-| `send-history-analysis`        | Highlights and trends from recent send history                        |
-| `subscriber-insights`          | Audience breakdown by tags and statuses                               |
-| `generate-email-template-html` | Generates responsive HTML email template from a description           |
-| `create-newsletter-message`    | Creates a draft or ready message inside a campaign                    |
+| Tool                           | Description                                                                        |
+| ------------------------------ | ---------------------------------------------------------------------------------- |
+| `list-campaigns`               | Lists campaigns (all campaigns for managers/administrators; editors see their own) |
+| `newsletter-report`            | Delivery report with summary, per-message stats, and daily timeseries              |
+| `send-history-analysis`        | Highlights and trends from recent send history                                     |
+| `subscriber-insights`          | Audience breakdown by tags and statuses                                            |
+| `generate-email-template-html` | Generates responsive HTML email template from a description                        |
+| `create-newsletter-message`    | Creates a draft or ready message inside a campaign                                 |
 
 ### Prompt
 
@@ -388,6 +390,39 @@ The server ships with a `newsletter-assistant` prompt — a reusable skill templ
 1. Create a token in the admin panel with the **MCP** ability
 2. Configure your AI client to connect to the MCP endpoint with the token as Bearer auth
 3. Debug locally with: `php artisan mcp:inspector mcp/newsletter`
+
+### VS Code / Cursor `mcp.json` example (HTTP)
+
+Point the URL at your app’s origin plus `/mcp/newsletter`, and send the Sanctum token in the `Authorization` header:
+
+```json
+{
+    "mcpServers": {
+        "newsletter": {
+            "url": "https://your-domain.example/mcp/newsletter",
+            "headers": {
+                "Authorization": "Bearer YOUR_SANCTUM_TOKEN"
+            }
+        }
+    }
+}
+```
+
+Replace `your-domain.example` with your deployment host (for local development, something like `http://127.0.0.1:8000/mcp/newsletter`). Replace `YOUR_SANCTUM_TOKEN` with the plaintext token string from the admin panel (treat it like a password).
+
+### Example requests (English)
+
+You can phrase tasks in natural English; the assistant maps them to MCP tools. Examples:
+
+- **Campaigns:** “List all newsletter campaigns.” / “What campaigns do we have?”
+- **Delivery stats:** “Give me a newsletter delivery report from **2026-01-01** to **2026-01-31**.” / “Show sends, opens, clicks, and bounces for the last 30 days.”
+- **Scoped report:** “Report for the campaign with id **…** between **2026-01-01** and **2026-01-31**.”
+- **Narrative summary:** “Summarize send history and highlights for the last quarter.”
+- **Audience:** “How many subscribers do we have by status? Which tags have the most subscribers?”
+- **HTML:** “Generate a responsive HTML email template for a product launch: hero, short intro, three feature bullets, primary CTA button.”
+- **New message:** “Create a **draft** message in the given campaign id, using the given template id, subject **Weekly digest**, HTML body **…**, and the listed tag ids.”
+
+For **send statistics** and **campaign listing**, use a token belonging to a **Manager** or **Administrator** if your organization splits campaign ownership across users; those roles see all campaigns in reports (same idea as the admin panel).
 
 ---
 

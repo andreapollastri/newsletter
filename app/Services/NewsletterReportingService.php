@@ -41,7 +41,10 @@ class NewsletterReportingService
         $start = $start->copy()->startOfDay();
         $end = $end->copy()->endOfDay();
 
-        $campaignQuery = Campaign::query()->where('user_id', $user->id);
+        $campaignQuery = Campaign::query();
+        if (! $user->canAccessManagementFeatures()) {
+            $campaignQuery->where('user_id', $user->id);
+        }
         if ($campaignId !== null) {
             $campaignQuery->where('id', $campaignId);
         }

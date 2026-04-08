@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Enums\MessageStatus;
 use App\Enums\SubscriberStatus;
+use App\Enums\UserRole;
 use App\Models\Campaign;
 use App\Models\MessageSend;
 use App\Models\Subscriber;
@@ -87,6 +88,42 @@ class ApiNewsletterExtensionsTest extends TestCase
 
         $response = $this->withToken($token)->getJson('/api/reports/newsletter?'.http_build_query([
             'campaign_id' => $campaign->id,
+            'start_date' => now()->subDay()->toDateString(),
+            'end_date' => now()->addDay()->toDateString(),
+        ]));
+
+        $response->assertOk();
+        $this->assertSame(1, $response->json('summary.sends'));
+        $this->assertSame(2, $response->json('summary.opens'));
+    }
+
+    public function test_newsletter_report_includes_campaigns_owned_by_other_users_for_managers(): void
+    {
+        $manager = User::factory()->manager()->create();
+        $owner = User::factory()->create(['role' => UserRole::Editor]);
+        $campaign = Campaign::factory()->create(['user_id' => $owner->id]);
+        $template = Template::factory()->create();
+
+        $message = $campaign->messages()->create([
+            'template_id' => $template->id,
+            'subject' => 'Hi',
+            'html_content' => '<p>x</p>',
+            'status' => MessageStatus::Sent,
+            'sent_at' => now(),
+        ]);
+
+        $subscriber = Subscriber::factory()->create();
+        MessageSend::factory()->create([
+            'message_id' => $message->id,
+            'subscriber_id' => $subscriber->id,
+            'sent_at' => now(),
+            'opens_count' => 2,
+            'clicks_count' => 1,
+        ]);
+
+        $token = $manager->createToken('api', [TokenAbility::Api])->plainTextToken;
+
+        $response = $this->withToken($token)->getJson('/api/reports/newsletter?'.http_build_query([
             'start_date' => now()->subDay()->toDateString(),
             'end_date' => now()->addDay()->toDateString(),
         ]));

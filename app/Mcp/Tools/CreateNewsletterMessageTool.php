@@ -35,7 +35,7 @@ class CreateNewsletterMessageTool extends Tool
         ]);
 
         $campaign = Campaign::query()->findOrFail($validated['campaign_id']);
-        if ($campaign->user_id !== $user->id) {
+        if (! $user->canAccessCampaign($campaign)) {
             return Response::text('You do not have access to that campaign.');
         }
 
