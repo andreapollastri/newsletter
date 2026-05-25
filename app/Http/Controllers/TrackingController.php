@@ -36,8 +36,7 @@ class TrackingController extends Controller
             $record->increment('opens_count');
         }
 
-        // Return 1x1 transparent GIF
-        $pixel = base64_decode('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7');
+        $pixel = hex2bin('47494638396101000100800000000000ffffff21f90401000000002c000000000100010000020144003b');
 
         return response($pixel)
             ->header('Content-Type', 'image/gif')
