@@ -2,14 +2,19 @@
     "agents": [
         "cursor"
     ],
+    "cloud": false,
     "guidelines": true,
     "mcp": true,
-    "nightwatch_mcp": false,
+    "nightwatch": false,
     "packages": [
-        "filament/filament"
+        "filament/filament",
+        "spatie/laravel-backup"
     ],
     "sail": false,
     "skills": [
-        "laravel-best-practices"
+        "laravel-best-practices",
+        "mcp-development",
+        "tailwindcss-development",
+        "laravel-backup"
     ]
 }
