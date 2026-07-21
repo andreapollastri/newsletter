@@ -46,7 +46,8 @@ class SubscribeControllerTest extends TestCase
         ]);
 
         Mail::assertSent(SubscriptionConfirmation::class, function ($mail) {
-            return $mail->hasTo('test@example.com');
+            return $mail->hasTo('test@example.com')
+                && $mail->envelope()->subject === __('Confirm your subscription');
         });
     }
 

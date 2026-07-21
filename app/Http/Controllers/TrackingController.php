@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\MessageClick;
 use App\Models\MessageOpen;
 use App\Models\MessageSend;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class TrackingController extends Controller
@@ -16,6 +18,7 @@ class TrackingController extends Controller
      * Track email open via pixel.
      *
      * When the send row no longer exists (e.g. testing-audience purge after completion), the pixel still loads so images do not break.
+     * Duplicate opens for the same send are ignored (unique open per message send).
      */
     public function open(string $messageSend, Request $request): Response
     {
@@ -26,14 +29,24 @@ class TrackingController extends Controller
         $record = MessageSend::find($messageSend);
 
         if ($record) {
-            MessageOpen::create([
-                'message_send_id' => $record->id,
-                'opened_at' => now(),
-                'ip_address' => $request->ip(),
-                'user_agent' => $request->userAgent(),
-            ]);
+            try {
+                DB::transaction(function () use ($record, $request): void {
+                    $created = MessageOpen::query()->firstOrCreate(
+                        ['message_send_id' => $record->id],
+                        [
+                            'opened_at' => now(),
+                            'ip_address' => $request->ip(),
+                            'user_agent' => $request->userAgent(),
+                        ]
+                    );
 
-            $record->increment('opens_count');
+                    if ($created->wasRecentlyCreated) {
+                        $record->increment('opens_count');
+                    }
+                });
+            } catch (UniqueConstraintViolationException) {
+                // Concurrent open from the same send — already recorded.
+            }
         }
 
         $pixel = hex2bin('47494638396101000100800000000000ffffff21f90401000000002c000000000100010000020144003b');
@@ -48,6 +61,7 @@ class TrackingController extends Controller
      * Track email click and redirect.
      *
      * When the send row no longer exists (e.g. testing-audience purge after completion), the destination URL is still applied so links in archived mail remain usable.
+     * Duplicate clicks for the same send + URL are ignored (unique click per destination).
      */
     public function click(string $messageSend, Request $request): RedirectResponse
     {
@@ -71,15 +85,27 @@ class TrackingController extends Controller
         $record = MessageSend::find($messageSend);
 
         if ($record) {
-            MessageClick::create([
-                'message_send_id' => $record->id,
-                'url' => $decodedUrl,
-                'clicked_at' => now(),
-                'ip_address' => $request->ip(),
-                'user_agent' => $request->userAgent(),
-            ]);
+            try {
+                DB::transaction(function () use ($record, $decodedUrl, $request): void {
+                    $created = MessageClick::query()->firstOrCreate(
+                        [
+                            'message_send_id' => $record->id,
+                            'url' => $decodedUrl,
+                        ],
+                        [
+                            'clicked_at' => now(),
+                            'ip_address' => $request->ip(),
+                            'user_agent' => $request->userAgent(),
+                        ]
+                    );
 
-            $record->increment('clicks_count');
+                    if ($created->wasRecentlyCreated) {
+                        $record->increment('clicks_count');
+                    }
+                });
+            } catch (UniqueConstraintViolationException) {
+                // Concurrent click for the same send + URL — already recorded.
+            }
         }
 
         return redirect()->away($decodedUrl);

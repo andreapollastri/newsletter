@@ -4,14 +4,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | IMAP Configuration
+    | IMAP Configuration (optional bounce detection)
     |--------------------------------------------------------------------------
     |
-    | Configuration for the IMAP server used to detect email bounces.
+    | Bounce processing is disabled by default. To enable it:
+    | 1. composer require webklex/laravel-imap
+    | 2. Set NEWSLETTER_IMAP_ENABLED=true
+    | 3. Configure host, username, and password below
+    |
+    | Without the package (or with enabled=false), newsletter:process-bounces
+    | exits cleanly and does nothing.
     |
     */
 
     'imap' => [
+        'enabled' => (bool) env('NEWSLETTER_IMAP_ENABLED', false),
         'host' => env('NEWSLETTER_IMAP_HOST'),
         'port' => env('NEWSLETTER_IMAP_PORT', 993),
         'username' => env('NEWSLETTER_IMAP_USERNAME'),

@@ -33,6 +33,18 @@ class TrackingControllerTest extends TestCase
         $this->assertEquals(1, $messageSend->opens_count);
     }
 
+    public function test_open_tracking_deduplicates_repeat_opens(): void
+    {
+        $messageSend = MessageSend::factory()->sent()->create(['opens_count' => 0]);
+
+        $this->get(route('tracking.open', $messageSend))->assertSuccessful();
+        $this->get(route('tracking.open', $messageSend))->assertSuccessful();
+
+        $messageSend->refresh();
+        $this->assertEquals(1, $messageSend->opens_count);
+        $this->assertDatabaseCount('message_opens', 1);
+    }
+
     public function test_click_tracking_creates_message_click_record(): void
     {
         $messageSend = MessageSend::factory()->sent()->create();
@@ -61,6 +73,45 @@ class TrackingControllerTest extends TestCase
 
         $messageSend->refresh();
         $this->assertEquals(1, $messageSend->clicks_count);
+    }
+
+    public function test_click_tracking_deduplicates_repeat_clicks_for_same_url(): void
+    {
+        $messageSend = MessageSend::factory()->sent()->create(['clicks_count' => 0]);
+        $url = 'https://example.com/test-page';
+
+        $this->get(route('tracking.click', [
+            'messageSend' => $messageSend,
+            'url' => base64_encode($url),
+        ]))->assertRedirect($url);
+
+        $this->get(route('tracking.click', [
+            'messageSend' => $messageSend,
+            'url' => base64_encode($url),
+        ]))->assertRedirect($url);
+
+        $messageSend->refresh();
+        $this->assertEquals(1, $messageSend->clicks_count);
+        $this->assertDatabaseCount('message_clicks', 1);
+    }
+
+    public function test_click_tracking_counts_distinct_urls_separately(): void
+    {
+        $messageSend = MessageSend::factory()->sent()->create(['clicks_count' => 0]);
+
+        $this->get(route('tracking.click', [
+            'messageSend' => $messageSend,
+            'url' => base64_encode('https://example.com/a'),
+        ]))->assertRedirect('https://example.com/a');
+
+        $this->get(route('tracking.click', [
+            'messageSend' => $messageSend,
+            'url' => base64_encode('https://example.com/b'),
+        ]))->assertRedirect('https://example.com/b');
+
+        $messageSend->refresh();
+        $this->assertEquals(2, $messageSend->clicks_count);
+        $this->assertDatabaseCount('message_clicks', 2);
     }
 
     public function test_click_tracking_redirects_to_original_url(): void

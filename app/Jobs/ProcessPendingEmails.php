@@ -5,8 +5,7 @@ namespace App\Jobs;
 use App\Enums\MessageStatus;
 use App\Models\Message;
 use App\Models\MessageSend;
-use App\Models\User;
-use Filament\Notifications\Notification;
+use App\Services\MessageCompletionService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 
@@ -29,71 +28,28 @@ class ProcessPendingEmails implements ShouldQueue
     /**
      * Execute the job.
      */
-    public function handle(): void
+    public function handle(MessageCompletionService $completionService): void
     {
-        $pendingSends = MessageSend::whereNull('sent_at')
+        $pendingSends = MessageSend::query()
+            ->whereNull('sent_at')
             ->whereNull('failed_at')
             ->with(['message', 'subscriber'])
             ->get();
 
-        if ($pendingSends->isEmpty()) {
-            return;
-        }
-
-        $processed = 0;
-        $failed = 0;
-
         foreach ($pendingSends as $messageSend) {
             try {
-                // Dispatch individual email job
                 SendNewsletterEmail::dispatch($messageSend->id)->onQueue('newsletters');
-                $processed++;
             } catch (\Exception $e) {
-                // Mark as failed if dispatch fails
                 $messageSend->update([
                     'failed_at' => now(),
                     'error_message' => 'Failed to queue: '.$e->getMessage(),
                 ]);
-                $failed++;
             }
         }
 
-        // Update message statuses for completed ones
-        $messagesToCheck = Message::where('status', MessageStatus::Sending)->get();
-        foreach ($messagesToCheck as $message) {
-            $pendingForMessage = MessageSend::where('message_id', $message->id)
-                ->whereNull('sent_at')
-                ->whereNull('failed_at')
-                ->count();
-
-            if ($pendingForMessage === 0) {
-                $totalSends = $message->sends()->count();
-                $sentSends = $message->sends()->whereNotNull('sent_at')->count();
-                $failedSends = $message->sends()->whereNotNull('failed_at')->count();
-
-                if ($sentSends > 0 && $failedSends === 0 && $message->status !== MessageStatus::Sent) {
-                    $message->update([
-                        'status' => MessageStatus::Sent,
-                        'sent_at' => now(),
-                    ]);
-
-                    // Send database notification to all users when sending is completed
-                    foreach (User::all() as $user) {
-                        Notification::make()
-                            ->title(__('Sending completed'))
-                            ->body(__('Message ":subject" sent to :sent recipients (:failed failed).', [
-                                'subject' => $message->subject,
-                                'sent' => $sentSends,
-                                'failed' => $failedSends,
-                            ]))
-                            ->success()
-                            ->sendToDatabase($user);
-                    }
-
-                    $message->refresh();
-                    $message->purgeSendsForTestingAudience();
-                }
-            }
-        }
+        Message::query()
+            ->where('status', MessageStatus::Sending)
+            ->get()
+            ->each(fn (Message $message) => $completionService->completeIfFinished($message));
     }
 }

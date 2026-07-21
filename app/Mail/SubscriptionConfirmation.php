@@ -29,7 +29,7 @@ class SubscriptionConfirmation extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Conferma la tua iscrizione',
+            subject: __('Confirm your subscription'),
         );
     }
 

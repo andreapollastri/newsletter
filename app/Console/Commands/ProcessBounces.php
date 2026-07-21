@@ -19,13 +19,25 @@ class ProcessBounces extends Command
      *
      * @var string
      */
-    protected $description = 'Process email bounces from IMAP server';
+    protected $description = 'Process email bounces from IMAP server (requires webklex/laravel-imap and NEWSLETTER_IMAP_ENABLED=true)';
 
     /**
      * Execute the console command.
      */
     public function handle(): int
     {
+        if (! config('newsletter.imap.enabled')) {
+            $this->warn('IMAP bounce processing is disabled. Set NEWSLETTER_IMAP_ENABLED=true to enable.');
+
+            return self::SUCCESS;
+        }
+
+        if (! class_exists('Webklex\\IMAP\\Facades\\Client')) {
+            $this->warn('Missing dependency: run composer require webklex/laravel-imap');
+
+            return self::SUCCESS;
+        }
+
         $this->info('Dispatching IMAP bounce processing job...');
 
         ProcessImapBounces::dispatch();

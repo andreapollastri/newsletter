@@ -9,11 +9,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.1.0] - 2026-07-21
 
+### Added
+
+- **`MessageCompletionService`** — shared completion logic for send/pending recovery jobs (status transition, notifications, testing-audience purge).
+- **Scheduled recovery** — `newsletter:process-pending` runs every 5 minutes (`withoutOverlapping`).
+- **Unique open/click tracking** — one open per message send; one click per send + URL (DB unique indexes + controller dedupe).
+- **IMAP bounce docs/config** — `NEWSLETTER_IMAP_ENABLED` (default `false`); optional `webklex/laravel-imap` dependency documented; bounce rows link to the latest successful `message_send` when possible.
+
 ### Changed
 
 - **Dependencies** — Composer lockfile refresh and Filament frontend assets republished. Notable bumps include Laravel Framework **13.21.1**, Filament **5.7.1**, Livewire **4.3.3**, Laravel MCP **0.6.7**, Laravel Boost **2.4.8**, and Spatie Laravel Backup **10.3.0**.
 - **`andreapollastri/checkpoint`** — moved from `require` to `require-dev` (development-only tooling).
 - **AI / Boost guidelines** — refreshed `AGENTS.md` and `boost.json` for the updated Laravel Boost stack.
+- **Subscription confirmation email** — subject and body use translation keys (IT/EN/DE/FR/ES/PT) instead of hardcoded Italian.
+- **IMAP bounce job** — no hard Composer dependency; skips cleanly when disabled, unconfigured, or missing the IMAP package.
+
+### Removed
+
+- **Legacy models** — unused `SendLog` / `LinkClick` (and `SendLogFactory`) from the pre-`MessageSend` pipeline.
 
 ---
 

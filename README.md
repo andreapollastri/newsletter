@@ -36,11 +36,11 @@ A complete newsletter management system for Laravel, built with Filament. Manage
 | **Campaigns & Messages**  | Hierarchical organization of campaigns and messages                  |
 | **HTML Templates**        | Customizable templates with placeholder support                      |
 | **Scheduled Sending**     | Automatic delivery via cron                                          |
-| **Full Tracking**         | Opens, clicks, and unsubscribe tracking                              |
+| **Full Tracking**         | Unique opens/clicks per send, plus unsubscribe tracking              |
 | **Targeting**             | Filter recipients by tags and status                                 |
 | **Dashboard**             | Statistics and monitoring widgets                                    |
 | **Rate Limiting**         | Configurable per-minute, per-hour, and per-day limits                |
-| **Bounce Detection**      | IMAP integration for bounce processing                               |
+| **Bounce Detection**      | Optional IMAP bounce processing (`webklex/laravel-imap`)             |
 | **REST API**              | Full CRUD API with Sanctum authentication and OpenAPI docs           |
 | **MCP Server**            | AI integration endpoint for Cursor, Claude Code, and other clients   |
 | **Testing Tags**          | Mark tags as testing to exclude sends from production statistics     |
@@ -188,9 +188,16 @@ See [Rate limiting](#rate-limiting) for behaviour and tuning.
 
 ### IMAP (Bounce Detection)
 
-Optional configuration for processing bounced emails:
+Bounce detection is **optional and disabled by default**. It requires an extra Composer package that is not shipped with the app:
+
+```bash
+composer require webklex/laravel-imap
+```
+
+Then enable and configure IMAP:
 
 ```env
+NEWSLETTER_IMAP_ENABLED=true
 NEWSLETTER_IMAP_HOST=imap.yourdomain.com
 NEWSLETTER_IMAP_PORT=993
 NEWSLETTER_IMAP_USERNAME=your-username
@@ -198,6 +205,8 @@ NEWSLETTER_IMAP_PASSWORD=your-password
 NEWSLETTER_IMAP_ENCRYPTION=ssl
 NEWSLETTER_IMAP_FOLDER=INBOX
 ```
+
+When disabled, missing credentials, or without `webklex/laravel-imap`, `newsletter:process-bounces` exits cleanly and does nothing. Matched bounces are linked to the subscriber’s most recent successful `message_send` when available.
 
 ### API Documentation (Swagger)
 
@@ -470,12 +479,13 @@ Add the Laravel scheduler to your crontab:
 * * * * * cd /path-to-your-project && php artisan schedule:run >> /dev/null 2>&1
 ```
 
-| Task                         | Schedule         | Description                                    |
-| ---------------------------- | ---------------- | ---------------------------------------------- |
-| `newsletter:send-scheduled`  | Every minute     | Sends messages with scheduled date in the past |
-| `newsletter:process-bounces` | Every 15 minutes | Processes bounced emails via IMAP              |
-| `backup:run`                 | Daily at 03:00   | Runs application backup                        |
-| `backup:clean`               | Daily at 04:00   | Cleans old backups                             |
+| Task                         | Schedule         | Description                                                      |
+| ---------------------------- | ---------------- | ---------------------------------------------------------------- |
+| `newsletter:send-scheduled`  | Every minute     | Sends messages with scheduled date in the past                   |
+| `newsletter:process-pending` | Every 5 minutes  | Re-queues stuck pending sends and completes finished messages    |
+| `newsletter:process-bounces` | Every 15 minutes | Processes bounced emails via IMAP (when enabled + package installed) |
+| `backup:run`                 | Daily at 03:00   | Runs application backup                                          |
+| `backup:clean`               | Daily at 04:00   | Cleans old backups                                               |
 
 ---
 

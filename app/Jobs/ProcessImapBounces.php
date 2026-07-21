@@ -5,10 +5,10 @@ namespace App\Jobs;
 use App\Enums\SubscriberStatus;
 use App\Models\Bounce;
 use App\Models\Subscriber;
+use App\Services\ImapBounceDetector;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
-use Webklex\IMAP\Facades\Client;
 
 class ProcessImapBounces implements ShouldQueue
 {
@@ -19,28 +19,42 @@ class ProcessImapBounces implements ShouldQueue
     public int $backoff = 300;
 
     /**
-     * Create a new job instance.
+     * Fully-qualified facade class from webklex/laravel-imap (optional dependency).
      */
-    public function __construct()
-    {
-        //
-    }
+    private const IMAP_CLIENT_FACADE = 'Webklex\\IMAP\\Facades\\Client';
 
     /**
      * Execute the job.
      */
-    public function handle(): void
+    public function handle(ImapBounceDetector $detector): void
     {
+        if (! config('newsletter.imap.enabled')) {
+            Log::info('IMAP bounce processing is disabled (NEWSLETTER_IMAP_ENABLED=false).');
+
+            return;
+        }
+
         $config = config('newsletter.imap');
 
         if (empty($config['host']) || empty($config['username']) || empty($config['password'])) {
-            Log::info('IMAP configuration not set, skipping bounce processing.');
+            Log::info('IMAP configuration incomplete, skipping bounce processing.');
+
+            return;
+        }
+
+        if (! class_exists(self::IMAP_CLIENT_FACADE)) {
+            Log::warning(
+                'IMAP bounce processing requires webklex/laravel-imap. Install with: composer require webklex/laravel-imap'
+            );
 
             return;
         }
 
         try {
-            $client = Client::make([
+            /** @var class-string $clientFacade */
+            $clientFacade = self::IMAP_CLIENT_FACADE;
+
+            $client = $clientFacade::make([
                 'host' => $config['host'],
                 'port' => $config['port'],
                 'encryption' => $config['encryption'],
@@ -58,7 +72,7 @@ class ProcessImapBounces implements ShouldQueue
                 ->get();
 
             foreach ($messages as $message) {
-                $this->processMessage($message);
+                $this->processMessage($message, $detector);
             }
 
             $client->disconnect();
@@ -68,94 +82,54 @@ class ProcessImapBounces implements ShouldQueue
         }
     }
 
-    protected function processMessage($message): void
+    protected function processMessage(mixed $message, ImapBounceDetector $detector): void
     {
-        $subject = $message->getSubject();
-        $body = $message->getTextBody() ?? $message->getHTMLBody();
+        $subject = (string) $message->getSubject();
+        $body = (string) ($message->getTextBody() ?? $message->getHTMLBody() ?? '');
 
-        // Check if it's a bounce message
-        $bounceIndicators = [
-            'delivery status notification',
-            'undeliverable',
-            'mail delivery failed',
-            'returned mail',
-            'delivery failure',
-            'bounce',
-            'non-delivery report',
-        ];
-
-        $isBounceLikely = false;
-        foreach ($bounceIndicators as $indicator) {
-            if (stripos($subject, $indicator) !== false || stripos($body, $indicator) !== false) {
-                $isBounceLikely = true;
-                break;
-            }
-        }
-
-        if (! $isBounceLikely) {
+        if (! $detector->isBounceLikely($subject, $body)) {
             return;
         }
 
-        // Extract email addresses from the message
-        $emails = $this->extractEmailAddresses($body);
+        $emails = $detector->extractEmailAddresses($body);
+        $bounceType = $detector->detectBounceType($body);
+        $rawMessage = substr($body, 0, 5000);
 
         foreach ($emails as $email) {
-            // Skip common system emails
-            if (str_contains($email, 'postmaster@') || str_contains($email, 'mailer-daemon@')) {
+            $subscriber = Subscriber::query()->where('email', $email)->first();
+
+            if (! $subscriber) {
                 continue;
             }
 
-            // Check if subscriber exists
-            $subscriber = Subscriber::where('email', $email)->first();
+            $messageSendId = $detector->resolveMessageSendId($subscriber);
 
-            if ($subscriber) {
-                // Create bounce record
-                Bounce::create([
-                    'email' => $email,
-                    'type' => $this->detectBounceType($body),
-                    'raw_message' => substr($body, 0, 5000), // Limit message size
-                    'detected_at' => now(),
-                ]);
-
-                // Mark subscriber as bounced
+            if ($messageSendId !== null && Bounce::query()->where('message_send_id', $messageSendId)->exists()) {
                 $subscriber->update([
                     'status' => SubscriberStatus::Bounced,
                 ]);
 
-                Log::info("Bounce detected for email: {$email}");
+                continue;
             }
+
+            Bounce::create([
+                'message_send_id' => $messageSendId,
+                'email' => $email,
+                'type' => $bounceType,
+                'raw_message' => $rawMessage,
+                'detected_at' => now(),
+            ]);
+
+            $subscriber->update([
+                'status' => SubscriberStatus::Bounced,
+            ]);
+
+            Log::info("Bounce detected for email: {$email}", [
+                'message_send_id' => $messageSendId,
+                'type' => $bounceType,
+            ]);
         }
 
-        // Mark message as read
         $message->setFlag('Seen');
-    }
-
-    protected function extractEmailAddresses(string $content): array
-    {
-        $pattern = '/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/';
-        preg_match_all($pattern, $content, $matches);
-
-        return array_unique($matches[0] ?? []);
-    }
-
-    protected function detectBounceType(string $content): string
-    {
-        $hardBounceIndicators = [
-            'user unknown',
-            'mailbox not found',
-            'address rejected',
-            'does not exist',
-            'no such user',
-            'invalid recipient',
-            'recipient rejected',
-        ];
-
-        foreach ($hardBounceIndicators as $indicator) {
-            if (stripos($content, $indicator) !== false) {
-                return 'hard';
-            }
-        }
-
-        return 'soft';
     }
 }
