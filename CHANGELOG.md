@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.0.8] - 2026-07-21
+
+### Changed
+
+- **Dependencies** — Composer lockfile refresh and Filament frontend assets republished. Notable bumps include Laravel Framework **13.21.1**, Filament **5.7.1**, Livewire **4.3.3**, Laravel MCP **0.6.7**, Laravel Boost **2.4.8**, and Spatie Laravel Backup **10.3.0**.
+- **`andreapollastri/checkpoint`** — moved from `require` to `require-dev` (development-only tooling).
+- **AI / Boost guidelines** — refreshed `AGENTS.md` and `boost.json` for the updated Laravel Boost stack.
+
+---
+
 ## [2.0.7] - 2026-04-08
 
 ### Added
