@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>404 — Newsletter</title>
+  <meta name="description" content="Page not found. Return to Newsletter." />
+  <meta name="robots" content="noindex" />
+  <meta name="theme-color" content="#1d6fd8" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Source+Sans+3:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap"
+    rel="stylesheet" />
+  <style>
+    :root {
+      --ink: #121a24;
+      --ink-soft: #2a3648;
+      --muted: #5a6778;
+      --line: #c5d0de;
+      --paper: #e8eef5;
+      --surface: #f3f6fa;
+      --white: #ffffff;
+      --signal: #1d6fd8;
+      --signal-deep: #1557ad;
+      --phosphor: #5ba3f5;
+      --mono: "IBM Plex Mono", ui-monospace, monospace;
+      --sans: "Source Sans 3", Georgia, sans-serif;
+      --display: "Space Grotesk", var(--sans);
+      --max: 1120px;
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--sans);
+      color: var(--ink);
+      background: var(--paper);
+      line-height: 1.55;
+      font-size: 1.0625rem;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a {
+      color: inherit;
+    }
+
+    .scan-field {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      background:
+        radial-gradient(ellipse 80% 50% at 10% -10%, rgba(29, 111, 216, 0.11), transparent 55%),
+        radial-gradient(ellipse 50% 40% at 90% 30%, rgba(18, 26, 36, 0.06), transparent 50%),
+        linear-gradient(180deg, var(--surface) 0%, var(--paper) 40%, var(--paper) 100%);
+    }
+
+    .scan-field::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(18, 26, 36, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(18, 26, 36, 0.035) 1px, transparent 1px);
+      background-size: 56px 56px;
+      mask-image: linear-gradient(180deg, #000 0%, transparent 70%);
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 0.9rem 1.5rem;
+      background: rgba(243, 246, 250, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .nav-brand {
+      display: block;
+      width: 11.5rem;
+      line-height: 0;
+      text-decoration: none;
+    }
+
+    .nav-brand svg {
+      display: block;
+      width: 100%;
+      height: auto;
+      overflow: visible;
+    }
+
+    .nav-cta {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.45rem 0.85rem;
+      border: 1px solid var(--ink);
+      background: var(--ink);
+      color: var(--white);
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 600;
+      transition: background 0.2s, border-color 0.2s;
+    }
+
+    .nav-cta:hover {
+      background: var(--signal);
+      border-color: var(--signal);
+    }
+
+    main {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 1.5rem;
+    }
+
+    .panel {
+      width: min(100%, 36rem);
+      animation: rise 0.7s ease both;
+    }
+
+    .kicker {
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--signal);
+      margin-bottom: 0.75rem;
+    }
+
+    h1 {
+      font-family: var(--display);
+      font-weight: 700;
+      font-size: clamp(2rem, 6vw, 3rem);
+      letter-spacing: -0.035em;
+      line-height: 1.1;
+      margin-bottom: 0.85rem;
+    }
+
+    p {
+      color: var(--muted);
+      font-size: 1.1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.8rem 1.25rem;
+      font-weight: 600;
+      text-decoration: none;
+      border: 1px solid transparent;
+      transition: transform 0.15s, background 0.2s, color 0.2s, border-color 0.2s;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .btn-primary {
+      background: var(--signal);
+      color: var(--white);
+      border-color: var(--signal);
+    }
+
+    .btn-primary:hover {
+      background: var(--signal-deep);
+      border-color: var(--signal-deep);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--ink);
+      border-color: var(--ink);
+    }
+
+    .btn-secondary:hover {
+      background: var(--ink);
+      color: var(--white);
+    }
+
+    .terminal {
+      margin-top: 2.5rem;
+      background: var(--ink);
+      color: #d7dde6;
+      border: 1px solid #243041;
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      line-height: 1.7;
+    }
+
+    .terminal-bar {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.65rem 0.9rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      color: #8b95a5;
+      font-size: 0.72rem;
+    }
+
+    .terminal-bar i {
+      width: 8px;
+      height: 8px;
+      background: var(--phosphor);
+      display: block;
+    }
+
+    .terminal pre {
+      margin: 0;
+      padding: 1rem 0.95rem;
+      white-space: pre-wrap;
+    }
+
+    .t-fail {
+      color: #ff6b81;
+    }
+
+    .t-dim {
+      color: #7a8494;
+    }
+
+    footer {
+      border-top: 1px solid var(--line);
+      padding: 1.5rem;
+      text-align: center;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    footer a {
+      color: var(--ink-soft);
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      color: var(--signal);
+    }
+
+    @keyframes rise {
+      from {
+        opacity: 0;
+        transform: translateY(16px);
+      }
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="scan-field" aria-hidden="true"></div>
+
+  <nav class="nav" aria-label="Primary">
+    <a class="nav-brand" href="/" aria-label="Newsletter">
+      <svg viewBox="0 0 620 78" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <text x="0" y="62" textLength="620" lengthAdjust="spacingAndGlyphs"
+          font-family="Space Grotesk, sans-serif" font-size="72" font-weight="700">
+          <tspan fill="#121a24">NEWS</tspan><tspan fill="#1d6fd8">LETTER</tspan>
+        </text>
+      </svg>
+    </a>
+    <a class="nav-cta" href="https://github.com/andreapollastri/newsletter" target="_blank" rel="noopener">GitHub</a>
+  </nav>
+
+  <main>
+    <div class="panel">
+      <div class="kicker">404</div>
+      <h1>This address<br>is not on the list.</h1>
+      <p>The page you asked for is missing, unsubscribed, or never existed.</p>
+      <div class="actions">
+        <a class="btn btn-primary" href="/">Back home</a>
+        <a class="btn btn-secondary" href="/#docs">Read the docs</a>
+      </div>
+      <div class="terminal" aria-hidden="true">
+        <div class="terminal-bar"><i></i><span>newsletter · router</span></div>
+        <pre><span class="t-fail">FAIL</span>  Route not found
+<span class="t-dim">      GET  </span><span id="path">/…</span>
+<span class="t-dim">─────────────────────────────────</span>
+<span class="t-dim">Hint</span>  return to /</pre>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    &copy; 2026 <a href="https://andreapollastri.net" target="_blank" rel="noopener">Andrea Pollastri</a> — MIT License
+  </footer>
+
+  <script>
+    document.getElementById("path").textContent = location.pathname || "/…";
+  </script>
+
+  <script async src="https://stats.web.ap.it/i/fd96bd67-38b9-4bac-a25a-99eda590d971.js"></script>
+  <noscript><img src="https://stats.web.ap.it/collect/pixel.gif?k=fd96bd67-38b9-4bac-a25a-99eda590d971&p=/404" width="1"
+      height="1" alt="" /></noscript>
+</body>
+
+</html>

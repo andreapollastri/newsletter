@@ -1,0 +1,1338 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Newsletter — Open-source Laravel newsletter platform</title>
+  <meta name="description"
+    content="Production-grade newsletter system for Laravel: Filament admin, REST API, MCP for AI agents, tracking, roles, and scheduled sending." />
+  <meta name="theme-color" content="#1d6fd8" />
+  <link rel="canonical" href="https://newsletter.web.ap.it/" />
+  <meta property="og:title" content="Newsletter — Open-source Laravel newsletter platform" />
+  <meta property="og:description"
+    content="AI-ready · API-first · Filament admin. Manage subscribers, campaigns, templates, and delivery analytics." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://newsletter.web.ap.it/" />
+  <meta name="twitter:card" content="summary" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Source+Sans+3:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Space+Grotesk:wght@600;700&display=swap"
+    rel="stylesheet" />
+  <style>
+    :root {
+      --ink: #121a24;
+      --ink-soft: #2a3648;
+      --muted: #5a6778;
+      --line: #c5d0de;
+      --paper: #e8eef5;
+      --surface: #f3f6fa;
+      --white: #ffffff;
+      --signal: #1d6fd8;
+      --signal-deep: #1557ad;
+      --phosphor: #5ba3f5;
+      --terminal: #121a24;
+      --pass: #1a7f4b;
+      --warn: #b45309;
+      --mono: "IBM Plex Mono", ui-monospace, monospace;
+      --sans: "Source Sans 3", Georgia, sans-serif;
+      --display: "Space Grotesk", var(--sans);
+      --max: 1120px;
+      --docs-sidebar: 220px;
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      scroll-padding-top: 5rem;
+    }
+
+    body {
+      font-family: var(--sans);
+      color: var(--ink);
+      background: var(--paper);
+      line-height: 1.55;
+      font-size: 1.0625rem;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a {
+      color: inherit;
+    }
+
+    code,
+    pre {
+      font-family: var(--mono);
+    }
+
+    .scan-field {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      background:
+        radial-gradient(ellipse 80% 50% at 10% -10%, rgba(29, 111, 216, 0.11), transparent 55%),
+        radial-gradient(ellipse 60% 40% at 90% 18%, rgba(18, 26, 36, 0.06), transparent 50%),
+        linear-gradient(180deg, var(--surface) 0%, var(--paper) 40%, var(--paper) 100%);
+    }
+
+    .scan-field::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(18, 26, 36, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(18, 26, 36, 0.035) 1px, transparent 1px);
+      background-size: 56px 56px;
+      mask-image: linear-gradient(180deg, #000 0%, transparent 70%);
+    }
+
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 0.9rem 1.5rem;
+      background: rgba(243, 246, 250, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .nav-brand {
+      display: block;
+      width: 11.5rem;
+      line-height: 0;
+      text-decoration: none;
+      flex-shrink: 0;
+    }
+
+    .nav-brand svg {
+      display: block;
+      width: 100%;
+      height: auto;
+      overflow: visible;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      font-size: 0.95rem;
+      font-weight: 500;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: var(--ink-soft);
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover {
+      color: var(--signal);
+    }
+
+    .nav-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.45rem 0.85rem;
+      border: 1px solid var(--ink);
+      background: var(--ink);
+      color: var(--white) !important;
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 600;
+      transition: background 0.2s, border-color 0.2s;
+    }
+
+    .nav-cta:hover {
+      background: var(--signal);
+      border-color: var(--signal);
+    }
+
+    .hero {
+      position: relative;
+      padding: 3.5rem 0 0;
+    }
+
+    .hero-copy {
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 0 1.5rem 2.5rem;
+    }
+
+    .hero-brand {
+      width: min(100%, 38rem);
+      line-height: 0;
+      animation: rise 0.7s ease both;
+    }
+
+    .hero-brand svg {
+      display: block;
+      width: 100%;
+      height: auto;
+      overflow: visible;
+    }
+
+    .hero-copy h1 {
+      font-family: var(--display);
+      font-weight: 700;
+      font-size: clamp(1.45rem, 3.2vw, 2rem);
+      letter-spacing: -0.03em;
+      line-height: 1.2;
+      margin: 1.1rem 0 0.7rem;
+      animation: rise 0.7s 0.08s ease both;
+    }
+
+    .hero-copy p {
+      color: var(--muted);
+      font-size: 1.1rem;
+      line-height: 1.5;
+      max-width: 38rem;
+      animation: rise 0.7s 0.14s ease both;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+      animation: rise 0.7s 0.2s ease both;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.45rem;
+      padding: 0.8rem 1.25rem;
+      font-family: var(--sans);
+      font-size: 0.95rem;
+      font-weight: 600;
+      text-decoration: none;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: transform 0.15s, background 0.2s, color 0.2s, border-color 0.2s;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .btn-primary {
+      background: var(--signal);
+      color: var(--white);
+      border-color: var(--signal);
+    }
+
+    .btn-primary:hover {
+      background: var(--signal-deep);
+      border-color: var(--signal-deep);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--ink);
+      border-color: var(--ink);
+    }
+
+    .btn-secondary:hover {
+      background: var(--ink);
+      color: var(--white);
+    }
+
+    .hero-visual {
+      position: relative;
+      width: 100%;
+      border-top: 1px solid var(--ink);
+      border-bottom: 1px solid var(--ink);
+      background: var(--terminal);
+      color: #d7dde6;
+      animation: rise 0.8s 0.22s ease both;
+    }
+
+    .hero-visual::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 3px,
+        rgba(29, 111, 216, 0.04) 3px,
+        rgba(29, 111, 216, 0.04) 6px
+      );
+      animation: scan 10s linear infinite;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .hero-visual-inner {
+      position: relative;
+      z-index: 1;
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 0 1.5rem;
+    }
+
+    .hero-visual-bar {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.85rem 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: #8b95a5;
+    }
+
+    .hero-visual-bar i {
+      flex: 0 0 8px;
+      width: 8px;
+      height: 8px;
+      display: block;
+      background: var(--phosphor);
+      animation: pulse 2.4s ease-in-out infinite;
+    }
+
+    .hero-visual pre {
+      margin: 0;
+      padding: 1.25rem 0 1.75rem;
+      font-size: clamp(0.72rem, 1.6vw, 0.85rem);
+      line-height: 1.75;
+      white-space: pre;
+      overflow-x: auto;
+      tab-size: 2;
+    }
+
+    .t-ok {
+      color: #3dbe7a;
+    }
+
+    .t-accent {
+      color: var(--phosphor);
+    }
+
+    .t-dim {
+      color: #7a8494;
+    }
+
+    .t-warn {
+      color: #f0b429;
+    }
+
+    @keyframes rise {
+      from {
+        opacity: 0;
+        transform: translateY(16px);
+      }
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+
+    @keyframes scan {
+      from {
+        transform: translateY(0);
+      }
+      to {
+        transform: translateY(40px);
+      }
+    }
+
+    @keyframes pulse {
+      0%,
+      100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.35;
+      }
+    }
+
+    section {
+      padding: 5rem 1.5rem;
+    }
+
+    .section-inner {
+      max-width: var(--max);
+      margin: 0 auto;
+    }
+
+    .section-kicker {
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--signal);
+      margin-bottom: 0.75rem;
+    }
+
+    .section-title {
+      font-family: var(--display);
+      font-weight: 700;
+      font-size: clamp(1.85rem, 4vw, 2.6rem);
+      letter-spacing: -0.035em;
+      line-height: 1.1;
+      margin-bottom: 0.85rem;
+    }
+
+    .section-lead {
+      color: var(--muted);
+      max-width: 36rem;
+      font-size: 1.1rem;
+      margin-bottom: 2rem;
+    }
+
+    .band {
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      background: var(--white);
+    }
+
+    .coverage-list {
+      display: grid;
+      gap: 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .coverage-row {
+      display: grid;
+      gap: 0.35rem;
+      padding: 1.15rem 0;
+      border-bottom: 1px solid var(--line);
+      align-items: baseline;
+    }
+
+    @media (min-width: 760px) {
+      .coverage-row {
+        grid-template-columns: 4.5rem 11rem 1fr auto;
+        gap: 1.25rem;
+      }
+    }
+
+    .coverage-row .n {
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
+    .coverage-row .name {
+      font-weight: 600;
+      color: var(--ink);
+    }
+
+    .coverage-row .desc {
+      color: var(--muted);
+      font-size: 0.98rem;
+    }
+
+    .coverage-row .tag {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--signal);
+      white-space: nowrap;
+    }
+
+    .feature-list {
+      display: grid;
+      gap: 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .feature-row {
+      display: grid;
+      gap: 0.35rem;
+      padding: 1rem 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    @media (min-width: 700px) {
+      .feature-row {
+        grid-template-columns: 13rem 1fr;
+        gap: 1.25rem;
+        align-items: baseline;
+      }
+    }
+
+    .feature-row .name {
+      font-weight: 600;
+      color: var(--ink);
+    }
+
+    .feature-row .desc {
+      color: var(--muted);
+      font-size: 0.97rem;
+    }
+
+    .install-grid {
+      display: grid;
+      gap: 1rem;
+    }
+
+    @media (min-width: 800px) {
+      .install-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    .code-block {
+      background: var(--terminal);
+      color: #d7dde6;
+      border: 1px solid #243041;
+      overflow: hidden;
+    }
+
+    .code-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.55rem 0.85rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: #8b95a5;
+    }
+
+    .copy-btn {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      color: #c5ccd6;
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      padding: 0.2rem 0.5rem;
+      cursor: pointer;
+    }
+
+    .copy-btn:hover {
+      border-color: var(--phosphor);
+      color: #fff;
+    }
+
+    .code-block pre {
+      padding: 1rem 0.95rem;
+      font-size: 0.82rem;
+      line-height: 1.65;
+      overflow-x: auto;
+      white-space: pre-wrap;
+    }
+
+    .tok-cmd {
+      color: #7ec8ff;
+    }
+
+    .tok-arg {
+      color: #ffb4c0;
+    }
+
+    .tok-flag {
+      color: #f0b429;
+    }
+
+    .tok-cmt {
+      color: #6b7482;
+    }
+
+    .link-inline {
+      color: var(--signal);
+      text-decoration: underline;
+      text-underline-offset: 0.15em;
+    }
+
+    .link-inline:hover {
+      color: var(--signal-deep);
+    }
+
+    #docs {
+      background: var(--white);
+      border-top: 1px solid var(--line);
+      padding-top: 4rem;
+      padding-bottom: 5rem;
+    }
+
+    .docs-layout {
+      max-width: var(--max);
+      margin: 0 auto;
+      display: grid;
+      gap: 2.5rem;
+      padding: 0 1.5rem;
+    }
+
+    @media (min-width: 900px) {
+      .docs-layout {
+        grid-template-columns: var(--docs-sidebar) minmax(0, 1fr);
+        gap: 3rem;
+        align-items: start;
+      }
+    }
+
+    .docs-toc {
+      font-size: 0.9rem;
+    }
+
+    @media (min-width: 900px) {
+      .docs-toc {
+        position: sticky;
+        top: 5rem;
+      }
+    }
+
+    .docs-toc strong {
+      display: block;
+      font-family: var(--display);
+      font-size: 0.95rem;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.85rem;
+    }
+
+    .docs-toc ol {
+      list-style: none;
+      display: grid;
+      gap: 0.35rem;
+      border-left: 2px solid var(--line);
+      padding-left: 0.85rem;
+    }
+
+    .docs-toc a {
+      text-decoration: none;
+      color: var(--muted);
+      display: block;
+      padding: 0.2rem 0;
+      transition: color 0.15s;
+    }
+
+    .docs-toc a:hover,
+    .docs-toc a.active {
+      color: var(--signal);
+    }
+
+    .docs-content {
+      min-width: 0;
+    }
+
+    .docs-content > header {
+      margin-bottom: 2.5rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .doc-block {
+      margin-bottom: 3rem;
+      scroll-margin-top: 5.5rem;
+    }
+
+    .doc-block h3 {
+      font-family: var(--display);
+      font-size: 1.45rem;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      margin-bottom: 0.75rem;
+    }
+
+    .doc-block h4 {
+      font-family: var(--sans);
+      font-size: 1.05rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.5rem;
+    }
+
+    .doc-block p,
+    .doc-block li {
+      color: var(--ink-soft);
+      max-width: 42rem;
+    }
+
+    .doc-block p + p {
+      margin-top: 0.85rem;
+    }
+
+    .doc-block ul,
+    .doc-block ol {
+      margin: 0.85rem 0 0 1.2rem;
+    }
+
+    .doc-block li + li {
+      margin-top: 0.35rem;
+    }
+
+    .doc-block code {
+      font-size: 0.88em;
+      background: rgba(18, 26, 36, 0.06);
+      padding: 0.12em 0.35em;
+    }
+
+    .doc-block .code-block {
+      margin-top: 1rem;
+    }
+
+    .callout {
+      margin: 1.1rem 0;
+      padding: 0.9rem 1rem;
+      border-left: 3px solid var(--signal);
+      background: rgba(29, 111, 216, 0.08);
+      color: var(--ink-soft);
+      font-size: 0.97rem;
+      max-width: 42rem;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      margin: 1rem 0;
+      border: 1px solid var(--line);
+      background: var(--surface);
+      max-width: 100%;
+    }
+
+    table.docs-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.92rem;
+    }
+
+    table.docs-table th,
+    table.docs-table td {
+      text-align: left;
+      padding: 0.7rem 0.85rem;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+    }
+
+    table.docs-table th {
+      font-family: var(--display);
+      font-weight: 600;
+      font-size: 0.78rem;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      color: var(--muted);
+      background: rgba(18, 26, 36, 0.03);
+    }
+
+    table.docs-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    table.docs-table td:first-child code {
+      white-space: nowrap;
+    }
+
+    footer {
+      border-top: 1px solid var(--line);
+      padding: 2rem 1.5rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      justify-content: space-between;
+      align-items: center;
+      max-width: var(--max);
+      margin: 0 auto;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    footer a {
+      color: var(--ink-soft);
+      text-decoration: none;
+      margin-left: 1rem;
+    }
+
+    footer a:hover {
+      color: var(--signal);
+    }
+
+    @media (max-width: 600px) {
+      .nav-links a:not(.nav-cta) {
+        display: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="scan-field" aria-hidden="true"></div>
+
+  <nav class="nav" aria-label="Primary">
+    <a class="nav-brand" href="/" aria-label="Newsletter">
+      <svg viewBox="0 0 620 78" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <text x="0" y="62" textLength="620" lengthAdjust="spacingAndGlyphs"
+          font-family="Space Grotesk, sans-serif" font-size="72" font-weight="700">
+          <tspan fill="#121a24">NEWS</tspan><tspan fill="#1d6fd8">LETTER</tspan>
+        </text>
+      </svg>
+    </a>
+    <div class="nav-links">
+      <a href="#pillars">Pillars</a>
+      <a href="#features">Features</a>
+      <a href="#install">Install</a>
+      <a href="#docs">Docs</a>
+      <a class="nav-cta" href="https://github.com/andreapollastri/newsletter" target="_blank" rel="noopener">GitHub</a>
+    </div>
+  </nav>
+
+  <header class="hero">
+    <div class="hero-copy">
+      <div class="hero-brand" role="img" aria-label="Newsletter">
+        <svg viewBox="0 0 620 78" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <text x="0" y="62" textLength="620" lengthAdjust="spacingAndGlyphs"
+            font-family="Space Grotesk, sans-serif" font-size="72" font-weight="700">
+            <tspan fill="#121a24">NEWS</tspan><tspan fill="#1d6fd8">LETTER</tspan>
+          </text>
+        </svg>
+      </div>
+      <h1>AI-ready newsletters<br>for Laravel.</h1>
+      <p>
+        MCP for agents, REST for CRM, Filament for operators — subscribers to delivery analytics in one open-source app.
+      </p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="#install">Get started</a>
+        <a class="btn btn-secondary" href="#docs">Read the docs</a>
+      </div>
+    </div>
+
+    <div class="hero-visual" aria-hidden="true">
+      <div class="hero-visual-inner">
+        <div class="hero-visual-bar"><i></i><span>newsletter · dashboard</span></div>
+        <pre><span class="t-dim">Campaign</span>  Weekly Digest  ·  <span class="t-accent">sending</span>
+<span class="t-dim">Audience</span>  12,480 active  ·  3 tags
+
+<span class="t-ok">sent</span>     8,214
+<span class="t-accent">opens</span>    41.2%
+<span class="t-accent">clicks</span>   6.8%
+<span class="t-warn">bounces</span>  0.4%
+
+<span class="t-dim">─────────────────────────────────</span>
+<span class="t-dim">MCP</span>  list-campaigns · newsletter-report · create-message
+<span class="t-ok">Ready</span>  /mcp/newsletter</pre>
+      </div>
+    </div>
+  </header>
+
+  <section id="pillars" class="band">
+    <div class="section-inner">
+      <div class="section-kicker">Pillars</div>
+      <h2 class="section-title">Built for operators<br>and integrations.</h2>
+      <p class="section-lead">
+        Three surfaces, one source of truth — the admin panel, the REST API, and an MCP server for AI clients.
+        PHP 8.3+ · Laravel 13 · Filament 5 · MIT · v2.1
+      </p>
+
+      <div class="coverage-list">
+        <div class="coverage-row">
+          <span class="n">01</span>
+          <span class="name">AI · MCP</span>
+          <span class="desc">Native MCP so Cursor and Claude can list campaigns, draft templates, create messages, and read delivery metrics.</span>
+          <span class="tag"><a class="link-inline" href="#doc-mcp">Docs</a></span>
+        </div>
+        <div class="coverage-row">
+          <span class="n">02</span>
+          <span class="name">REST API</span>
+          <span class="desc">Sanctum-authenticated CRUD for subscribers, tags, templates, campaigns, and messages — plus OpenAPI at <code>/api/documentation</code>.</span>
+          <span class="tag"><a class="link-inline" href="#doc-api">Docs</a></span>
+        </div>
+        <div class="coverage-row">
+          <span class="n">03</span>
+          <span class="name">Roles</span>
+          <span class="desc">Editor, Manager, and Administrator with clear boundaries over campaigns, subscribers, tokens, and users.</span>
+          <span class="tag"><a class="link-inline" href="#doc-roles">Docs</a></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="features">
+    <div class="section-inner">
+      <div class="section-kicker">Features</div>
+      <h2 class="section-title">Everything for real sends.</h2>
+      <p class="section-lead">
+        From subscriber hygiene to delivery analytics — the essentials, without the bloat.
+      </p>
+
+      <div class="feature-list">
+        <div class="feature-row">
+          <div class="name">Subscribers &amp; tags</div>
+          <div class="desc">CSV import/export, status workflows, tagging, and precise audience segmentation — including testing tags that keep dry-runs out of production metrics.</div>
+        </div>
+        <div class="feature-row">
+          <div class="name">Campaigns &amp; messages</div>
+          <div class="desc">Structured campaigns with draft, ready, sending, and sent states you can trust.</div>
+        </div>
+        <div class="feature-row">
+          <div class="name">HTML templates</div>
+          <div class="desc">Reusable templates with placeholders — plus optional AI-assisted generation via MCP.</div>
+        </div>
+        <div class="feature-row">
+          <div class="name">Scheduled sending</div>
+          <div class="desc">Cron-driven delivery with rate limits and estimated completion aligned to your SMTP caps.</div>
+        </div>
+        <div class="feature-row">
+          <div class="name">Full tracking</div>
+          <div class="desc">Opens, clicks, unsubscribes, and automatic UTM parameters on outbound links.</div>
+        </div>
+        <div class="feature-row">
+          <div class="name">Dashboard &amp; analytics</div>
+          <div class="desc">KPIs, send statistics, per-message tracking, and widgets built for operators.</div>
+        </div>
+        <div class="feature-row">
+          <div class="name">Bounce detection</div>
+          <div class="desc">Optional IMAP bounce processing that keeps your list clean automatically.</div>
+        </div>
+        <div class="feature-row">
+          <div class="name">Multilingual admin</div>
+          <div class="desc">Italian, English, German, French, Spanish, and Portuguese.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="install" class="band">
+    <div class="section-inner">
+      <div class="section-kicker">Install</div>
+      <h2 class="section-title">Up in minutes.</h2>
+      <p class="section-lead">
+        Clone, configure, migrate — then create your first admin user.
+      </p>
+
+      <div class="install-grid">
+        <div class="code-block">
+          <div class="code-header">
+            <span>bash — clone &amp; install</span>
+            <button class="copy-btn" type="button"
+              data-copy="git clone https://github.com/andreapollastri/newsletter.git&#10;cd newsletter&#10;composer install">Copy</button>
+          </div>
+          <pre><span class="tok-cmd">git clone</span> https://github.com/andreapollastri/newsletter.git
+<span class="tok-cmd">cd</span> newsletter
+<span class="tok-cmd">composer</span> install</pre>
+        </div>
+        <div class="code-block">
+          <div class="code-header">
+            <span>bash — configure &amp; run</span>
+            <button class="copy-btn" type="button"
+              data-copy="cp .env.example .env&#10;php artisan key:generate&#10;php artisan migrate&#10;npm install &amp;&amp; npm run build&#10;php artisan make:filament-user">Copy</button>
+          </div>
+          <pre><span class="tok-cmd">cp</span> .env.example .env
+<span class="tok-cmd">php artisan</span> <span class="tok-arg">key:generate</span>
+<span class="tok-cmd">php artisan</span> <span class="tok-arg">migrate</span>
+<span class="tok-cmd">npm install</span> &amp;&amp; <span class="tok-cmd">npm run</span> <span class="tok-arg">build</span>
+<span class="tok-cmd">php artisan</span> <span class="tok-arg">make:filament-user</span></pre>
+        </div>
+      </div>
+
+      <p style="margin-top:1.5rem;color:var(--muted);max-width:40rem">
+        Prefer the one-shot setup script?
+        <code>composer run setup</code> installs dependencies, creates <code>.env</code>, generates the key, migrates, and builds assets.
+        Full details in
+        <a class="link-inline" href="#doc-installation">Docs → Installation</a>.
+      </p>
+    </div>
+  </section>
+
+  <section id="docs">
+    <div class="docs-layout">
+      <aside class="docs-toc" aria-label="Documentation contents">
+        <strong>Documentation</strong>
+        <ol>
+          <li><a href="#doc-overview">Overview</a></li>
+          <li><a href="#doc-requirements">Requirements</a></li>
+          <li><a href="#doc-installation">Installation</a></li>
+          <li><a href="#doc-configuration">Configuration</a></li>
+          <li><a href="#doc-roles">Roles</a></li>
+          <li><a href="#doc-sending">Sending</a></li>
+          <li><a href="#doc-api">REST API</a></li>
+          <li><a href="#doc-mcp">MCP</a></li>
+          <li><a href="#doc-scheduler">Scheduler</a></li>
+          <li><a href="#doc-deploy">Deploy</a></li>
+        </ol>
+      </aside>
+
+      <div class="docs-content">
+        <header>
+          <div class="section-kicker">Docs</div>
+          <h2 class="section-title">From zero to first campaign.</h2>
+          <p class="section-lead" style="margin-bottom:0">
+            The essentials to install, configure, send, and integrate. Deep reference lives in the
+            <a class="link-inline" href="https://github.com/andreapollastri/newsletter/blob/main/README.md" target="_blank" rel="noopener">GitHub README</a>.
+          </p>
+        </header>
+
+        <article class="doc-block" id="doc-overview">
+          <h3>Overview</h3>
+          <p>
+            Newsletter is a complete newsletter management system for Laravel, built with Filament.
+            Manage subscribers, campaigns, HTML templates, scheduled sending, and full tracking from a modern admin panel.
+          </p>
+          <p>
+            It ships with a Sanctum REST API (OpenAPI docs included) and an MCP server so AI agents can operate on the same data as your team.
+          </p>
+        </article>
+
+        <article class="doc-block" id="doc-requirements">
+          <h3>Requirements</h3>
+          <ul>
+            <li><strong>PHP</strong> <code>8.3+</code></li>
+            <li><strong>Laravel</strong> <code>13</code></li>
+            <li><strong>Filament</strong> <code>5</code></li>
+            <li><strong>Database</strong> SQLite, MySQL, or PostgreSQL</li>
+            <li><strong>Queue</strong> database, Redis, or similar</li>
+            <li><strong>Node</strong> for Vite asset builds</li>
+          </ul>
+        </article>
+
+        <article class="doc-block" id="doc-installation">
+          <h3>Installation</h3>
+          <div class="code-block">
+            <div class="code-header">
+              <span>bash</span>
+              <button class="copy-btn" type="button"
+                data-copy="git clone https://github.com/andreapollastri/newsletter.git&#10;cd newsletter&#10;composer run setup">Copy</button>
+            </div>
+            <pre><span class="tok-cmd">git clone</span> https://github.com/andreapollastri/newsletter.git
+<span class="tok-cmd">cd</span> newsletter
+<span class="tok-cmd">composer run</span> <span class="tok-arg">setup</span></pre>
+          </div>
+          <p style="margin-top:1rem">
+            Then create an admin user and start the queue worker:
+          </p>
+          <div class="code-block">
+            <div class="code-header">
+              <span>bash</span>
+              <button class="copy-btn" type="button"
+                data-copy="php artisan make:filament-user&#10;./start-worker.sh">Copy</button>
+            </div>
+            <pre><span class="tok-cmd">php artisan</span> <span class="tok-arg">make:filament-user</span>
+<span class="tok-cmd">./start-worker.sh</span></pre>
+          </div>
+          <p style="margin-top:1rem">
+            Optional sample data: <code>php artisan newsletter:seed-data</code>
+            (default credentials after seeding: <code>admin@newsletter.test</code> / <code>password</code>).
+          </p>
+          <p>
+            Generate OpenAPI docs with <code>php artisan l5-swagger:generate</code>.
+          </p>
+        </article>
+
+        <article class="doc-block" id="doc-configuration">
+          <h3>Configuration</h3>
+          <h4>Mail</h4>
+          <p>Configure SMTP in <code>.env</code>:</p>
+          <div class="code-block">
+            <div class="code-header"><span>env</span></div>
+            <pre><span class="tok-flag">MAIL_MAILER</span>=smtp
+<span class="tok-flag">MAIL_HOST</span>=your-smtp-host.com
+<span class="tok-flag">MAIL_PORT</span>=587
+<span class="tok-flag">MAIL_USERNAME</span>=your-username
+<span class="tok-flag">MAIL_PASSWORD</span>=your-password
+<span class="tok-flag">MAIL_FROM_ADDRESS</span>="newsletter@yourdomain.com"
+<span class="tok-flag">MAIL_FROM_NAME</span>="${APP_NAME}"</pre>
+          </div>
+
+          <h4>Rate limiting</h4>
+          <p>Rolling windows in cache. Set a value to <code>0</code> to disable that cap.</p>
+          <div class="table-wrap">
+            <table class="docs-table">
+              <thead>
+                <tr>
+                  <th>Variable</th>
+                  <th>Window</th>
+                  <th>Default</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>NEWSLETTER_RATE_LIMIT_PER_MINUTE</code></td>
+                  <td>~1 min</td>
+                  <td><code>0</code></td>
+                </tr>
+                <tr>
+                  <td><code>NEWSLETTER_RATE_LIMIT_PER_HOUR</code></td>
+                  <td>~1 h</td>
+                  <td><code>0</code></td>
+                </tr>
+                <tr>
+                  <td><code>NEWSLETTER_RATE_LIMIT_PER_DAY</code></td>
+                  <td>~24 h</td>
+                  <td><code>0</code></td>
+                </tr>
+                <tr>
+                  <td><code>NEWSLETTER_TRACKING_ENABLED</code></td>
+                  <td>—</td>
+                  <td><code>true</code></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="callout">
+            Inspect live counters with <code>php artisan newsletter:rate-limits</code>.
+            Keep the worker <code>--timeout</code> a few seconds below your queue <code>retry_after</code>.
+          </div>
+
+          <h4>IMAP bounce detection (optional)</h4>
+          <div class="code-block">
+            <div class="code-header">
+              <span>bash</span>
+              <button class="copy-btn" type="button"
+                data-copy="composer require webklex/laravel-imap">Copy</button>
+            </div>
+            <pre><span class="tok-cmd">composer require</span> <span class="tok-arg">webklex/laravel-imap</span></pre>
+          </div>
+          <div class="code-block">
+            <div class="code-header"><span>env</span></div>
+            <pre><span class="tok-flag">NEWSLETTER_IMAP_ENABLED</span>=true
+<span class="tok-flag">NEWSLETTER_IMAP_HOST</span>=imap.yourdomain.com
+<span class="tok-flag">NEWSLETTER_IMAP_PORT</span>=993
+<span class="tok-flag">NEWSLETTER_IMAP_USERNAME</span>=your-username
+<span class="tok-flag">NEWSLETTER_IMAP_PASSWORD</span>=your-password
+<span class="tok-flag">NEWSLETTER_IMAP_ENCRYPTION</span>=ssl
+<span class="tok-flag">NEWSLETTER_IMAP_FOLDER</span>=INBOX</pre>
+          </div>
+        </article>
+
+        <article class="doc-block" id="doc-roles">
+          <h3>Roles</h3>
+          <p>Every user has exactly one role.</p>
+          <div class="table-wrap">
+            <table class="docs-table">
+              <thead>
+                <tr>
+                  <th>Role</th>
+                  <th>Access</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Editor</strong></td>
+                  <td>Create and manage <em>draft</em> messages inside existing campaigns.</td>
+                </tr>
+                <tr>
+                  <td><strong>Manager</strong></td>
+                  <td>Campaigns, subscribers, tags, templates, all message states, and reports.</td>
+                </tr>
+                <tr>
+                  <td><strong>Administrator</strong></td>
+                  <td>Everything a Manager can do, plus users and API token management.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
+
+        <article class="doc-block" id="doc-sending">
+          <h3>Sending</h3>
+          <h4>Immediate</h4>
+          <ol>
+            <li>Open <strong>Newsletter → Messages</strong></li>
+            <li>Create or select a message</li>
+            <li>Set status to <strong>Ready</strong></li>
+            <li>Click <strong>Send Now</strong> — the queue worker delivers</li>
+          </ol>
+          <h4>Scheduled</h4>
+          <p>
+            Set <strong>Scheduled Date</strong> on a message. The scheduler picks it up when due
+            (<code>newsletter:send-scheduled</code> every minute).
+          </p>
+          <h4>Testing tags</h4>
+          <p>
+            Mark tags as testing in Filament. Messages that target <em>only</em> testing tags are excluded from production statistics
+            and cleaned up after the send — so you can dry-run the pipeline safely.
+          </p>
+        </article>
+
+        <article class="doc-block" id="doc-api">
+          <h3>REST API</h3>
+          <p>
+            Authenticate with a Sanctum personal access token that has the <code>api</code> ability.
+            Create tokens from the admin user menu → <strong>API tokens</strong>.
+          </p>
+          <div class="code-block">
+            <div class="code-header"><span>http</span></div>
+            <pre>Authorization: Bearer &lt;your-token&gt;</pre>
+          </div>
+          <p style="margin-top:1rem">
+            Resources under <code>/api</code>: user, newsletter report, tags, subscribers, templates, campaigns, and messages.
+            Interactive OpenAPI UI: <code>/api/documentation</code>.
+          </p>
+        </article>
+
+        <article class="doc-block" id="doc-mcp">
+          <h3>MCP server</h3>
+          <p>
+            Endpoint: <code>/mcp/newsletter</code>.
+            Authenticate with a Sanctum token that has the <code>mcp</code> ability.
+          </p>
+          <h4>Tools</h4>
+          <ul>
+            <li><code>list-campaigns</code></li>
+            <li><code>newsletter-report</code></li>
+            <li><code>send-history-analysis</code></li>
+            <li><code>subscriber-insights</code></li>
+            <li><code>generate-email-template-html</code></li>
+            <li><code>create-newsletter-message</code></li>
+          </ul>
+          <h4>Cursor / VS Code <code>mcp.json</code></h4>
+          <div class="code-block">
+            <div class="code-header">
+              <span>json</span>
+              <button class="copy-btn" type="button"
+                data-copy='{\n  "mcpServers": {\n    "newsletter": {\n      "url": "https://your-domain.example/mcp/newsletter",\n      "headers": {\n        "Authorization": "Bearer YOUR_SANCTUM_TOKEN"\n      }\n    }\n  }\n}'>Copy</button>
+            </div>
+            <pre>{
+  "mcpServers": {
+    "newsletter": {
+      "url": "https://your-domain.example/mcp/newsletter",
+      "headers": {
+        "Authorization": "Bearer YOUR_SANCTUM_TOKEN"
+      }
+    }
+  }
+}</pre>
+          </div>
+          <p style="margin-top:1rem">
+            Debug locally with <code>php artisan mcp:inspector mcp/newsletter</code>.
+          </p>
+        </article>
+
+        <article class="doc-block" id="doc-scheduler">
+          <h3>Scheduler &amp; commands</h3>
+          <p>Add the Laravel scheduler to crontab:</p>
+          <div class="code-block">
+            <div class="code-header">
+              <span>cron</span>
+              <button class="copy-btn" type="button"
+                data-copy="* * * * * cd /path-to-your-project &amp;&amp; php artisan schedule:run &gt;&gt; /dev/null 2&gt;&amp;1">Copy</button>
+            </div>
+            <pre>* * * * * cd /path-to-your-project &amp;&amp; php artisan schedule:run &gt;&gt; /dev/null 2&gt;&amp;1</pre>
+          </div>
+          <div class="table-wrap">
+            <table class="docs-table">
+              <thead>
+                <tr>
+                  <th>Task</th>
+                  <th>Schedule</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>newsletter:send-scheduled</code></td>
+                  <td>Every minute</td>
+                </tr>
+                <tr>
+                  <td><code>newsletter:process-pending</code></td>
+                  <td>Every 5 minutes</td>
+                </tr>
+                <tr>
+                  <td><code>newsletter:process-bounces</code></td>
+                  <td>Every 15 minutes</td>
+                </tr>
+                <tr>
+                  <td><code>backup:run</code> / <code>backup:clean</code></td>
+                  <td>Daily</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            Public routes: <code>/subscribe</code>, double opt-in confirm, and unsubscribe flows.
+          </p>
+        </article>
+
+        <article class="doc-block" id="doc-deploy">
+          <h3>Deploy</h3>
+          <p>
+            Deploy on any Ubuntu VPS with
+            <a class="link-inline" href="https://cipi.sh" target="_blank" rel="noopener">cipi.sh</a>
+            — dedicated Linux user, PHP-FPM pool, zero-downtime deploys, SSL, and queue workers.
+          </p>
+          <div class="code-block">
+            <div class="code-header">
+              <span>bash</span>
+              <button class="copy-btn" type="button"
+                data-copy="wget -O - https://cipi.sh/setup.sh | bash">Copy</button>
+            </div>
+            <pre><span class="tok-cmd">wget -O -</span> https://cipi.sh/setup.sh | bash</pre>
+          </div>
+          <p style="margin-top:1rem">
+            Source and issues:
+            <a class="link-inline" href="https://github.com/andreapollastri/newsletter" target="_blank" rel="noopener">github.com/andreapollastri/newsletter</a>
+            · MIT License · v2.1
+          </p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div>
+      &copy; 2026 <a href="https://andreapollastri.net" target="_blank" rel="noopener" style="margin-left:0">Andrea
+        Pollastri</a> — MIT License · v2.1
+    </div>
+    <div>
+      <a href="https://github.com/andreapollastri/newsletter" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://cipi.sh" target="_blank" rel="noopener">cipi.sh</a>
+      <a href="#docs">Docs</a>
+    </div>
+  </footer>
+
+  <script>
+    document.querySelectorAll(".copy-btn[data-copy]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const raw = btn.getAttribute("data-copy") || "";
+        const text = raw
+          .replace(/&#10;/g, "\n")
+          .replace(/&amp;/g, "&")
+          .replace(/&gt;/g, ">")
+          .replace(/&lt;/g, "<")
+          .replace(/\\n/g, "\n");
+        try {
+          await navigator.clipboard.writeText(text);
+          const prev = btn.textContent;
+          btn.textContent = "Copied";
+          setTimeout(() => { btn.textContent = prev; }, 1400);
+        } catch (_) {
+          btn.textContent = "Failed";
+          setTimeout(() => { btn.textContent = "Copy"; }, 1400);
+        }
+      });
+    });
+
+    const tocLinks = [...document.querySelectorAll(".docs-toc a")];
+    const sections = tocLinks
+      .map((a) => document.querySelector(a.getAttribute("href")))
+      .filter(Boolean);
+
+    const tocObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          const id = "#" + entry.target.id;
+          tocLinks.forEach((link) => {
+            link.classList.toggle("active", link.getAttribute("href") === id);
+          });
+        });
+      },
+      { rootMargin: "-20% 0px -65% 0px", threshold: 0 }
+    );
+
+    sections.forEach((section) => tocObserver.observe(section));
+  </script>
+
+  <script async src="https://stats.web.ap.it/i/fd96bd67-38b9-4bac-a25a-99eda590d971.js"></script>
+  <noscript><img src="https://stats.web.ap.it/collect/pixel.gif?k=fd96bd67-38b9-4bac-a25a-99eda590d971&p=/" width="1"
+      height="1" alt="" /></noscript>
+</body>
+
+</html>
