@@ -1,6 +1,6 @@
 <?php
 
-use Boogle\Boogle;
+use Boogle\Facade as Boogle;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -20,5 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        Boogle::registerExceptionHandler($exceptions);
+        $exceptions->reportable(function (\Throwable $e) {
+            Boogle::handle($e);
+        });
     })->create();
