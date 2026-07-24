@@ -72,4 +72,20 @@ return [
         'token',
         'secret',
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | HTTP snapshot (goes in exception.http)
+    |--------------------------------------------------------------------------
+    | Control what is included in the JSON. Apply mask via "blacklist" above.
+    | Merge extra keys: Boogle::handle($e, "php", ["http" => ["extra" => "value"]]).
+    */
+    'http' => [
+        'include_query'   => true,
+        'include_payload' => true,
+        'include_cookies' => true,
+        'cookie_values'   => true,
+        'include_session' => false,
+        'include_headers' => false,
+    ],
 ];
