@@ -267,13 +267,11 @@
       content: "";
       position: absolute;
       inset: 0;
-      background: repeating-linear-gradient(
-        0deg,
-        transparent,
-        transparent 3px,
-        rgba(29, 111, 216, 0.04) 3px,
-        rgba(29, 111, 216, 0.04) 6px
-      );
+      background: repeating-linear-gradient(0deg,
+          transparent,
+          transparent 3px,
+          rgba(29, 111, 216, 0.04) 3px,
+          rgba(29, 111, 216, 0.04) 6px);
       animation: scan 10s linear infinite;
       pointer-events: none;
       z-index: 0;
@@ -338,6 +336,7 @@
         opacity: 0;
         transform: translateY(16px);
       }
+
       to {
         opacity: 1;
         transform: none;
@@ -348,16 +347,19 @@
       from {
         transform: translateY(0);
       }
+
       to {
         transform: translateY(40px);
       }
     }
 
     @keyframes pulse {
+
       0%,
       100% {
         opacity: 1;
       }
+
       50% {
         opacity: 0.35;
       }
@@ -627,7 +629,7 @@
       min-width: 0;
     }
 
-    .docs-content > header {
+    .docs-content>header {
       margin-bottom: 2.5rem;
       padding-bottom: 1.5rem;
       border-bottom: 1px solid var(--line);
@@ -659,7 +661,7 @@
       max-width: 42rem;
     }
 
-    .doc-block p + p {
+    .doc-block p+p {
       margin-top: 0.85rem;
     }
 
@@ -668,7 +670,7 @@
       margin: 0.85rem 0 0 1.2rem;
     }
 
-    .doc-block li + li {
+    .doc-block li+li {
       margin-top: 0.35rem;
     }
 
@@ -770,9 +772,10 @@
   <nav class="nav" aria-label="Primary">
     <a class="nav-brand" href="/" aria-label="Newsletter">
       <svg viewBox="0 0 620 78" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <text x="0" y="62" textLength="620" lengthAdjust="spacingAndGlyphs"
-          font-family="Space Grotesk, sans-serif" font-size="72" font-weight="700">
-          <tspan fill="#121a24">NEWS</tspan><tspan fill="#1d6fd8">LETTER</tspan>
+        <text x="0" y="62" textLength="620" lengthAdjust="spacingAndGlyphs" font-family="Space Grotesk, sans-serif"
+          font-size="72" font-weight="700">
+          <tspan fill="#121a24">NEWS</tspan>
+          <tspan fill="#1d6fd8">LETTER</tspan>
         </text>
       </svg>
     </a>
@@ -789,9 +792,10 @@
     <div class="hero-copy">
       <div class="hero-brand" role="img" aria-label="Newsletter">
         <svg viewBox="0 0 620 78" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <text x="0" y="62" textLength="620" lengthAdjust="spacingAndGlyphs"
-            font-family="Space Grotesk, sans-serif" font-size="72" font-weight="700">
-            <tspan fill="#121a24">NEWS</tspan><tspan fill="#1d6fd8">LETTER</tspan>
+          <text x="0" y="62" textLength="620" lengthAdjust="spacingAndGlyphs" font-family="Space Grotesk, sans-serif"
+            font-size="72" font-weight="700">
+            <tspan fill="#121a24">NEWS</tspan>
+            <tspan fill="#1d6fd8">LETTER</tspan>
           </text>
         </svg>
       </div>
@@ -836,19 +840,22 @@
         <div class="coverage-row">
           <span class="n">01</span>
           <span class="name">AI · MCP</span>
-          <span class="desc">Native MCP so Cursor and Claude can list campaigns, draft templates, create messages, and read delivery metrics.</span>
+          <span class="desc">Native MCP so Cursor and Claude can list campaigns, draft templates, create messages, and
+            read delivery metrics.</span>
           <span class="tag"><a class="link-inline" href="#doc-mcp">Docs</a></span>
         </div>
         <div class="coverage-row">
           <span class="n">02</span>
           <span class="name">REST API</span>
-          <span class="desc">Sanctum-authenticated CRUD for subscribers, tags, templates, campaigns, and messages — plus OpenAPI at <code>/api/documentation</code>.</span>
+          <span class="desc">Sanctum-authenticated CRUD for subscribers, tags, templates, campaigns, and messages — plus
+            OpenAPI at <code>/api/documentation</code>.</span>
           <span class="tag"><a class="link-inline" href="#doc-api">Docs</a></span>
         </div>
         <div class="coverage-row">
           <span class="n">03</span>
           <span class="name">Roles</span>
-          <span class="desc">Editor, Manager, and Administrator with clear boundaries over campaigns, subscribers, tokens, and users.</span>
+          <span class="desc">Editor, Manager, and Administrator with clear boundaries over campaigns, subscribers,
+            tokens, and users.</span>
           <span class="tag"><a class="link-inline" href="#doc-roles">Docs</a></span>
         </div>
       </div>
@@ -866,7 +873,8 @@
       <div class="feature-list">
         <div class="feature-row">
           <div class="name">Subscribers &amp; tags</div>
-          <div class="desc">CSV import/export, status workflows, tagging, and precise audience segmentation — including testing tags that keep dry-runs out of production metrics.</div>
+          <div class="desc">CSV import/export, status workflows, tagging, and precise audience segmentation — including
+            testing tags that keep dry-runs out of production metrics.</div>
         </div>
         <div class="feature-row">
           <div class="name">Campaigns &amp; messages</div>
@@ -878,7 +886,8 @@
         </div>
         <div class="feature-row">
           <div class="name">Scheduled sending</div>
-          <div class="desc">Cron-driven delivery with rate limits and estimated completion aligned to your SMTP caps.</div>
+          <div class="desc">Cron-driven delivery with rate limits and estimated completion aligned to your SMTP caps.
+          </div>
         </div>
         <div class="feature-row">
           <div class="name">Full tracking</div>
@@ -935,7 +944,8 @@
 
       <p style="margin-top:1.5rem;color:var(--muted);max-width:40rem">
         Prefer the one-shot setup script?
-        <code>composer run setup</code> installs dependencies, creates <code>.env</code>, generates the key, migrates, and builds assets.
+        <code>composer run setup</code> installs dependencies, creates <code>.env</code>, generates the key, migrates,
+        and builds assets.
         Full details in
         <a class="link-inline" href="#doc-installation">Docs → Installation</a>.
       </p>
@@ -966,7 +976,8 @@
           <h2 class="section-title">From zero to first campaign.</h2>
           <p class="section-lead" style="margin-bottom:0">
             The essentials to install, configure, send, and integrate. Deep reference lives in the
-            <a class="link-inline" href="https://github.com/andreapollastri/newsletter/blob/main/README.md" target="_blank" rel="noopener">GitHub README</a>.
+            <a class="link-inline" href="https://github.com/andreapollastri/newsletter/blob/main/README.md"
+              target="_blank" rel="noopener">GitHub README</a>.
           </p>
         </header>
 
@@ -974,10 +985,12 @@
           <h3>Overview</h3>
           <p>
             Newsletter is a complete newsletter management system for Laravel, built with Filament.
-            Manage subscribers, campaigns, HTML templates, scheduled sending, and full tracking from a modern admin panel.
+            Manage subscribers, campaigns, HTML templates, scheduled sending, and full tracking from a modern admin
+            panel.
           </p>
           <p>
-            It ships with a Sanctum REST API (OpenAPI docs included) and an MCP server so AI agents can operate on the same data as your team.
+            It ships with a Sanctum REST API (OpenAPI docs included) and an MCP server so AI agents can operate on the
+            same data as your team.
           </p>
         </article>
 
@@ -1085,8 +1098,7 @@
           <div class="code-block">
             <div class="code-header">
               <span>bash</span>
-              <button class="copy-btn" type="button"
-                data-copy="composer require webklex/laravel-imap">Copy</button>
+              <button class="copy-btn" type="button" data-copy="composer require webklex/laravel-imap">Copy</button>
             </div>
             <pre><span class="tok-cmd">composer require</span> <span class="tok-arg">webklex/laravel-imap</span></pre>
           </div>
@@ -1147,7 +1159,8 @@
           </p>
           <h4>Testing tags</h4>
           <p>
-            Mark tags as testing in Filament. Messages that target <em>only</em> testing tags are excluded from production statistics
+            Mark tags as testing in Filament. Messages that target <em>only</em> testing tags are excluded from
+            production statistics
             and cleaned up after the send — so you can dry-run the pipeline safely.
           </p>
         </article>
@@ -1163,7 +1176,8 @@
             <pre>Authorization: Bearer &lt;your-token&gt;</pre>
           </div>
           <p style="margin-top:1rem">
-            Resources under <code>/api</code>: user, newsletter report, tags, subscribers, templates, campaigns, and messages.
+            Resources under <code>/api</code>: user, newsletter report, tags, subscribers, templates, campaigns, and
+            messages.
             Interactive OpenAPI UI: <code>/api/documentation</code>.
           </p>
         </article>
@@ -1260,14 +1274,14 @@
           <div class="code-block">
             <div class="code-header">
               <span>bash</span>
-              <button class="copy-btn" type="button"
-                data-copy="wget -O - https://cipi.sh/setup.sh | bash">Copy</button>
+              <button class="copy-btn" type="button" data-copy="wget -O - https://cipi.sh/setup.sh | bash">Copy</button>
             </div>
             <pre><span class="tok-cmd">wget -O -</span> https://cipi.sh/setup.sh | bash</pre>
           </div>
           <p style="margin-top:1rem">
             Source and issues:
-            <a class="link-inline" href="https://github.com/andreapollastri/newsletter" target="_blank" rel="noopener">github.com/andreapollastri/newsletter</a>
+            <a class="link-inline" href="https://github.com/andreapollastri/newsletter" target="_blank"
+              rel="noopener">github.com/andreapollastri/newsletter</a>
             · MIT License · v2.1
           </p>
         </article>
@@ -1329,9 +1343,9 @@
     sections.forEach((section) => tocObserver.observe(section));
   </script>
 
-  <script async src="https://stats.web.ap.it/i/fd96bd67-38b9-4bac-a25a-99eda590d971.js"></script>
-  <noscript><img src="https://stats.web.ap.it/collect/pixel.gif?k=fd96bd67-38b9-4bac-a25a-99eda590d971&p=/" width="1"
-      height="1" alt="" /></noscript>
+  <script async src="https://stats.misterdev.it/i/ddf034e6-03ec-4662-a182-637a5792a149.js"></script>
+  <noscript><img src="https://stats.misterdev.it/collect/pixel.gif?k=ddf034e6-03ec-4662-a182-637a5792a149&p=/" width="1"
+      height="1" /></noscript>
 </body>
 
 </html>
