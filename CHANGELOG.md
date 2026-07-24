@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.1.1] - 2026-07-24
+
+### Added
+
+- **Product docs site** — static marketing/docs pages under `docs/` (home + 404), deployable via Netlify (`netlify.toml`, publish directory `docs`).
+- **Boogle error tracking** — exceptions are reported via `Boogle::handle()` in the application exception pipeline; `config/boogle.php` gains HTTP snapshot options (query, payload, cookies; session/headers off by default). Requires `BOOGLE_KEY` and `BOOGLE_PROJECT_KEY` (active in `production` only).
+
+### Changed
+
+- **Dependencies** — Composer and npm lockfile refresh; Filament frontend assets republished.
+
+---
+
 ## [2.1.0] - 2026-07-21
 
 ### Added

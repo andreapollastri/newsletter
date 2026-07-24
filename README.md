@@ -1,6 +1,6 @@
 # Newsletter System
 
-**Version 2.1.0** — [Changelog](CHANGELOG.md)
+**Version 2.1.1** — [Changelog](CHANGELOG.md)
 
 A complete newsletter management system for Laravel, built with Filament. Manage subscribers, campaigns, HTML templates, scheduled sending, and full tracking — all from a modern admin panel. Includes a REST API, OpenAPI documentation, and an MCP server for AI integrations.
 
