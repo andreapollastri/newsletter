@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/subscribe', [SubscribeController::class, 'showForm'])->name('subscribe.form');
 Route::post('/subscribe', [SubscribeController::class, 'subscribe'])->name('subscribe.store');
 Route::get('/subscribe/confirm/{token}', [SubscribeController::class, 'confirm'])->name('subscribe.confirm');
+Route::post('/unsubscribe/test', [SubscribeController::class, 'testUnsubscribe'])->name('unsubscribe.test');
 Route::get('/unsubscribe/{subscriber}', [SubscribeController::class, 'unsubscribe'])->name('unsubscribe');
 Route::post('/unsubscribe/{subscriber}', [SubscribeController::class, 'oneClickUnsubscribe'])->name('unsubscribe.oneClick');
 Route::post('/unsubscribe/{subscriber}/confirm', [SubscribeController::class, 'confirmUnsubscribe'])->name('unsubscribe.confirm');

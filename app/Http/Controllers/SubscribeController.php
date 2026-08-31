@@ -127,6 +127,14 @@ class SubscribeController extends Controller
     }
 
     /**
+     * Unsubscribe endpoint for test sends that always returns success.
+     */
+    public function testUnsubscribe(): Response
+    {
+        return response()->noContent();
+    }
+
+    /**
      * Confirm and process unsubscribe.
      */
     public function confirmUnsubscribe(Request $request, Subscriber $subscriber): View
