@@ -7,6 +7,7 @@ use App\Mail\SubscriptionConfirmation;
 use App\Models\MessageSend;
 use App\Models\Subscriber;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
@@ -109,6 +110,31 @@ class SubscribeController extends Controller
     }
 
     /**
+     * Handle RFC 8058 one-click unsubscribe (POST to the List-Unsubscribe URL).
+     */
+    public function oneClickUnsubscribe(Request $request, Subscriber $subscriber): Response
+    {
+        $messageSendId = $request->query('message_send');
+
+        $messageId = null;
+        if ($messageSendId && ($messageSend = MessageSend::find($messageSendId))) {
+            $messageId = $messageSend->message_id;
+        }
+
+        $this->markUnsubscribed($subscriber, $messageId);
+
+        return response()->noContent();
+    }
+
+    /**
+     * Unsubscribe endpoint for test sends that always returns success.
+     */
+    public function testUnsubscribe(): Response
+    {
+        return response()->noContent();
+    }
+
+    /**
      * Confirm and process unsubscribe.
      */
     public function confirmUnsubscribe(Request $request, Subscriber $subscriber): View
@@ -126,6 +152,16 @@ class SubscribeController extends Controller
             $request->session()->forget('unsubscribe_message_send');
         }
 
+        $this->markUnsubscribed($subscriber, $messageId);
+
+        return view('subscribe.unsubscribed');
+    }
+
+    /**
+     * Mark the subscriber as unsubscribed.
+     */
+    protected function markUnsubscribed(Subscriber $subscriber, ?int $messageId): void
+    {
         if ($subscriber->status !== SubscriberStatus::Unsubscribed) {
             $subscriber->update([
                 'status' => SubscriberStatus::Unsubscribed,
@@ -133,7 +169,5 @@ class SubscribeController extends Controller
                 'unsubscribed_from_message_id' => $messageId,
             ]);
         }
-
-        return view('subscribe.unsubscribed');
     }
 }

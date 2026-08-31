@@ -84,8 +84,10 @@ class SendNewsletterEmail implements ShouldQueue
                 );
             }
 
+            $unsubscribeUrl = route('unsubscribe', $subscriber->id).'?message_send='.$messageSend->id;
+
             // Send email
-            Mail::to($subscriber->email)->send(new NewsletterMail($subject, $htmlContent));
+            Mail::to($subscriber->email)->send(new NewsletterMail($subject, $htmlContent, $unsubscribeUrl));
 
             // Mark as sent
             $messageSend->update([
