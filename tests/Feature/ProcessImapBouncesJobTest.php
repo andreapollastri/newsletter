@@ -63,6 +63,7 @@ class ProcessImapBouncesJobTest extends TestCase
         $detector = app(ImapBounceDetector::class);
 
         $this->assertTrue($detector->isBounceLikely('Mail Delivery Failed', 'User unknown'));
+        $this->assertTrue($detector->isBounceLikely('Undelivered Mail Returned to Sender', ''));
         $this->assertSame('hard', $detector->detectBounceType('mailbox not found for bounce@example.com'));
         $this->assertSame([$subscriber->email], $detector->extractEmailAddresses('Failed: bounce@example.com mailer-daemon@example.com'));
         $this->assertSame($latest->id, $detector->resolveMessageSendId($subscriber));
