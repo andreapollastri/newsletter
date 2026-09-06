@@ -14,6 +14,11 @@ class SubscriberExporter extends Exporter
 {
     protected static ?string $model = Subscriber::class;
 
+    public function getFileDisk(): string
+    {
+        return config('filesystems.default', 'local');
+    }
+
     public static function getColumns(): array
     {
         return [
