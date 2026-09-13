@@ -12,9 +12,11 @@ class ImapBounceDetector
      */
     private const BOUNCE_INDICATORS = [
         'delivery status notification',
+        'undelivered mail',
         'undeliverable',
         'mail delivery failed',
         'returned mail',
+        'returned to sender',
         'delivery failure',
         'bounce',
         'non-delivery report',
