@@ -178,6 +178,10 @@ class MessagesTable
                             Mail::html($htmlContent, function ($message) use ($subject, $data) {
                                 $message->to($data['test_email'])
                                     ->subject('[TEST] '.$subject);
+
+                                $message->getSymfonyMessage()->getHeaders()
+                                    ->addTextHeader('List-Unsubscribe', '<'.route('unsubscribe.test').'>')
+                                    ->addTextHeader('List-Unsubscribe-Post', 'List-Unsubscribe=One-Click');
                             });
 
                             Notification::make()

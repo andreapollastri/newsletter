@@ -6,6 +6,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Envelope;
+use Illuminate\Mail\Mailables\Headers;
 use Illuminate\Queue\SerializesModels;
 
 class NewsletterMail extends Mailable
@@ -17,7 +18,8 @@ class NewsletterMail extends Mailable
      */
     public function __construct(
         public string $emailSubject,
-        public string $htmlContent
+        public string $htmlContent,
+        public string $unsubscribeUrl,
     ) {
         //
     }
@@ -38,6 +40,19 @@ class NewsletterMail extends Mailable
     public function build(): self
     {
         return $this->html($this->htmlContent);
+    }
+
+    /**
+     * Get the headers for the message.
+     */
+    public function headers(): Headers
+    {
+        return new Headers(
+            text: [
+                'List-Unsubscribe' => '<'.$this->unsubscribeUrl.'>',
+                'List-Unsubscribe-Post' => 'List-Unsubscribe=One-Click',
+            ],
+        );
     }
 
     /**
