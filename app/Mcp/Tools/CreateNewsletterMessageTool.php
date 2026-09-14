@@ -14,7 +14,7 @@ use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Attributes\Description;
 use Laravel\Mcp\Server\Tool;
 
-#[Description('Creates a draft or ready message inside a campaign owned by the user, optionally attaching audience tags.')]
+#[Description('Creates a draft or ready message inside a campaign owned by the user, optionally attaching include and exclude audience tags.')]
 class CreateNewsletterMessageTool extends Tool
 {
     public function handle(Request $request): Response
@@ -32,7 +32,15 @@ class CreateNewsletterMessageTool extends Tool
             'status' => ['required', 'in:draft,ready'],
             'tag_ids' => ['nullable', 'array'],
             'tag_ids.*' => ['uuid', 'exists:tags,id'],
+            'excluded_tag_ids' => ['nullable', 'array'],
+            'excluded_tag_ids.*' => ['uuid', 'exists:tags,id'],
         ]);
+
+        $tagIds = $validated['tag_ids'] ?? [];
+        $excludedTagIds = $validated['excluded_tag_ids'] ?? [];
+        if (Message::tagsOverlap($tagIds, $excludedTagIds)) {
+            return Response::text(__('A tag cannot be both included and excluded.'));
+        }
 
         $campaign = Campaign::query()->findOrFail($validated['campaign_id']);
         if (! $user->canAccessCampaign($campaign)) {
@@ -51,13 +59,17 @@ class CreateNewsletterMessageTool extends Tool
         /** @var Message $message */
         $message = $campaign->messages()->create($data);
 
-        $tagIds = $validated['tag_ids'] ?? [];
         if ($tagIds !== []) {
             $valid = Tag::query()->whereIn('id', $tagIds)->pluck('id');
             $message->tags()->sync($valid);
         }
 
-        $message->load('tags');
+        if ($excludedTagIds !== []) {
+            $validExcluded = Tag::query()->whereIn('id', $excludedTagIds)->pluck('id');
+            $message->excludedTags()->sync($validExcluded);
+        }
+
+        $message->load(['tags', 'excludedTags']);
 
         return Response::json([
             'message' => [
@@ -67,6 +79,7 @@ class CreateNewsletterMessageTool extends Tool
                 'subject' => $message->subject,
                 'status' => $message->status->value,
                 'tag_ids' => $message->tags->pluck('id')->values()->all(),
+                'excluded_tag_ids' => $message->excludedTags->pluck('id')->values()->all(),
             ],
         ]);
     }
@@ -84,7 +97,10 @@ class CreateNewsletterMessageTool extends Tool
             'status' => $schema->string()->enum(['draft', 'ready'])->description('Message workflow status.')->required(),
             'tag_ids' => $schema->array()
                 ->items($schema->string()->format('uuid'))
-                ->description('Optional audience tag UUIDs.'),
+                ->description('Optional include audience tag UUIDs.'),
+            'excluded_tag_ids' => $schema->array()
+                ->items($schema->string()->format('uuid'))
+                ->description('Optional exclude audience tag UUIDs. Subscribers with these tags will not receive the message.'),
         ];
     }
 }

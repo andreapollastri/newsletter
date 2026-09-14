@@ -30,6 +30,8 @@ class UpdateMessageRequest extends FormRequest
             'scheduled_at' => ['nullable', 'date'],
             'tag_ids' => ['sometimes', 'array'],
             'tag_ids.*' => ['uuid', 'exists:tags,id'],
+            'excluded_tag_ids' => ['sometimes', 'array'],
+            'excluded_tag_ids.*' => ['uuid', 'exists:tags,id'],
         ];
     }
 
@@ -43,7 +45,7 @@ class UpdateMessageRequest extends FormRequest
             }
 
             if ($message->status === MessageStatus::Sent || $message->status === MessageStatus::Sending) {
-                if ($this->hasAny(['template_id', 'subject', 'html_content', 'status', 'scheduled_at', 'tag_ids'])) {
+                if ($this->hasAny(['template_id', 'subject', 'html_content', 'status', 'scheduled_at', 'tag_ids', 'excluded_tag_ids'])) {
                     $validator->errors()->add('status', __('Sent or sending messages cannot be modified via API.'));
                 }
             }
@@ -52,12 +54,21 @@ class UpdateMessageRequest extends FormRequest
                 $validator->errors()->add('status', __('Cannot change status while the message is sending.'));
             }
 
-            $tagIds = $this->input('tag_ids', null);
-            if ($tagIds === null) {
-                return;
+            $tagIds = $this->has('tag_ids') ? $this->input('tag_ids', []) : $message->tags()->pluck('tags.id')->all();
+            $excludedTagIds = $this->has('excluded_tag_ids')
+                ? $this->input('excluded_tag_ids', [])
+                : $message->excludedTags()->pluck('tags.id')->all();
+
+            if (
+                ($this->has('tag_ids') || $this->has('excluded_tag_ids'))
+                && is_array($tagIds)
+                && is_array($excludedTagIds)
+                && Message::tagsOverlap($tagIds, $excludedTagIds)
+            ) {
+                $validator->errors()->add('excluded_tag_ids', __('A tag cannot be both included and excluded.'));
             }
 
-            if (! is_array($tagIds) || $tagIds === []) {
+            if (! $this->has('tag_ids') || ! is_array($tagIds) || $tagIds === []) {
                 return;
             }
 

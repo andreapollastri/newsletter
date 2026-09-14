@@ -3,12 +3,10 @@
 namespace App\Filament\Resources\Messages\Tables;
 
 use App\Enums\MessageStatus;
-use App\Enums\SubscriberStatus;
 use App\Filament\Resources\Messages\MessageResource;
 use App\Jobs\SendNewsletterEmail;
 use App\Models\Message;
 use App\Models\MessageSend;
-use App\Models\Subscriber;
 use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
@@ -44,10 +42,14 @@ class MessagesTable
                 TextColumn::make('audience_tags')
                     ->label(__('Audience'))
                     ->badge()
-                    ->state(fn (Message $record): array => $record->tags->isEmpty()
-                        ? [__('All subscribers')]
-                        : $record->tags->pluck('name')->toArray())
-                    ->color(fn (string $state): string => $state === __('All subscribers') ? 'warning' : 'info'),
+                    ->state(fn (Message $record): array => $record->audienceLabels())
+                    ->color(function (string $state, Message $record): string {
+                        if ($state === __('All subscribers')) {
+                            return 'warning';
+                        }
+
+                        return $record->excludedTagLabels()->contains($state) ? 'danger' : 'info';
+                    }),
 
                 TextColumn::make('emails_sent_count')
                     ->label(__('Emails sent'))
@@ -115,15 +117,7 @@ class MessagesTable
                         ->action(function (Message $record) {
                             $record->update(['status' => MessageStatus::Sending]);
 
-                            // Get target subscribers
-                            $query = Subscriber::where('status', SubscriberStatus::Confirmed);
-
-                            if ($record->tags->isNotEmpty()) {
-                                $tagIds = $record->tags->pluck('id');
-                                $query->whereHas('tags', fn ($q) => $q->whereIn('tags.id', $tagIds));
-                            }
-
-                            $subscribers = $query->get();
+                            $subscribers = $record->targetSubscribers()->get();
 
                             foreach ($subscribers as $subscriber) {
                                 $messageSend = MessageSend::create([
@@ -207,9 +201,14 @@ class MessagesTable
                             $duplicate->subject = $record->subject.' ('.__('Copy').')';
                             $duplicate->save();
 
-                            // Copy tag relationships
+                            $record->loadMissing(['tags', 'excludedTags']);
+
                             if ($record->tags->isNotEmpty()) {
                                 $duplicate->tags()->attach($record->tags->pluck('id'));
+                            }
+
+                            if ($record->excludedTags->isNotEmpty()) {
+                                $duplicate->excludedTags()->attach($record->excludedTags->pluck('id'));
                             }
 
                             Notification::make()

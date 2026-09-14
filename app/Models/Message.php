@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\MessageStatus;
+use App\Enums\SubscriberStatus;
 use Database\Factories\MessageFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -11,6 +12,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class Message extends Model
@@ -83,6 +85,91 @@ class Message extends Model
     public function tags(): BelongsToMany
     {
         return $this->belongsToMany(Tag::class);
+    }
+
+    /**
+     * Tags whose subscribers must not receive this message.
+     *
+     * @return BelongsToMany<Tag, $this>
+     */
+    public function excludedTags(): BelongsToMany
+    {
+        return $this->belongsToMany(Tag::class, 'message_excluded_tag');
+    }
+
+    /**
+     * Confirmed subscribers who should receive this message.
+     *
+     * Include tags match any selected tag (OR). Excluded tags remove anyone
+     * who has at least one of those tags, including when include tags are empty.
+     *
+     * @return Builder<Subscriber>
+     */
+    public function targetSubscribers(): Builder
+    {
+        $this->loadMissing(['tags', 'excludedTags']);
+
+        $query = Subscriber::query()->where('status', SubscriberStatus::Confirmed);
+
+        if ($this->tags->isNotEmpty()) {
+            $tagIds = $this->tags->pluck('id');
+            $query->whereHas('tags', fn (Builder $q) => $q->whereIn('tags.id', $tagIds));
+        }
+
+        if ($this->excludedTags->isNotEmpty()) {
+            $excludedIds = $this->excludedTags->pluck('id');
+            $query->whereDoesntHave('tags', fn (Builder $q) => $q->whereIn('tags.id', $excludedIds));
+        }
+
+        return $query;
+    }
+
+    /**
+     * Labels for the audience column (include tags plus "not {tag}" exclusions).
+     *
+     * @return list<string>
+     */
+    public function audienceLabels(): array
+    {
+        $this->loadMissing(['tags', 'excludedTags']);
+
+        $included = $this->tags->pluck('name');
+        $excluded = $this->excludedTagLabels();
+
+        if ($included->isEmpty() && $excluded->isEmpty()) {
+            return [__('All subscribers')];
+        }
+
+        if ($included->isEmpty()) {
+            return $excluded->all();
+        }
+
+        return $included->concat($excluded)->values()->all();
+    }
+
+    /**
+     * @return Collection<int, string>
+     */
+    public function excludedTagLabels(): Collection
+    {
+        $this->loadMissing('excludedTags');
+
+        return $this->excludedTags
+            ->pluck('name')
+            ->map(fn (string $name): string => __('not :tag', ['tag' => $name]))
+            ->values();
+    }
+
+    /**
+     * @param  list<string>|array<int, string>  $includedIds
+     * @param  list<string>|array<int, string>  $excludedIds
+     */
+    public static function tagsOverlap(array $includedIds, array $excludedIds): bool
+    {
+        return array_intersect(
+            array_map(strval(...), $includedIds),
+            array_map(strval(...), $excludedIds),
+        ) !== [];
     }
 
     /**

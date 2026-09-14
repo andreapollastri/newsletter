@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Enums\MessageStatus;
 use App\Models\Campaign;
 use App\Models\Message;
+use App\Models\Tag;
 use App\Models\Template;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -131,6 +132,54 @@ class ApiCampaignAndMessageApiTest extends TestCase
 
         $this->withToken($token)->putJson('/api/campaigns/'.$campaign->id.'/messages/'.$message->id, [])
             ->assertForbidden();
+    }
+
+    public function test_can_create_and_update_message_excluded_tags_via_api(): void
+    {
+        $user = User::factory()->create();
+        $campaign = Campaign::factory()->create(['user_id' => $user->id]);
+        $template = Template::factory()->create();
+        $include = Tag::factory()->create();
+        $exclude = Tag::factory()->create();
+        $token = $user->createToken('test', ['api'])->plainTextToken;
+
+        $store = $this->withToken($token)->postJson('/api/campaigns/'.$campaign->id.'/messages', [
+            'template_id' => $template->id,
+            'subject' => 'Hello',
+            'html_content' => '<p>Body</p>',
+            'status' => MessageStatus::Draft->value,
+            'tag_ids' => [$include->id],
+            'excluded_tag_ids' => [$exclude->id],
+        ]);
+
+        $store->assertCreated()
+            ->assertJsonPath('data.tag_ids.0', $include->id)
+            ->assertJsonPath('data.excluded_tag_ids.0', $exclude->id);
+
+        $messageId = $store->json('data.id');
+
+        $this->withToken($token)->putJson('/api/campaigns/'.$campaign->id.'/messages/'.$messageId, [
+            'excluded_tag_ids' => [],
+        ])->assertOk()->assertJsonPath('data.excluded_tag_ids', []);
+    }
+
+    public function test_cannot_include_and_exclude_the_same_tag_via_api(): void
+    {
+        $user = User::factory()->create();
+        $campaign = Campaign::factory()->create(['user_id' => $user->id]);
+        $template = Template::factory()->create();
+        $tag = Tag::factory()->create();
+        $token = $user->createToken('test', ['api'])->plainTextToken;
+
+        $this->withToken($token)->postJson('/api/campaigns/'.$campaign->id.'/messages', [
+            'template_id' => $template->id,
+            'subject' => 'Hello',
+            'html_content' => '<p>Body</p>',
+            'status' => MessageStatus::Draft->value,
+            'tag_ids' => [$tag->id],
+            'excluded_tag_ids' => [$tag->id],
+        ])->assertUnprocessable()
+            ->assertJsonPath('errors.excluded_tag_ids.0', __('A tag cannot be both included and excluded.'));
     }
 
     public function test_cannot_delete_sent_message_via_api(): void

@@ -67,6 +67,17 @@ class ProcessImapBouncesJobTest extends TestCase
         $this->assertSame('hard', $detector->detectBounceType('mailbox not found for bounce@example.com'));
         $this->assertSame([$subscriber->email], $detector->extractEmailAddresses('Failed: bounce@example.com mailer-daemon@example.com'));
         $this->assertSame($latest->id, $detector->resolveMessageSendId($subscriber));
+        $this->assertSame(
+            $latest->id,
+            $detector->extractMessageSendIdFromContent('Failed: <img src="https://example.test/track/open/'.$latest->id.'">'),
+        );
+        $this->assertSame(
+            $latest->id,
+            $detector->resolveMessageSendId(
+                $subscriber,
+                'Mail Delivery Failed /track/open/'.$latest->id,
+            ),
+        );
 
         Bounce::create([
             'message_send_id' => $detector->resolveMessageSendId($subscriber),
@@ -90,5 +101,47 @@ class ProcessImapBouncesJobTest extends TestCase
         $this->artisan('newsletter:process-bounces')
             ->expectsOutputToContain('disabled')
             ->assertSuccessful();
+    }
+
+    public function test_detector_prefers_tracking_pixel_over_latest_send(): void
+    {
+        $subscriber = Subscriber::factory()->confirmed()->create();
+
+        MessageSend::factory()->sent()->create([
+            'subscriber_id' => $subscriber->id,
+            'sent_at' => now(),
+        ]);
+
+        $original = MessageSend::factory()->sent()->create([
+            'subscriber_id' => $subscriber->id,
+            'sent_at' => now()->subMinute(),
+        ]);
+
+        $detector = app(ImapBounceDetector::class);
+
+        $this->assertSame(
+            $original->id,
+            $detector->resolveMessageSendId(
+                $subscriber,
+                'Undelivered Mail Returned to Sender https://example.test/track/click/'.$original->id.'?url=abc',
+            ),
+        );
+    }
+
+    public function test_detector_ignores_tracking_pixel_belonging_to_another_subscriber(): void
+    {
+        $subscriber = Subscriber::factory()->confirmed()->create();
+        $latest = MessageSend::factory()->sent()->create([
+            'subscriber_id' => $subscriber->id,
+            'sent_at' => now(),
+        ]);
+        $foreign = MessageSend::factory()->sent()->create();
+
+        $detector = app(ImapBounceDetector::class);
+
+        $this->assertSame(
+            $latest->id,
+            $detector->resolveMessageSendId($subscriber, '/track/open/'.$foreign->id),
+        );
     }
 }

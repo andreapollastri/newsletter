@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Bounce;
 use App\Models\MessageSend;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -162,6 +163,48 @@ class TrackingControllerTest extends TestCase
             ->assertHeader('Content-Type', 'image/gif');
 
         $this->assertDatabaseCount('message_opens', 0);
+    }
+
+    public function test_open_tracking_ignores_bounced_sends(): void
+    {
+        $messageSend = MessageSend::factory()->sent()->create(['opens_count' => 0]);
+
+        Bounce::create([
+            'message_send_id' => $messageSend->id,
+            'email' => $messageSend->subscriber->email,
+            'type' => 'hard',
+            'raw_message' => 'undelivered mail returned to sender',
+            'detected_at' => now(),
+        ]);
+
+        $this->get(route('tracking.open', $messageSend))
+            ->assertSuccessful()
+            ->assertHeader('Content-Type', 'image/gif');
+
+        $this->assertDatabaseCount('message_opens', 0);
+        $this->assertSame(0, $messageSend->fresh()->opens_count);
+    }
+
+    public function test_click_tracking_ignores_bounced_sends(): void
+    {
+        $messageSend = MessageSend::factory()->sent()->create(['clicks_count' => 0]);
+        $url = 'https://example.com/from-ndr';
+
+        Bounce::create([
+            'message_send_id' => $messageSend->id,
+            'email' => $messageSend->subscriber->email,
+            'type' => 'hard',
+            'raw_message' => 'undelivered mail returned to sender',
+            'detected_at' => now(),
+        ]);
+
+        $this->get(route('tracking.click', [
+            'messageSend' => $messageSend,
+            'url' => base64_encode($url),
+        ]))->assertRedirect($url);
+
+        $this->assertDatabaseCount('message_clicks', 0);
+        $this->assertSame(0, $messageSend->fresh()->clicks_count);
     }
 
     public function test_tracking_returns_404_for_non_uuid_message_send_parameter(): void

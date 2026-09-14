@@ -82,6 +82,22 @@ class MessageSend extends Model
     }
 
     /**
+     * Failed deliveries cannot have been opened or clicked by the recipient.
+     *
+     * Bounce NDRs typically include the original HTML, so mail clients and scanners
+     * load the tracking pixel and would otherwise inflate open/click counts.
+     */
+    public function discardEngagementTracking(): void
+    {
+        $this->opens()->delete();
+        $this->clicks()->delete();
+        $this->forceFill([
+            'opens_count' => 0,
+            'clicks_count' => 0,
+        ])->save();
+    }
+
+    /**
      * Sends that count toward newsletter statistics (excludes testing-tag-only message audiences).
      *
      * @param  Builder<MessageSend>  $query

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\MessageSend;
 use App\Models\Subscriber;
+use Illuminate\Support\Str;
 
 class ImapBounceDetector
 {
@@ -76,15 +77,42 @@ class ImapBounceDetector
     }
 
     /**
-     * Prefer the most recent successful send for this subscriber.
+     * Prefer a tracking URL from the NDR body, otherwise the most recent successful send.
      */
-    public function resolveMessageSendId(Subscriber $subscriber): ?string
+    public function resolveMessageSendId(Subscriber $subscriber, string $content = ''): ?string
     {
+        $extractedId = $this->extractMessageSendIdFromContent($content);
+
+        if ($extractedId !== null) {
+            $belongsToSubscriber = MessageSend::query()
+                ->whereKey($extractedId)
+                ->where('subscriber_id', $subscriber->id)
+                ->exists();
+
+            if ($belongsToSubscriber) {
+                return $extractedId;
+            }
+        }
+
         return MessageSend::query()
             ->where('subscriber_id', $subscriber->id)
             ->whereNotNull('sent_at')
             ->whereNull('failed_at')
             ->latest('sent_at')
             ->value('id');
+    }
+
+    /**
+     * Pull the original message-send UUID from a tracking pixel or wrapped click URL.
+     */
+    public function extractMessageSendIdFromContent(string $content): ?string
+    {
+        $decoded = urldecode(html_entity_decode($content, ENT_QUOTES));
+
+        if (preg_match('#/track/(?:open|click)/([0-9a-fA-F-]{36})#', $decoded, $matches) !== 1) {
+            return null;
+        }
+
+        return Str::isUuid($matches[1]) ? $matches[1] : null;
     }
 }

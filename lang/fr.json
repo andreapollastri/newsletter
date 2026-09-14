@@ -232,6 +232,10 @@
     "Creating messages in :status status is not allowed via API.": "La création de messages au statut :status n’est pas autorisée via l’API.",
     "Audience": "Audience",
     "All subscribers": "Tous les abonnés",
+    "Exclude tags": "Exclure des tags",
+    "Subscribers with these tags will not receive the message, even if they match the selected recipient tags. Leave empty to exclude nobody.": "Les abonnés ayant ces tags ne recevront pas le message, même s'ils correspondent aux tags destinataires. Laissez vide pour n'exclure personne.",
+    "A tag cannot be both included and excluded.": "Un tag ne peut pas être à la fois inclus et exclu.",
+    "not :tag": "pas :tag",
     "Emails sent": "E-mails envoyés",
     "Opens (total)": "Ouvertures (total)",
     "Hide sends to test-only subscribers": "Masquer les envois vers abonnés test uniquement"

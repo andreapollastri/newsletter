@@ -45,4 +45,12 @@ class Tag extends Model
     {
         return $this->belongsToMany(Message::class);
     }
+
+    /**
+     * @return BelongsToMany<Message, $this>
+     */
+    public function excludedFromMessages(): BelongsToMany
+    {
+        return $this->belongsToMany(Message::class, 'message_excluded_tag');
+    }
 }

@@ -74,6 +74,19 @@ class MessageInfolist
                         TextEntry::make('sent_at')
                             ->label(__('Sent At'))
                             ->dateTime(),
+
+                        TextEntry::make('audience_tags')
+                            ->label(__('Audience'))
+                            ->badge()
+                            ->state(fn (Message $record): array => $record->audienceLabels())
+                            ->color(function (string $state, Message $record): string {
+                                if ($state === __('All subscribers')) {
+                                    return 'warning';
+                                }
+
+                                return $record->excludedTagLabels()->contains($state) ? 'danger' : 'info';
+                            })
+                            ->columnSpanFull(),
                     ])
                     ->columnSpanFull(),
 

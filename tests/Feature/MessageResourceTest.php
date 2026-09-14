@@ -9,10 +9,12 @@ use App\Filament\Resources\Messages\Pages\ListMessages;
 use App\Models\Campaign;
 use App\Models\Message;
 use App\Models\MessageSend;
+use App\Models\Subscriber;
 use App\Models\Tag;
 use App\Models\Template;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Queue;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -269,8 +271,10 @@ class MessageResourceTest extends TestCase
         $message = Message::factory()->for($campaign)->create();
         $tag1 = Tag::factory()->create();
         $tag2 = Tag::factory()->create();
+        $excluded = Tag::factory()->create(['name' => 'partner']);
 
         $message->tags()->attach([$tag1->id, $tag2->id]);
+        $message->excludedTags()->attach($excluded->id);
 
         Livewire::test(ListMessages::class)
             ->callTableAction('duplicate', $message);
@@ -280,6 +284,107 @@ class MessageResourceTest extends TestCase
         $this->assertCount(2, $duplicate->tags);
         $this->assertTrue($duplicate->tags->contains($tag1));
         $this->assertTrue($duplicate->tags->contains($tag2));
+        $this->assertCount(1, $duplicate->excludedTags);
+        $this->assertTrue($duplicate->excludedTags->contains($excluded));
+    }
+
+    public function test_can_create_message_with_excluded_tags(): void
+    {
+        $campaign = Campaign::factory()->create(['user_id' => $this->user->id]);
+        $template = Template::factory()->create();
+        $partner = Tag::factory()->create(['name' => 'partner']);
+
+        Livewire::test(CreateMessage::class)
+            ->fillForm([
+                'campaign_id' => $campaign->id,
+                'template_id' => $template->id,
+                'subject' => 'Not partners',
+                'html_content' => '<p>Hello</p>',
+                'status' => MessageStatus::Draft->value,
+                'excludedTags' => [$partner->id],
+            ])
+            ->call('create')
+            ->assertHasNoFormErrors();
+
+        $message = Message::query()->where('subject', 'Not partners')->first();
+
+        $this->assertNotNull($message);
+        $this->assertTrue($message->excludedTags->contains($partner));
+    }
+
+    public function test_cannot_include_and_exclude_the_same_tag(): void
+    {
+        $campaign = Campaign::factory()->create(['user_id' => $this->user->id]);
+        $template = Template::factory()->create();
+        $tag = Tag::factory()->create();
+
+        Livewire::test(CreateMessage::class)
+            ->fillForm([
+                'campaign_id' => $campaign->id,
+                'template_id' => $template->id,
+                'subject' => 'Overlap',
+                'html_content' => '<p>Hello</p>',
+                'status' => MessageStatus::Draft->value,
+                'tags' => [$tag->id],
+                'excludedTags' => [$tag->id],
+            ])
+            ->call('create')
+            ->assertHasFormErrors(['excludedTags']);
+    }
+
+    public function test_send_now_skips_subscribers_with_excluded_tags(): void
+    {
+        Queue::fake();
+
+        $campaign = Campaign::factory()->create(['user_id' => $this->user->id]);
+        $partner = Tag::factory()->create(['name' => 'partner']);
+        $message = Message::factory()->for($campaign)->ready()->create();
+        $message->excludedTags()->attach($partner->id);
+
+        $regular = Subscriber::factory()->confirmed()->create();
+        $partnerSubscriber = Subscriber::factory()->confirmed()->create();
+        $partnerSubscriber->tags()->attach($partner->id);
+
+        Livewire::test(ListMessages::class)
+            ->callTableAction('sendNow', $message);
+
+        $this->assertDatabaseHas('message_sends', [
+            'message_id' => $message->id,
+            'subscriber_id' => $regular->id,
+        ]);
+        $this->assertDatabaseMissing('message_sends', [
+            'message_id' => $message->id,
+            'subscriber_id' => $partnerSubscriber->id,
+        ]);
+    }
+
+    public function test_scheduled_send_skips_subscribers_with_excluded_tags(): void
+    {
+        Queue::fake();
+
+        $partner = Tag::factory()->create(['name' => 'partner']);
+        $message = Message::factory()->for(
+            Campaign::factory()->create(['user_id' => $this->user->id])
+        )->create([
+            'status' => MessageStatus::Ready,
+            'scheduled_at' => now()->subMinute(),
+        ]);
+        $message->excludedTags()->attach($partner->id);
+
+        $regular = Subscriber::factory()->confirmed()->create();
+        $partnerSubscriber = Subscriber::factory()->confirmed()->create();
+        $partnerSubscriber->tags()->attach($partner->id);
+
+        $this->artisan('newsletter:send-scheduled')->assertSuccessful();
+
+        $this->assertDatabaseHas('message_sends', [
+            'message_id' => $message->id,
+            'subscriber_id' => $regular->id,
+        ]);
+        $this->assertDatabaseMissing('message_sends', [
+            'message_id' => $message->id,
+            'subscriber_id' => $partnerSubscriber->id,
+        ]);
     }
 
     public function test_can_delete_draft_message(): void

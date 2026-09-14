@@ -28,6 +28,7 @@ class MessageResource extends JsonResource
             'created_at' => $this->created_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),
             'tag_ids' => $this->whenLoaded('tags', fn () => $this->tags->pluck('id')->values()->all()),
+            'excluded_tag_ids' => $this->whenLoaded('excludedTags', fn () => $this->excludedTags->pluck('id')->values()->all()),
         ];
     }
 }

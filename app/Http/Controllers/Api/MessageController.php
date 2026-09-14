@@ -34,7 +34,7 @@ class MessageController extends Controller
         $this->authorize('view', $campaign);
 
         $messages = $campaign->messages()
-            ->with('tags')
+            ->with(['tags', 'excludedTags'])
             ->orderByDesc('created_at')
             ->get();
 
@@ -65,6 +65,12 @@ class MessageController extends Controller
                         items: new OA\Items(type: 'string', format: 'uuid'),
                         nullable: true
                     ),
+                    new OA\Property(
+                        property: 'excluded_tag_ids',
+                        type: 'array',
+                        items: new OA\Items(type: 'string', format: 'uuid'),
+                        nullable: true
+                    ),
                 ]
             )
         ),
@@ -81,11 +87,13 @@ class MessageController extends Controller
 
         $data = $request->validated();
         $tagIds = $data['tag_ids'] ?? [];
-        unset($data['tag_ids']);
+        $excludedTagIds = $data['excluded_tag_ids'] ?? [];
+        unset($data['tag_ids'], $data['excluded_tag_ids']);
 
         $message = $campaign->messages()->create($data);
         $message->tags()->sync($tagIds);
-        $message->load('tags');
+        $message->excludedTags()->sync($excludedTagIds);
+        $message->load(['tags', 'excludedTags']);
 
         return (new MessageResource($message))
             ->response()
@@ -113,7 +121,7 @@ class MessageController extends Controller
         $this->authorize('view', $campaign);
         $this->authorize('view', $message);
 
-        $message->load('tags');
+        $message->load(['tags', 'excludedTags']);
 
         return new MessageResource($message);
     }
@@ -141,6 +149,12 @@ class MessageController extends Controller
                         items: new OA\Items(type: 'string', format: 'uuid'),
                         nullable: true
                     ),
+                    new OA\Property(
+                        property: 'excluded_tag_ids',
+                        type: 'array',
+                        items: new OA\Items(type: 'string', format: 'uuid'),
+                        nullable: true
+                    ),
                 ]
             )
         ),
@@ -159,9 +173,14 @@ class MessageController extends Controller
 
         $data = $request->validated();
         $tagIds = null;
+        $excludedTagIds = null;
         if (array_key_exists('tag_ids', $data)) {
             $tagIds = $data['tag_ids'];
             unset($data['tag_ids']);
+        }
+        if (array_key_exists('excluded_tag_ids', $data)) {
+            $excludedTagIds = $data['excluded_tag_ids'];
+            unset($data['excluded_tag_ids']);
         }
 
         if ($data !== []) {
@@ -172,7 +191,11 @@ class MessageController extends Controller
             $message->tags()->sync($tagIds);
         }
 
-        return new MessageResource($message->fresh(['tags']));
+        if ($excludedTagIds !== null) {
+            $message->excludedTags()->sync($excludedTagIds);
+        }
+
+        return new MessageResource($message->fresh(['tags', 'excludedTags']));
     }
 
     #[OA\Delete(

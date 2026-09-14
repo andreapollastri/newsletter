@@ -69,6 +69,7 @@ class MessageResource extends Resource
         return parent::getEloquentQuery()
             ->with([
                 'tags',
+                'excludedTags',
                 'campaign',
             ])
             ->withCount([

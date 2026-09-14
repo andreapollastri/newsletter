@@ -2,10 +2,9 @@
 
 namespace App\Jobs;
 
-use App\Enums\SubscriberStatus;
-use App\Models\Bounce;
 use App\Models\Subscriber;
 use App\Services\ImapBounceDetector;
+use App\Services\RecordSubscriberBounce;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
@@ -26,7 +25,7 @@ class ProcessImapBounces implements ShouldQueue
     /**
      * Execute the job.
      */
-    public function handle(ImapBounceDetector $detector): void
+    public function handle(ImapBounceDetector $detector, RecordSubscriberBounce $recorder): void
     {
         if (! config('newsletter.imap.enabled')) {
             Log::info('IMAP bounce processing is disabled (NEWSLETTER_IMAP_ENABLED=false).');
@@ -72,7 +71,7 @@ class ProcessImapBounces implements ShouldQueue
                 ->get();
 
             foreach ($messages as $message) {
-                $this->processMessage($message, $detector);
+                $this->processMessage($message, $detector, $recorder);
             }
 
             $client->disconnect();
@@ -82,10 +81,12 @@ class ProcessImapBounces implements ShouldQueue
         }
     }
 
-    protected function processMessage(mixed $message, ImapBounceDetector $detector): void
+    protected function processMessage(mixed $message, ImapBounceDetector $detector, RecordSubscriberBounce $recorder): void
     {
         $subject = (string) $message->getSubject();
-        $body = (string) ($message->getTextBody() ?? $message->getHTMLBody() ?? '');
+        $textBody = (string) ($message->getTextBody() ?? '');
+        $htmlBody = (string) ($message->getHTMLBody() ?? '');
+        $body = trim($textBody."\n".$htmlBody);
 
         if (! $detector->isBounceLikely($subject, $body)) {
             return;
@@ -102,32 +103,14 @@ class ProcessImapBounces implements ShouldQueue
                 continue;
             }
 
-            $messageSendId = $detector->resolveMessageSendId($subscriber);
+            $bounce = $recorder->handle($subscriber, $bounceType, $rawMessage, $body);
 
-            if ($messageSendId !== null && Bounce::query()->where('message_send_id', $messageSendId)->exists()) {
-                $subscriber->update([
-                    'status' => SubscriberStatus::Bounced,
+            if ($bounce->wasRecentlyCreated) {
+                Log::info("Bounce detected for email: {$email}", [
+                    'message_send_id' => $bounce->message_send_id,
+                    'type' => $bounceType,
                 ]);
-
-                continue;
             }
-
-            Bounce::create([
-                'message_send_id' => $messageSendId,
-                'email' => $email,
-                'type' => $bounceType,
-                'raw_message' => $rawMessage,
-                'detected_at' => now(),
-            ]);
-
-            $subscriber->update([
-                'status' => SubscriberStatus::Bounced,
-            ]);
-
-            Log::info("Bounce detected for email: {$email}", [
-                'message_send_id' => $messageSendId,
-                'type' => $bounceType,
-            ]);
         }
 
         $message->setFlag('Seen');

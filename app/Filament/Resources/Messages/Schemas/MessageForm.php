@@ -11,6 +11,7 @@ use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 
 class MessageForm
@@ -81,21 +82,49 @@ class MessageForm
                             ->multiple()
                             ->searchable()
                             ->preload()
-                            ->columnSpanFull()
                             ->helperText(__('Select recipient tags. If empty, send to all confirmed. Messages that use only testing tags do not affect dashboard statistics and send rows are removed from history after the send completes.'))
                             ->rules([
-                                fn (): Closure => function (string $attribute, mixed $value, Closure $fail): void {
-                                    if (! is_array($value) || $value === []) {
+                                fn (Get $get): Closure => function (string $attribute, mixed $value, Closure $fail) use ($get): void {
+                                    $includedIds = is_array($value) ? array_values($value) : [];
+                                    $excludedIds = is_array($get('excludedTags')) ? array_values($get('excludedTags')) : [];
+
+                                    if (Message::tagsOverlap($includedIds, $excludedIds)) {
+                                        $fail(__('A tag cannot be both included and excluded.'));
+
                                         return;
                                     }
-                                    $tags = Tag::query()->whereIn('id', $value)->get();
+
+                                    if ($includedIds === []) {
+                                        return;
+                                    }
+
+                                    $tags = Tag::query()->whereIn('id', $includedIds)->get();
                                     if ($tags->isEmpty()) {
                                         return;
                                     }
+
                                     $hasTesting = $tags->contains(fn (Tag $tag): bool => $tag->is_testing);
                                     $hasNonTesting = $tags->contains(fn (Tag $tag): bool => ! $tag->is_testing);
                                     if ($hasTesting && $hasNonTesting) {
                                         $fail(__('You cannot mix testing tags with normal tags on the same message.'));
+                                    }
+                                },
+                            ]),
+
+                        Select::make('excludedTags')
+                            ->label(__('Exclude tags'))
+                            ->relationship('excludedTags', 'name')
+                            ->multiple()
+                            ->searchable()
+                            ->preload()
+                            ->helperText(__('Subscribers with these tags will not receive the message, even if they match the selected recipient tags. Leave empty to exclude nobody.'))
+                            ->rules([
+                                fn (Get $get): Closure => function (string $attribute, mixed $value, Closure $fail) use ($get): void {
+                                    $excludedIds = is_array($value) ? array_values($value) : [];
+                                    $includedIds = is_array($get('tags')) ? array_values($get('tags')) : [];
+
+                                    if (Message::tagsOverlap($includedIds, $excludedIds)) {
+                                        $fail(__('A tag cannot be both included and excluded.'));
                                     }
                                 },
                             ]),

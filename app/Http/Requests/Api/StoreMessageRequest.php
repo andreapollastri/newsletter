@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api;
 
 use App\Enums\MessageStatus;
+use App\Models\Message;
 use App\Models\Tag;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -29,6 +30,8 @@ class StoreMessageRequest extends FormRequest
             'scheduled_at' => ['nullable', 'date'],
             'tag_ids' => ['sometimes', 'array'],
             'tag_ids.*' => ['uuid', 'exists:tags,id'],
+            'excluded_tag_ids' => ['sometimes', 'array'],
+            'excluded_tag_ids.*' => ['uuid', 'exists:tags,id'],
         ];
     }
 
@@ -46,6 +49,12 @@ class StoreMessageRequest extends FormRequest
             }
 
             $tagIds = $this->input('tag_ids', []);
+            $excludedTagIds = $this->input('excluded_tag_ids', []);
+
+            if (is_array($tagIds) && is_array($excludedTagIds) && Message::tagsOverlap($tagIds, $excludedTagIds)) {
+                $validator->errors()->add('excluded_tag_ids', __('A tag cannot be both included and excluded.'));
+            }
+
             if (! is_array($tagIds) || $tagIds === []) {
                 return;
             }

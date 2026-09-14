@@ -19,6 +19,7 @@ class TrackingController extends Controller
      *
      * When the send row no longer exists (e.g. testing-audience purge after completion), the pixel still loads so images do not break.
      * Duplicate opens for the same send are ignored (unique open per message send).
+     * Opens for bounced sends are ignored: NDRs include the original HTML and would otherwise count as opens.
      */
     public function open(string $messageSend, Request $request): Response
     {
@@ -29,24 +30,20 @@ class TrackingController extends Controller
         $record = MessageSend::find($messageSend);
 
         if ($record) {
-            try {
-                DB::transaction(function () use ($record, $request): void {
-                    $created = MessageOpen::query()->firstOrCreate(
-                        ['message_send_id' => $record->id],
-                        [
-                            'opened_at' => now(),
-                            'ip_address' => $request->ip(),
-                            'user_agent' => $request->userAgent(),
-                        ]
-                    );
+            $this->recordIfNotBounced($record, function (MessageSend $record) use ($request): void {
+                $created = MessageOpen::query()->firstOrCreate(
+                    ['message_send_id' => $record->id],
+                    [
+                        'opened_at' => now(),
+                        'ip_address' => $request->ip(),
+                        'user_agent' => $request->userAgent(),
+                    ]
+                );
 
-                    if ($created->wasRecentlyCreated) {
-                        $record->increment('opens_count');
-                    }
-                });
-            } catch (UniqueConstraintViolationException) {
-                // Concurrent open from the same send — already recorded.
-            }
+                if ($created->wasRecentlyCreated) {
+                    $record->increment('opens_count');
+                }
+            });
         }
 
         $pixel = hex2bin('47494638396101000100800000000000ffffff21f90401000000002c000000000100010000020144003b');
@@ -62,6 +59,7 @@ class TrackingController extends Controller
      *
      * When the send row no longer exists (e.g. testing-audience purge after completion), the destination URL is still applied so links in archived mail remain usable.
      * Duplicate clicks for the same send + URL are ignored (unique click per destination).
+     * Clicks for bounced sends are ignored: NDRs include the original HTML and would otherwise count as clicks.
      */
     public function click(string $messageSend, Request $request): RedirectResponse
     {
@@ -85,29 +83,45 @@ class TrackingController extends Controller
         $record = MessageSend::find($messageSend);
 
         if ($record) {
-            try {
-                DB::transaction(function () use ($record, $decodedUrl, $request): void {
-                    $created = MessageClick::query()->firstOrCreate(
-                        [
-                            'message_send_id' => $record->id,
-                            'url' => $decodedUrl,
-                        ],
-                        [
-                            'clicked_at' => now(),
-                            'ip_address' => $request->ip(),
-                            'user_agent' => $request->userAgent(),
-                        ]
-                    );
+            $this->recordIfNotBounced($record, function (MessageSend $record) use ($decodedUrl, $request): void {
+                $created = MessageClick::query()->firstOrCreate(
+                    [
+                        'message_send_id' => $record->id,
+                        'url' => $decodedUrl,
+                    ],
+                    [
+                        'clicked_at' => now(),
+                        'ip_address' => $request->ip(),
+                        'user_agent' => $request->userAgent(),
+                    ]
+                );
 
-                    if ($created->wasRecentlyCreated) {
-                        $record->increment('clicks_count');
-                    }
-                });
-            } catch (UniqueConstraintViolationException) {
-                // Concurrent click for the same send + URL — already recorded.
-            }
+                if ($created->wasRecentlyCreated) {
+                    $record->increment('clicks_count');
+                }
+            });
         }
 
         return redirect()->away($decodedUrl);
+    }
+
+    /**
+     * @param  callable(MessageSend): void  $callback
+     */
+    private function recordIfNotBounced(MessageSend $record, callable $callback): void
+    {
+        try {
+            DB::transaction(function () use ($record, $callback): void {
+                $locked = MessageSend::query()->lockForUpdate()->find($record->id);
+
+                if ($locked === null || $locked->bounce()->exists()) {
+                    return;
+                }
+
+                $callback($locked);
+            });
+        } catch (UniqueConstraintViolationException) {
+            // Concurrent tracking for the same send — already recorded.
+        }
     }
 }

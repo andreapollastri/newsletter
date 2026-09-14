@@ -3,11 +3,9 @@
 namespace App\Console\Commands;
 
 use App\Enums\MessageStatus;
-use App\Enums\SubscriberStatus;
 use App\Jobs\SendNewsletterEmail;
 use App\Models\Message;
 use App\Models\MessageSend;
-use App\Models\Subscriber;
 use App\Models\User;
 use Filament\Notifications\Notification;
 use Illuminate\Console\Command;
@@ -36,6 +34,7 @@ class SendScheduledMessages extends Command
         $messages = Message::where('status', MessageStatus::Ready)
             ->whereNotNull('scheduled_at')
             ->where('scheduled_at', '<=', now())
+            ->with(['tags', 'excludedTags'])
             ->get();
 
         if ($messages->isEmpty()) {
@@ -60,16 +59,7 @@ class SendScheduledMessages extends Command
         // Update status to sending
         $message->update(['status' => MessageStatus::Sending]);
 
-        // Get target subscribers
-        $query = Subscriber::where('status', SubscriberStatus::Confirmed);
-
-        // Filter by tags if specified
-        if ($message->tags->isNotEmpty()) {
-            $tagIds = $message->tags->pluck('id');
-            $query->whereHas('tags', fn ($q) => $q->whereIn('tags.id', $tagIds));
-        }
-
-        $subscribers = $query->get();
+        $subscribers = $message->targetSubscribers()->get();
 
         $this->info("Found {$subscribers->count()} target subscriber(s).");
 

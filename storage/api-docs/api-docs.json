@@ -329,6 +329,14 @@
                                             "format": "uuid"
                                         },
                                         "nullable": true
+                                    },
+                                    "excluded_tag_ids": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "format": "uuid"
+                                        },
+                                        "nullable": true
                                     }
                                 },
                                 "type": "object"
@@ -448,6 +456,14 @@
                                         "nullable": true
                                     },
                                     "tag_ids": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "format": "uuid"
+                                        },
+                                        "nullable": true
+                                    },
+                                    "excluded_tag_ids": {
                                         "type": "array",
                                         "items": {
                                             "type": "string",
