@@ -3,11 +3,13 @@
 namespace Tests\Feature;
 
 use App\Enums\SubscriberStatus;
+use App\Filament\Exports\SubscriberExporter;
 use App\Filament\Resources\Subscribers\Pages\CreateSubscriber;
 use App\Filament\Resources\Subscribers\Pages\EditSubscriber;
 use App\Filament\Resources\Subscribers\Pages\ListSubscribers;
 use App\Models\Subscriber;
 use App\Models\User;
+use Filament\Actions\Exports\Models\Export;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -139,5 +141,18 @@ class SubscriberResourceTest extends TestCase
         $subscriber->delete();
 
         $this->assertSoftDeleted($subscriber);
+    }
+
+    public function test_subscriber_exporter_uses_configured_default_filesystem_disk(): void
+    {
+        config()->set('filesystems.default', 'public');
+        config()->set('filesystems.disks.local', [
+            'driver' => 'local',
+            'root' => storage_path('app/private'),
+        ]);
+
+        $exporter = new SubscriberExporter(new Export(), [], []);
+
+        $this->assertSame('public', $exporter->getFileDisk());
     }
 }
