@@ -10,6 +10,7 @@ use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
@@ -82,6 +83,7 @@ class MessageForm
                             ->multiple()
                             ->searchable()
                             ->preload()
+                            ->live()
                             ->helperText(__('Select recipient tags. If empty, send to all confirmed. Messages that use only testing tags do not affect dashboard statistics and send rows are removed from history after the send completes.'))
                             ->rules([
                                 fn (Get $get): Closure => function (string $attribute, mixed $value, Closure $fail) use ($get): void {
@@ -117,6 +119,7 @@ class MessageForm
                             ->multiple()
                             ->searchable()
                             ->preload()
+                            ->live()
                             ->helperText(__('Subscribers with these tags will not receive the message, even if they match the selected recipient tags. Leave empty to exclude nobody.'))
                             ->rules([
                                 fn (Get $get): Closure => function (string $attribute, mixed $value, Closure $fail) use ($get): void {
@@ -128,6 +131,19 @@ class MessageForm
                                     }
                                 },
                             ]),
+
+                        TextEntry::make('estimated_recipients')
+                            ->label(__('Estimated recipients'))
+                            ->state(fn (Get $get): int => Message::audienceQuery(
+                                array_values(array_filter((array) $get('tags'))),
+                                array_values(array_filter((array) $get('excludedTags'))),
+                            )->count())
+                            ->numeric()
+                            ->badge()
+                            ->color(fn (int $state): string => $state > 0 ? 'success' : 'danger')
+                            ->helperText(__('Confirmed subscribers matching the current tag selection.'))
+                            ->visible(fn (): bool => ! auth()->user()?->isEditor())
+                            ->columnSpanFull(),
 
                         Select::make('status')
                             ->label(__('Status'))

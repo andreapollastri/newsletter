@@ -15,7 +15,7 @@ class MessageInfolist
         return $schema
             ->components([
                 Section::make(__('Send Statistics'))
-                    ->columns(7)
+                    ->columns(4)
                     ->schema([
                         TextEntry::make('total_sends')
                             ->label(__('Total Sends'))
@@ -45,6 +45,11 @@ class MessageInfolist
                         TextEntry::make('failed_sends')
                             ->label(__('Failed Sends'))
                             ->state(fn (Message $record) => $record->sends()->whereNotNull('failed_at')->count())
+                            ->numeric(),
+
+                        TextEntry::make('bounces')
+                            ->label(__('Bounces'))
+                            ->state(fn (Message $record) => $record->bounces()->count())
                             ->numeric(),
 
                         TextEntry::make('unsubscribes')
@@ -95,6 +100,7 @@ class MessageInfolist
                         TextEntry::make('html_content')
                             ->label(__('HTML Content'))
                             ->html()
+                            ->prose()
                             ->columnSpanFull(),
                     ])
                     ->columnSpanFull(),

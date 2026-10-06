@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Bounce;
 use App\Models\MessageSend;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\URL;
 use Tests\TestCase;
 
 class TrackingControllerTest extends TestCase
@@ -148,12 +149,46 @@ class TrackingControllerTest extends TestCase
     {
         $url = 'https://example.com/after-testing-purge';
 
-        $this->get(route('tracking.click', [
-            'messageSend' => '019d6d6a-7303-71e5-b451-c303271926a5',
-            'url' => base64_encode($url),
-        ]))->assertRedirect($url);
+        $this->get($this->signedClickUrl('019d6d6a-7303-71e5-b451-c303271926a5', $url))
+            ->assertRedirect($url);
 
         $this->assertDatabaseCount('message_clicks', 0);
+    }
+
+    public function test_signed_click_tracking_records_click_and_redirects(): void
+    {
+        $messageSend = MessageSend::factory()->sent()->create(['clicks_count' => 0]);
+        $url = 'https://example.com/signed?a=1&b=2';
+
+        $this->get($this->signedClickUrl($messageSend->id, $url))
+            ->assertRedirect($url);
+
+        $this->assertSame(1, $messageSend->fresh()->clicks_count);
+    }
+
+    public function test_unsigned_click_link_for_unknown_send_is_rejected(): void
+    {
+        $this->get(route('tracking.click', [
+            'messageSend' => '019d6d6a-7303-71e5-b451-c303271926a5',
+            'url' => base64_encode('https://evil.example/phishing'),
+        ]))->assertForbidden();
+    }
+
+    public function test_tampered_click_link_is_rejected(): void
+    {
+        $messageSend = MessageSend::factory()->sent()->create(['clicks_count' => 0]);
+
+        $signed = $this->signedClickUrl($messageSend->id, 'https://example.com/original');
+        $tampered = str_replace(
+            urlencode(base64_encode('https://example.com/original')),
+            urlencode(base64_encode('https://evil.example/phishing')),
+            $signed,
+        );
+
+        $this->assertNotSame($signed, $tampered);
+
+        $this->get($tampered)->assertForbidden();
+        $this->assertSame(0, $messageSend->fresh()->clicks_count);
     }
 
     public function test_open_tracking_returns_pixel_when_message_send_row_was_removed(): void
@@ -216,5 +251,13 @@ class TrackingControllerTest extends TestCase
             'messageSend' => 'not-a-uuid',
             'url' => base64_encode('https://example.com'),
         ]))->assertNotFound();
+    }
+
+    private function signedClickUrl(string $messageSendId, string $url): string
+    {
+        return URL::signedRoute('tracking.click', [
+            'messageSend' => $messageSendId,
+            'url' => base64_encode($url),
+        ], absolute: false);
     }
 }

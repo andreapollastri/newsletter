@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Route;
 
 // Subscription routes
 Route::get('/subscribe', [SubscribeController::class, 'showForm'])->name('subscribe.form');
-Route::post('/subscribe', [SubscribeController::class, 'subscribe'])->name('subscribe.store');
+Route::post('/subscribe', [SubscribeController::class, 'subscribe'])->name('subscribe.store')->middleware('throttle:subscribe');
 Route::get('/subscribe/confirm/{token}', [SubscribeController::class, 'confirm'])->name('subscribe.confirm');
 
 // Unsubscribe routes. The one-click POSTs receive no CSRF token from mail receivers (RFC 8058),

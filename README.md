@@ -1,14 +1,19 @@
 # Newsletter System
 
-**Version 2.1.1** — [Changelog](CHANGELOG.md)
+**Version 2.2.0** — [Changelog](CHANGELOG.md) · [Website & docs](https://newsletter.web.ap.it/)
 
 A complete newsletter management system for Laravel, built with Filament. Manage subscribers, campaigns, HTML templates, scheduled sending, and full tracking — all from a modern admin panel. Includes a REST API, OpenAPI documentation, and an MCP server for AI integrations.
+
+![Newsletter dashboard with delivery KPIs and a daily chart of emails sent and opens](docs/images/dashboard.webp)
+
+> Screenshots in this README come from a real local install seeded with `php artisan newsletter:seed-data`.
 
 ---
 
 ## Table of Contents
 
 - [Features](#features)
+- [Screenshots](#screenshots)
 - [User Management & Roles](#user-management--roles)
 - [Requirements](#requirements)
 - [Installation](#installation)
@@ -37,16 +42,31 @@ A complete newsletter management system for Laravel, built with Filament. Manage
 | **HTML Templates**        | Customizable templates with placeholder support                      |
 | **Scheduled Sending**     | Automatic delivery via cron                                          |
 | **Full Tracking**         | Unique opens/clicks per send, plus unsubscribe tracking              |
-| **Targeting**             | Filter recipients by tags and status                                 |
+| **Targeting**             | Include and exclude tags, with a live estimated recipients count     |
+| **Email Preview**         | Render messages and templates in a sandboxed preview before sending  |
 | **Dashboard**             | Statistics and monitoring widgets                                    |
 | **Rate Limiting**         | Configurable per-minute, per-hour, and per-day limits                |
-| **Bounce Detection**      | Optional IMAP bounce processing (`webklex/laravel-imap`)             |
+| **Bounce Detection**      | Optional IMAP processing of RFC 3464 delivery reports                |
+| **One-click Unsubscribe** | `List-Unsubscribe` + `List-Unsubscribe-Post` headers (RFC 8058)      |
 | **REST API**              | Full CRUD API with Sanctum authentication and OpenAPI docs           |
 | **MCP Server**            | AI integration endpoint for Cursor, Claude Code, and other clients   |
 | **Testing Tags**          | Mark tags as testing to exclude sends from production statistics     |
 | **Multilingual**          | Admin panel in Italian, English, German, French, Spanish, Portuguese |
-| **UTM Tracking**          | Automatic UTM parameters on outbound newsletter links                |
+| **UTM Tracking**          | Automatic UTM parameters on signed, tracked outbound links           |
+| **Demo Data**             | `newsletter:seed-data` builds a realistic dataset to explore the app |
 | **User Roles**            | Three permission levels: Editor, Manager, Administrator              |
+
+---
+
+## Screenshots
+
+| Messages and audiences | Include / exclude targeting |
+| --- | --- |
+| ![Messages list with audience badges such as "not Partners", sends, opens, status and schedule](docs/images/messages.webp) | ![Message form with include tags, exclude tags and live estimated recipients](docs/images/message-recipients.webp) |
+| **Email preview** | **Per-message statistics** |
+| ![Email preview modal rendering a message inside its template](docs/images/email-preview.webp) | ![Sent message with sends, opens, clicks, failures, bounces and unsubscribes](docs/images/message-view.webp) |
+| **Subscribers** | **API tokens & MCP** |
+| ![Subscribers list with statuses, tags, import and export](docs/images/subscribers.webp) | ![API tokens with API and MCP abilities and the MCP endpoint](docs/images/api-tokens.webp) |
 
 ---
 
@@ -96,12 +116,16 @@ Administrators can create, edit, and delete users from the **Users** page in the
 
 An administrator cannot delete their own account.
 
+![Users list with Administrator, Manager and Editor roles](docs/images/users.webp)
+
 ### Migrations
 
 When upgrading from a version without roles, two migrations handle the transition:
 
 1. `add_role_to_users_table` — adds the `role` column (defaults to `editor`).
 2. `set_all_existing_users_to_legacy_administrator_role` — promotes all pre-existing users to `administrator` so they retain full access.
+
+On a fresh install, the **first account** created without an explicit role (for example with `php artisan make:filament-user`) becomes an **Administrator**. Later accounts without a role default to **Editor**.
 
 ---
 
@@ -112,6 +136,7 @@ When upgrading from a version without roles, two migrations handle the transitio
 - Filament 5
 - Database (SQLite, MySQL, or PostgreSQL)
 - Queue driver (database, Redis, etc.)
+- Node.js 22+ (only to build the frontend assets)
 
 ---
 
@@ -145,7 +170,7 @@ npm install
 npm run build
 ```
 
-1. **Create an admin user** (if not using seed data):
+1. **Create an admin user** (if not using seed data). The first user becomes an Administrator:
 
 ```bash
 php artisan make:filament-user
@@ -206,7 +231,14 @@ NEWSLETTER_IMAP_ENCRYPTION=ssl
 NEWSLETTER_IMAP_FOLDER=INBOX
 ```
 
-When disabled, missing credentials, or without `webklex/laravel-imap`, `newsletter:process-bounces` exits cleanly and does nothing. Matched bounces are linked to the subscriber’s most recent successful `message_send` when available.
+When disabled, missing credentials, or without `webklex/laravel-imap`, `newsletter:process-bounces` exits cleanly and does nothing.
+
+How reports are interpreted:
+
+- **Delivery-status notifications (RFC 3464)** — when the report carries `Final-Recipient` / `Action` / `Status` fields (Postfix, Exim, Gmail, Exchange…), only recipients with `Action: failed` bounce. `5.x.x` status codes are **hard** bounces, `4.x.x` are **soft**.
+- **Delay warnings** (`Action: delayed`, "Delayed Mail (still being retried)", "Delivery Status Notification (Delay)") are ignored: the MTA is still retrying.
+- **Other reports** fall back to keyword detection; your own `MAIL_FROM_ADDRESS` and IMAP username are never treated as bounced recipients.
+- The bounce is linked to the original send (tracking URL in the returned message, also when quoted-printable encoded) or to the subscriber's latest send, and any opens/clicks recorded for that send are discarded (mail clients load the tracking pixel of the returned copy).
 
 ### API Documentation (Swagger)
 
@@ -222,11 +254,13 @@ For production, run `php artisan l5-swagger:generate` during deploy.
 
 ## Quick Start
 
-1. **Seed sample data** (optional, recommended for testing):
+1. **Seed demo data** (optional, recommended for a first look):
 
 ```bash
 php artisan newsletter:seed-data
 ```
+
+This creates a realistic, reproducible dataset: 400 subscribers (`--subscribers=` to change it) with mixed statuses and tags, three templates and campaigns, six sent messages with opens, clicks, bounces and unsubscribes, plus a scheduled message, drafts and a testing-tag message. All addresses use reserved `example.*` domains. Re-running it is safe, and it refuses to run in `production` unless you pass `--force`.
 
 1. **Start the queue worker:**
 
@@ -263,13 +297,36 @@ php artisan queue:work --tries=3 --timeout=90
 2. Set the **Scheduled Date** field
 3. The system sends automatically at the scheduled time (requires cron — see [Scheduled Tasks](#scheduled-tasks))
 
+If a due message matches no confirmed subscriber, it is moved back to **Draft** and every user gets a notification. Sending is idempotent: a subscriber never gets two send rows for the same message, even if sending is triggered twice.
+
+### Audience
+
+- **Tags** — subscribers with **any** of the selected tags receive the message. No tags = all confirmed subscribers.
+- **Exclude tags** — subscribers with **at least one** of these tags are removed, even if they match an include tag (e.g. *Customers*, but not *Partners*). A tag cannot be both included and excluded.
+- **Estimated recipients** — live count of confirmed subscribers matching the current selection (Managers and Administrators).
+
+### Preview and Test
+
+- **Preview** (messages table, message view/edit pages, templates) renders the saved email inside its template in a sandboxed frame, personalised with your name.
+- **Send Test** delivers the message to any address, without tracking, with a `[TEST]` subject prefix.
+
+![Email preview modal](docs/images/email-preview.webp)
+
+### Unsubscribe Headers
+
+Every newsletter carries `List-Unsubscribe` and `List-Unsubscribe-Post: List-Unsubscribe=One-Click` (RFC 8058), so Gmail, Yahoo and Outlook can show their native unsubscribe button. Make sure your MTA DKIM-signs these headers.
+
+### Link Tracking
+
+When tracking is enabled, links are rewritten to `/track/click/{send}` with UTM parameters and a **signature** that binds the destination to the send, so the endpoint cannot be used as an open redirect. Links sent by earlier versions (unsigned) keep working as long as their send row exists. `mailto:`, `tel:` and `#anchor` links are left untouched.
+
 ---
 
 ## Monitoring & Analytics
 
-- **Dashboard:** Main KPIs and send statistics
-- **Messages:** Status and send counts per message
-- **Message Details:** Individual tracking (opens, clicks) per recipient
+- **Dashboard:** Main KPIs plus a daily chart of emails sent and opens, filterable by campaign and period
+- **Messages:** Status, audience and send counts per message
+- **Message Details:** Sends, opens, clicks, failures, bounces and unsubscribes, plus per-recipient tracking
 
 ---
 
@@ -364,6 +421,8 @@ Interactive Swagger UI is available at `/api/documentation`. Generate or update 
 ```bash
 php artisan l5-swagger:generate
 ```
+
+![Swagger UI for the Newsletter API](docs/images/swagger.webp)
 
 ---
 
@@ -461,13 +520,19 @@ The admin panel supports six languages: **Italian**, **English**, **German**, **
 
 The following routes are available for public use:
 
-| Route                               | Method | Description                          |
-| ----------------------------------- | ------ | ------------------------------------ |
-| `/subscribe`                        | GET    | Subscription form                    |
-| `/subscribe`                        | POST   | Process subscription                 |
-| `/subscribe/confirm/{token}`        | GET    | Confirm subscription (double opt-in) |
-| `/unsubscribe/{subscriber}`         | GET    | Unsubscribe form                     |
-| `/unsubscribe/{subscriber}/confirm` | POST   | Confirm unsubscribe                  |
+| Route                               | Method | Description                                                   |
+| ----------------------------------- | ------ | ------------------------------------------------------------- |
+| `/subscribe`                        | GET    | Subscription form                                             |
+| `/subscribe`                        | POST   | Process subscription (10/min per IP, 5/hour per address)      |
+| `/subscribe/confirm/{token}`        | GET    | Confirm subscription (double opt-in)                          |
+| `/unsubscribe/{subscriber}`         | GET    | Unsubscribe form                                              |
+| `/unsubscribe/{subscriber}`         | POST   | RFC 8058 one-click unsubscribe (no CSRF token, returns `204`) |
+| `/unsubscribe/{subscriber}/confirm` | POST   | Confirm unsubscribe                                           |
+| `/unsubscribe/test`                 | POST   | One-click target for test sends (no-op, returns `204`)        |
+| `/track/open/{send}`                | GET    | Open-tracking pixel                                           |
+| `/track/click/{send}`               | GET    | Signed click tracking and redirect                            |
+
+<img src="docs/images/subscribe.webp" alt="Public subscription form" width="420">
 
 ---
 
@@ -493,7 +558,7 @@ Add the Laravel scheduler to your crontab:
 
 | Command                        | Description                                                        |
 | ------------------------------ | ------------------------------------------------------------------ |
-| `newsletter:seed-data`         | Populate database with sample subscribers, campaigns, and messages |
+| `newsletter:seed-data`         | Seed a realistic demo dataset (`--subscribers=`, `--force`)        |
 | `newsletter:send-scheduled`    | Manually trigger scheduled message sending                         |
 | `newsletter:process-pending`   | Process pending emails in the queue                                |
 | `newsletter:process-bounces`   | Process bounced emails from IMAP                                   |

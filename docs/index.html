@@ -14,7 +14,11 @@
     content="AI-ready · API-first · Filament admin. Manage subscribers, campaigns, templates, and delivery analytics." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://newsletter.web.ap.it/" />
-  <meta name="twitter:card" content="summary" />
+  <meta property="og:image" content="https://newsletter.web.ap.it/images/og-dashboard.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Newsletter admin dashboard with delivery KPIs and a daily sends and opens chart" />
+  <meta name="twitter:card" content="summary_large_image" />
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -315,6 +319,36 @@
       tab-size: 2;
     }
 
+    .hero-shot {
+      margin: 1.25rem 0 0;
+      line-height: 0;
+    }
+
+    .hero-shot img {
+      display: block;
+      width: 100%;
+      height: auto;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-bottom: 0;
+      box-shadow: 0 -12px 60px rgba(29, 111, 216, 0.22);
+    }
+
+    .hero-caption {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 0.5rem 1.5rem;
+      padding: 0.85rem 0;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: #8b95a5;
+    }
+
+    .hero-caption code {
+      color: #d7dde6;
+    }
+
     .t-ok {
       color: #3dbe7a;
     }
@@ -400,6 +434,11 @@
       margin-bottom: 2rem;
     }
 
+    .section-lead code {
+      font-size: 0.88em;
+      white-space: nowrap;
+    }
+
     .band {
       border-top: 1px solid var(--line);
       border-bottom: 1px solid var(--line);
@@ -481,6 +520,116 @@
     .feature-row .desc {
       color: var(--muted);
       font-size: 0.97rem;
+    }
+
+    .tour-tabs {
+      display: flex;
+      gap: 0;
+      overflow-x: auto;
+      border: 1px solid var(--ink);
+      border-bottom: 0;
+      background: var(--white);
+      scrollbar-width: thin;
+    }
+
+    .tour-tabs button {
+      flex: 1 0 auto;
+      padding: 0.75rem 1rem;
+      border: 0;
+      border-right: 1px solid var(--line);
+      background: transparent;
+      color: var(--ink-soft);
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .tour-tabs button:last-child {
+      border-right: 0;
+    }
+
+    .tour-tabs button:hover {
+      color: var(--signal);
+    }
+
+    .tour-tabs button[aria-selected="true"] {
+      background: var(--ink);
+      color: var(--white);
+    }
+
+    .tour-tabs button:focus-visible {
+      outline: 2px solid var(--signal);
+      outline-offset: -2px;
+    }
+
+    .tour-panel {
+      margin: 0;
+      border: 1px solid var(--ink);
+      background: var(--white);
+    }
+
+    .tour-panel[hidden] {
+      display: none;
+    }
+
+    .tour-panel img,
+    .doc-figure img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .tour-panel figcaption {
+      display: grid;
+      gap: 0.35rem;
+      padding: 1rem 1.15rem 1.15rem;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 0.98rem;
+    }
+
+    @media (min-width: 760px) {
+      .tour-panel figcaption {
+        grid-template-columns: 13rem 1fr;
+        gap: 1.25rem;
+      }
+    }
+
+    .tour-panel figcaption strong {
+      color: var(--ink);
+      font-weight: 600;
+    }
+
+    .doc-figure {
+      margin: 1.25rem 0 0.5rem;
+      max-width: 100%;
+    }
+
+    .doc-figure a {
+      display: block;
+      border: 1px solid var(--line);
+      background: var(--surface);
+      line-height: 0;
+      transition: border-color 0.15s;
+    }
+
+    .doc-figure a:hover {
+      border-color: var(--signal);
+    }
+
+    .doc-figure figcaption {
+      margin-top: 0.5rem;
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--muted);
+    }
+
+    .doc-figure.narrow {
+      max-width: 26rem;
     }
 
     .install-grid {
@@ -781,6 +930,7 @@
     </a>
     <div class="nav-links">
       <a href="#pillars">Pillars</a>
+      <a href="#tour">Tour</a>
       <a href="#features">Features</a>
       <a href="#install">Install</a>
       <a href="#docs">Docs</a>
@@ -809,20 +959,17 @@
       </div>
     </div>
 
-    <div class="hero-visual" aria-hidden="true">
+    <div class="hero-visual">
       <div class="hero-visual-inner">
-        <div class="hero-visual-bar"><i></i><span>newsletter · dashboard</span></div>
-        <pre><span class="t-dim">Campaign</span>  Weekly Digest  ·  <span class="t-accent">sending</span>
-<span class="t-dim">Audience</span>  12,480 active  ·  3 tags
-
-<span class="t-ok">sent</span>     8,214
-<span class="t-accent">opens</span>    41.2%
-<span class="t-accent">clicks</span>   6.8%
-<span class="t-warn">bounces</span>  0.4%
-
-<span class="t-dim">─────────────────────────────────</span>
-<span class="t-dim">MCP</span>  list-campaigns · newsletter-report · create-message
-<span class="t-ok">Ready</span>  /mcp/newsletter</pre>
+        <div class="hero-visual-bar"><i></i><span>newsletter.test · dashboard · dark mode</span></div>
+        <figure class="hero-shot">
+          <img src="/images/dashboard-dark.webp" width="2000" height="1250" fetchpriority="high"
+            alt="Newsletter dashboard in dark mode: new subscribers, unsubscribes, emails sent, open rate, click rate and bounces above a daily chart of emails sent and opens" />
+        </figure>
+        <div class="hero-caption">
+          <span>Real screenshot — demo data from <code>php artisan newsletter:seed-data</code></span>
+          <span><span class="t-ok">MCP</span> /mcp/newsletter · <span class="t-accent">REST</span> /api · <span class="t-warn">OpenAPI</span> /api/documentation</span>
+        </div>
       </div>
     </div>
   </header>
@@ -833,7 +980,7 @@
       <h2 class="section-title">Built for operators<br>and integrations.</h2>
       <p class="section-lead">
         Three surfaces, one source of truth — the admin panel, the REST API, and an MCP server for AI clients.
-        PHP 8.3+ · Laravel 13 · Filament 5 · MIT · v2.1
+        PHP 8.3+ · Laravel 13 · Filament 5 · MIT · v2.2
       </p>
 
       <div class="coverage-list">
@@ -862,7 +1009,75 @@
     </div>
   </section>
 
-  <section id="features">
+  <section id="tour">
+    <div class="section-inner">
+      <div class="section-kicker">Tour</div>
+      <h2 class="section-title">Real screens,<br>real demo data.</h2>
+      <p class="section-lead">
+        No mockups: every image comes from a local install seeded with
+        <code>php artisan newsletter:seed-data</code> — 400 subscribers, three campaigns, opens, clicks, bounces and
+        unsubscribes.
+      </p>
+
+      <div class="tour" data-tour>
+        <div class="tour-tabs" role="tablist" aria-label="Product tour">
+          <button type="button" role="tab" id="tab-messages" aria-controls="tour-messages" aria-selected="true">Messages</button>
+          <button type="button" role="tab" id="tab-targeting" aria-controls="tour-targeting" aria-selected="false" tabindex="-1">Targeting</button>
+          <button type="button" role="tab" id="tab-preview" aria-controls="tour-preview" aria-selected="false" tabindex="-1">Preview</button>
+          <button type="button" role="tab" id="tab-stats" aria-controls="tour-stats" aria-selected="false" tabindex="-1">Message stats</button>
+          <button type="button" role="tab" id="tab-subscribers" aria-controls="tour-subscribers" aria-selected="false" tabindex="-1">Subscribers</button>
+          <button type="button" role="tab" id="tab-dashboard" aria-controls="tour-dashboard" aria-selected="false" tabindex="-1">Dashboard</button>
+          <button type="button" role="tab" id="tab-campaigns" aria-controls="tour-campaigns" aria-selected="false" tabindex="-1">Campaigns</button>
+        </div>
+
+        <figure class="tour-panel" role="tabpanel" id="tour-messages" aria-labelledby="tab-messages">
+          <img src="/images/messages.webp" width="1600" height="1165" loading="lazy"
+            alt="Messages list with campaign, audience badges such as Customers and not Partners, emails sent, opens, status and schedule" />
+          <figcaption><strong>Messages</strong><span>Every message with its campaign, audience (include tags in blue,
+              <em>not</em> tags in red), sends, opens, status and schedule. Send now, send a test, preview or duplicate
+              from the row menu.</span></figcaption>
+        </figure>
+        <figure class="tour-panel" role="tabpanel" id="tour-targeting" aria-labelledby="tab-targeting" hidden>
+          <img src="/images/message-recipients.webp" width="1600" height="473" loading="lazy"
+            alt="Recipients section of the message form with include tags, exclude tags and a live estimated recipients badge" />
+          <figcaption><strong>Targeting</strong><span>Include tags match any selected tag; exclude tags remove anyone who
+              has one of them. The estimated recipients badge updates live while you pick tags.</span></figcaption>
+        </figure>
+        <figure class="tour-panel" role="tabpanel" id="tour-preview" aria-labelledby="tab-preview" hidden>
+          <img src="/images/email-preview.webp" width="1600" height="1000" loading="lazy"
+            alt="Email preview modal rendering the message inside its HTML template" />
+          <figcaption><strong>Preview</strong><span>See the exact email — template plus body, personalised with your
+              name — in a sandboxed frame before anyone receives it. Templates have the same preview.</span></figcaption>
+        </figure>
+        <figure class="tour-panel" role="tabpanel" id="tour-stats" aria-labelledby="tab-stats" hidden>
+          <img src="/images/message-view.webp" width="1600" height="1260" loading="lazy"
+            alt="Sent message page with total sends, opens, clicks, failed sends, bounces and unsubscribes" />
+          <figcaption><strong>Message stats</strong><span>Sends, unique opens and clicks, failures, bounces and
+              unsubscribes for each message, plus the per-recipient send history below.</span></figcaption>
+        </figure>
+        <figure class="tour-panel" role="tabpanel" id="tour-subscribers" aria-labelledby="tab-subscribers" hidden>
+          <img src="/images/subscribers.webp" width="1600" height="1000" loading="lazy"
+            alt="Subscribers list with status badges, tags, import and export buttons" />
+          <figcaption><strong>Subscribers</strong><span>Statuses (pending, confirmed, unsubscribed, bounced), tags,
+              CSV/XLSX import and export, and bulk actions to retag or change status.</span></figcaption>
+        </figure>
+        <figure class="tour-panel" role="tabpanel" id="tour-dashboard" aria-labelledby="tab-dashboard" hidden>
+          <img src="/images/dashboard.webp" width="1600" height="1127" loading="lazy"
+            alt="Dashboard in light mode with KPIs and a bar chart of emails sent and opens per day" />
+          <figcaption><strong>Dashboard</strong><span>KPIs and a daily sends-and-opens chart, filtered by campaign and
+              period. Testing-tag sends never pollute these numbers.</span></figcaption>
+        </figure>
+        <figure class="tour-panel" role="tabpanel" id="tour-campaigns" aria-labelledby="tab-campaigns" hidden>
+          <img src="/images/campaign.webp" width="1600" height="1042" loading="lazy"
+            alt="Campaign page with details and the list of its messages" />
+          <figcaption><strong>Campaigns</strong><span>Group messages into campaigns; the slug feeds the
+              <code>utm_campaign</code> parameter added to every tracked link.</span></figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <section id="features" class="band">
     <div class="section-inner">
       <div class="section-kicker">Features</div>
       <h2 class="section-title">Everything for real sends.</h2>
@@ -878,11 +1093,18 @@
         </div>
         <div class="feature-row">
           <div class="name">Campaigns &amp; messages</div>
-          <div class="desc">Structured campaigns with draft, ready, sending, and sent states you can trust.</div>
+          <div class="desc">Structured campaigns with draft, ready, sending, and sent states you can trust. Sending is
+            idempotent: nobody gets the same message twice.</div>
+        </div>
+        <div class="feature-row">
+          <div class="name">Audience targeting</div>
+          <div class="desc">Include tags, exclude tags (&ldquo;customers, but not partners&rdquo;), and a live estimate of
+            how many confirmed subscribers will receive the message.</div>
         </div>
         <div class="feature-row">
           <div class="name">HTML templates</div>
-          <div class="desc">Reusable templates with placeholders — plus optional AI-assisted generation via MCP.</div>
+          <div class="desc">Reusable templates with placeholders, in-panel previews of templates and messages — plus
+            optional AI-assisted generation via MCP.</div>
         </div>
         <div class="feature-row">
           <div class="name">Scheduled sending</div>
@@ -891,7 +1113,8 @@
         </div>
         <div class="feature-row">
           <div class="name">Full tracking</div>
-          <div class="desc">Opens, clicks, unsubscribes, and automatic UTM parameters on outbound links.</div>
+          <div class="desc">Opens, clicks, unsubscribes, and automatic UTM parameters on outbound links. Click links are
+            signed, so the redirect can't be abused for phishing.</div>
         </div>
         <div class="feature-row">
           <div class="name">Dashboard &amp; analytics</div>
@@ -899,7 +1122,13 @@
         </div>
         <div class="feature-row">
           <div class="name">Bounce detection</div>
-          <div class="desc">Optional IMAP bounce processing that keeps your list clean automatically.</div>
+          <div class="desc">Optional IMAP processing that reads delivery reports (RFC 3464): hard vs soft from the status
+            code, delay notices ignored, and false opens from bounced mail discarded.</div>
+        </div>
+        <div class="feature-row">
+          <div class="name">Deliverability</div>
+          <div class="desc">One-click unsubscribe headers (<code>List-Unsubscribe</code> + RFC 8058) for Gmail, Yahoo
+            and Outlook, double opt-in, and rate limits that match your SMTP quotas.</div>
         </div>
         <div class="feature-row">
           <div class="name">Multilingual admin</div>
@@ -909,12 +1138,12 @@
     </div>
   </section>
 
-  <section id="install" class="band">
+  <section id="install">
     <div class="section-inner">
       <div class="section-kicker">Install</div>
       <h2 class="section-title">Up in minutes.</h2>
       <p class="section-lead">
-        Clone, configure, migrate — then create your first admin user.
+        Clone, configure, migrate — then create your first user (it becomes the Administrator).
       </p>
 
       <div class="install-grid">
@@ -1002,7 +1231,7 @@
             <li><strong>Filament</strong> <code>5</code></li>
             <li><strong>Database</strong> SQLite, MySQL, or PostgreSQL</li>
             <li><strong>Queue</strong> database, Redis, or similar</li>
-            <li><strong>Node</strong> for Vite asset builds</li>
+            <li><strong>Node.js</strong> <code>22+</code> for Vite asset builds</li>
           </ul>
         </article>
 
@@ -1031,8 +1260,12 @@
 <span class="tok-cmd">./start-worker.sh</span></pre>
           </div>
           <p style="margin-top:1rem">
-            Optional sample data: <code>php artisan newsletter:seed-data</code>
-            (default credentials after seeding: <code>admin@newsletter.test</code> / <code>password</code>).
+            The first account you create is an <strong>Administrator</strong>; later accounts default to Editor.
+          </p>
+          <p>
+            Want to look around first? <code>php artisan newsletter:seed-data</code> loads the demo dataset used for the
+            screenshots on this page (log in with <code>admin@newsletter.test</code> / <code>password</code>). It only
+            uses <code>example.com</code> addresses and refuses to run in production without <code>--force</code>.
           </p>
           <p>
             Generate OpenAPI docs with <code>php artisan l5-swagger:generate</code>.
@@ -1112,6 +1345,12 @@
 <span class="tok-flag">NEWSLETTER_IMAP_ENCRYPTION</span>=ssl
 <span class="tok-flag">NEWSLETTER_IMAP_FOLDER</span>=INBOX</pre>
           </div>
+          <p style="margin-top:1rem">
+            Reports are parsed as RFC 3464 delivery-status notifications when possible: only
+            <code>Action: failed</code> recipients bounce, <code>5.x.x</code> codes are hard bounces and
+            <code>4.x.x</code> soft ones, delay warnings are ignored, and your own sender address is never marked as
+            bounced.
+          </p>
         </article>
 
         <article class="doc-block" id="doc-roles">
@@ -1141,6 +1380,11 @@
               </tbody>
             </table>
           </div>
+          <figure class="doc-figure">
+            <a href="/images/users.webp" target="_blank" rel="noopener"><img src="/images/users.webp" width="1600"
+                height="620" loading="lazy" alt="Users list with Administrator, Manager and Editor roles" /></a>
+            <figcaption>Users → one role per account</figcaption>
+          </figure>
         </article>
 
         <article class="doc-block" id="doc-sending">
@@ -1155,7 +1399,25 @@
           <h4>Scheduled</h4>
           <p>
             Set <strong>Scheduled Date</strong> on a message. The scheduler picks it up when due
-            (<code>newsletter:send-scheduled</code> every minute).
+            (<code>newsletter:send-scheduled</code> every minute). If no confirmed subscriber matches the audience, the
+            message goes back to <strong>Draft</strong> and everyone gets a notification instead of a silent no-op.
+          </p>
+          <h4>Audience</h4>
+          <p>
+            <strong>Tags</strong> include subscribers that have <em>any</em> of the selected tags (none selected = all
+            confirmed subscribers). <strong>Exclude tags</strong> remove anyone with at least one of them. The
+            <strong>Estimated recipients</strong> badge shows the result while you edit.
+          </p>
+          <figure class="doc-figure">
+            <a href="/images/message-recipients.webp" target="_blank" rel="noopener"><img
+                src="/images/message-recipients.webp" width="1600" height="473" loading="lazy"
+                alt="Message form with include tags Prospects and Webinar 2026, exclude tag Customers and 154 estimated recipients" /></a>
+            <figcaption>Messages → Edit → Recipients and Sending</figcaption>
+          </figure>
+          <h4>Preview &amp; test</h4>
+          <p>
+            <strong>Preview</strong> renders the saved message inside its template in a sandboxed frame;
+            <strong>Send Test</strong> delivers it to any address without tracking.
           </p>
           <h4>Testing tags</h4>
           <p>
@@ -1180,6 +1442,11 @@
             messages.
             Interactive OpenAPI UI: <code>/api/documentation</code>.
           </p>
+          <figure class="doc-figure">
+            <a href="/images/swagger.webp" target="_blank" rel="noopener"><img src="/images/swagger.webp" width="1600"
+                height="1000" loading="lazy" alt="Swagger UI for the Newsletter API with the subscribers endpoints expanded" /></a>
+            <figcaption>/api/documentation</figcaption>
+          </figure>
         </article>
 
         <article class="doc-block" id="doc-mcp">
@@ -1218,6 +1485,12 @@
           <p style="margin-top:1rem">
             Debug locally with <code>php artisan mcp:inspector mcp/newsletter</code>.
           </p>
+          <figure class="doc-figure">
+            <a href="/images/api-tokens.webp" target="_blank" rel="noopener"><img src="/images/api-tokens.webp"
+                width="1600" height="1000" loading="lazy"
+                alt="API tokens page listing tokens with API and MCP permissions and the MCP endpoint URL" /></a>
+            <figcaption>User menu → API tokens: pick API, MCP, or both per token</figcaption>
+          </figure>
         </article>
 
         <article class="doc-block" id="doc-scheduler">
@@ -1259,9 +1532,40 @@
               </tbody>
             </table>
           </div>
-          <p>
-            Public routes: <code>/subscribe</code>, double opt-in confirm, and unsubscribe flows.
-          </p>
+          <h4>Public pages</h4>
+          <div class="table-wrap">
+            <table class="docs-table">
+              <thead>
+                <tr>
+                  <th>Route</th>
+                  <th>Purpose</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>GET|POST /subscribe</code></td>
+                  <td>Subscription form (rate limited) with double opt-in email</td>
+                </tr>
+                <tr>
+                  <td><code>GET /subscribe/confirm/{token}</code></td>
+                  <td>Confirm the subscription</td>
+                </tr>
+                <tr>
+                  <td><code>GET /unsubscribe/{subscriber}</code></td>
+                  <td>Unsubscribe confirmation page</td>
+                </tr>
+                <tr>
+                  <td><code>POST /unsubscribe/{subscriber}</code></td>
+                  <td>RFC 8058 one-click unsubscribe used by mailbox providers</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <figure class="doc-figure narrow">
+            <a href="/images/subscribe.webp" target="_blank" rel="noopener"><img src="/images/subscribe.webp" width="900"
+                height="660" loading="lazy" alt="Public subscription form with name and email fields" /></a>
+            <figcaption>/subscribe</figcaption>
+          </figure>
         </article>
 
         <article class="doc-block" id="doc-deploy">
@@ -1282,7 +1586,7 @@
             Source and issues:
             <a class="link-inline" href="https://github.com/andreapollastri/newsletter" target="_blank"
               rel="noopener">github.com/andreapollastri/newsletter</a>
-            · MIT License · v2.1
+            · MIT License · v2.2
           </p>
         </article>
       </div>
@@ -1292,7 +1596,7 @@
   <footer>
     <div>
       &copy; 2026 <a href="https://andreapollastri.net" target="_blank" rel="noopener" style="margin-left:0">Andrea
-        Pollastri</a> — MIT License · v2.1
+        Pollastri</a> — MIT License · v2.2
     </div>
     <div>
       <a href="https://github.com/andreapollastri/newsletter" target="_blank" rel="noopener">GitHub</a>
@@ -1319,6 +1623,28 @@
           btn.textContent = "Failed";
           setTimeout(() => { btn.textContent = "Copy"; }, 1400);
         }
+      });
+    });
+
+    document.querySelectorAll("[data-tour]").forEach((tour) => {
+      const tabs = [...tour.querySelectorAll('[role="tab"]')];
+      const select = (tab, focus) => {
+        tabs.forEach((other) => {
+          const selected = other === tab;
+          other.setAttribute("aria-selected", String(selected));
+          other.tabIndex = selected ? 0 : -1;
+          document.getElementById(other.getAttribute("aria-controls")).hidden = !selected;
+        });
+        if (focus) tab.focus();
+      };
+      tabs.forEach((tab, index) => {
+        tab.addEventListener("click", () => select(tab, false));
+        tab.addEventListener("keydown", (event) => {
+          const step = { ArrowRight: 1, ArrowLeft: -1 }[event.key];
+          if (!step) return;
+          event.preventDefault();
+          select(tabs[(index + step + tabs.length) % tabs.length], true);
+        });
       });
     });
 

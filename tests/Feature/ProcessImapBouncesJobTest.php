@@ -2,11 +2,13 @@
 
 namespace Tests\Feature;
 
+use App\Enums\SubscriberStatus;
 use App\Jobs\ProcessImapBounces;
 use App\Models\Bounce;
 use App\Models\MessageSend;
 use App\Models\Subscriber;
 use App\Services\ImapBounceDetector;
+use App\Services\RecordSubscriberBounce;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Log;
 use Tests\TestCase;
@@ -143,5 +145,87 @@ class ProcessImapBouncesJobTest extends TestCase
             $latest->id,
             $detector->resolveMessageSendId($subscriber, '/track/open/'.$foreign->id),
         );
+    }
+
+    public function test_job_bounces_only_the_failed_dsn_recipient(): void
+    {
+        $recipient = Subscriber::factory()->confirmed()->create(['email' => 'recipient@example.com']);
+        $owner = Subscriber::factory()->confirmed()->create(['email' => 'owner@example.com']);
+        $send = MessageSend::factory()->sent()->create(['subscriber_id' => $recipient->id, 'opens_count' => 1]);
+
+        $message = $this->fakeImapMessage(
+            'Undelivered Mail Returned to Sender',
+            "<recipient@example.com>: host mx.example.com said: 550 5.1.1 User unknown\n\n"
+            ."Final-Recipient: rfc822; recipient@example.com\nAction: failed\nStatus: 5.1.1\n\n"
+            ."From: Owner <owner@example.com>\nTo: recipient@example.com\n"
+            .'<img src="https://news.example.com/track/open/'.$send->id.'">',
+        );
+
+        $this->processImapMessage($message);
+
+        $this->assertSame(SubscriberStatus::Bounced, $recipient->fresh()->status);
+        $this->assertSame(SubscriberStatus::Confirmed, $owner->fresh()->status);
+        $this->assertDatabaseHas('bounces', ['message_send_id' => $send->id, 'type' => 'hard']);
+        $this->assertSame(0, $send->fresh()->opens_count);
+        $this->assertSame(['Seen'], $message->flags);
+    }
+
+    public function test_job_ignores_delay_notifications(): void
+    {
+        $subscriber = Subscriber::factory()->confirmed()->create(['email' => 'slow@example.com']);
+
+        $message = $this->fakeImapMessage(
+            'Delivery Status Notification (Delay)',
+            "Final-Recipient: rfc822; slow@example.com\nAction: delayed\nStatus: 4.4.1",
+        );
+
+        $this->processImapMessage($message);
+
+        $this->assertSame(SubscriberStatus::Confirmed, $subscriber->fresh()->status);
+        $this->assertDatabaseCount('bounces', 0);
+    }
+
+    private function processImapMessage(object $message): void
+    {
+        (new \ReflectionMethod(ProcessImapBounces::class, 'processMessage'))->invoke(
+            new ProcessImapBounces,
+            $message,
+            app(ImapBounceDetector::class),
+            app(RecordSubscriberBounce::class),
+        );
+    }
+
+    /**
+     * Minimal stand-in for a webklex/php-imap message.
+     */
+    private function fakeImapMessage(string $subject, string $body): object
+    {
+        return new class($subject, $body)
+        {
+            /** @var list<string> */
+            public array $flags = [];
+
+            public function __construct(private string $subject, private string $body) {}
+
+            public function getSubject(): string
+            {
+                return $this->subject;
+            }
+
+            public function getTextBody(): string
+            {
+                return $this->body;
+            }
+
+            public function getHTMLBody(): ?string
+            {
+                return null;
+            }
+
+            public function setFlag(string $flag): void
+            {
+                $this->flags[] = $flag;
+            }
+        };
     }
 }

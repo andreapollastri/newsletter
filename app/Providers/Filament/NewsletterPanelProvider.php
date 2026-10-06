@@ -20,6 +20,7 @@ use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\Support\Enums\Width;
 use Filament\Support\Icons\Heroicon;
 use Filament\View\PanelsRenderHook;
 use Filament\Widgets\AccountWidget;
@@ -51,6 +52,8 @@ class NewsletterPanelProvider extends PanelProvider
             })
             ->profile(EditProfile::class)
             ->topNavigation()
+            // Message and subscriber tables have many columns: the default 1280px container forces horizontal scrolling.
+            ->maxContentWidth(Width::ScreenTwoExtraLarge)
             ->databaseNotifications()
             ->multiFactorAuthentication([
                 AppAuthentication::make()

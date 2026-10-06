@@ -12,9 +12,12 @@
     ],
     "sail": false,
     "skills": [
+        "infer-conventions",
         "laravel-best-practices",
+        "testing-best-practices",
         "mcp-development",
         "tailwindcss-development",
+        "filament-development",
         "laravel-backup"
     ]
 }

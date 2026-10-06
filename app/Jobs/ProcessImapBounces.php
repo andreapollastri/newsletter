@@ -88,27 +88,38 @@ class ProcessImapBounces implements ShouldQueue
         $htmlBody = (string) ($message->getHTMLBody() ?? '');
         $body = trim($textBody."\n".$htmlBody);
 
-        if (! $detector->isBounceLikely($subject, $body)) {
+        // The message/delivery-status part (Final-Recipient, Action, Status) is usually not exposed as a text
+        // body, so include the raw MIME body when the client provides it.
+        $content = method_exists($message, 'getRawBody')
+            ? trim($body."\n".$message->getRawBody())
+            : $body;
+
+        $failures = $detector->detectFailedRecipients($subject, $content, [
+            config('mail.from.address'),
+            config('newsletter.imap.username'),
+        ]);
+
+        if ($failures === [] && ! $detector->isBounceLikely($subject, $content)) {
             return;
         }
 
-        $emails = $detector->extractEmailAddresses($body);
-        $bounceType = $detector->detectBounceType($body);
-        $rawMessage = substr($body, 0, 5000);
+        $rawMessage = substr($body !== '' ? $body : $content, 0, 5000);
 
-        foreach ($emails as $email) {
-            $subscriber = Subscriber::query()->where('email', $email)->first();
+        foreach ($failures as $failure) {
+            $subscriber = Subscriber::query()
+                ->whereRaw('LOWER(email) = ?', [strtolower($failure['email'])])
+                ->first();
 
             if (! $subscriber) {
                 continue;
             }
 
-            $bounce = $recorder->handle($subscriber, $bounceType, $rawMessage, $body);
+            $bounce = $recorder->handle($subscriber, $failure['type'], $rawMessage, $content);
 
             if ($bounce->wasRecentlyCreated) {
-                Log::info("Bounce detected for email: {$email}", [
+                Log::info("Bounce detected for email: {$subscriber->email}", [
                     'message_send_id' => $bounce->message_send_id,
-                    'type' => $bounceType,
+                    'type' => $failure['type'],
                 ]);
             }
         }

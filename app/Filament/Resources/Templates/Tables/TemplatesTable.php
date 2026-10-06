@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Templates\Tables;
 
+use App\Filament\Actions\EmailPreviewAction;
 use Filament\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -26,6 +27,7 @@ class TemplatesTable
                 //
             ])
             ->recordActions([
+                EmailPreviewAction::forTemplate(),
                 EditAction::make(),
             ])
             ->toolbarActions([

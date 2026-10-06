@@ -237,5 +237,21 @@
     "A tag cannot be both included and excluded.": "Un tag non può essere incluso ed escluso insieme.",
     "not :tag": "non :tag",
     "Opens (total)": "Aperture (totale)",
-    "Hide sends to test-only subscribers": "Nascondi invii solo a iscritti di test"
+    "Hide sends to test-only subscribers": "Nascondi invii solo a iscritti di test",
+    "No recipients": "Nessun destinatario",
+    "No confirmed subscribers match this message audience.": "Nessun iscritto confermato corrisponde ai destinatari di questo messaggio.",
+    "Estimated recipients": "Destinatari stimati",
+    "Confirmed subscribers matching the current tag selection.": "Iscritti confermati che corrispondono alla selezione di tag attuale.",
+    "Details": "Dettagli",
+    "Update Status": "Aggiorna stato",
+    "New Status": "Nuovo stato",
+    "Add Tags": "Aggiungi tag",
+    "Preview": "Anteprima",
+    "Close": "Chiudi",
+    "Saved version, rendered with its template. Tracking links are added only when sending.": "Versione salvata, con il suo template. I link di tracciamento vengono aggiunti solo all'invio.",
+    "Saved version, filled with sample content in place of {{body}}.": "Versione salvata, con contenuto di esempio al posto di {{body}}.",
+    "Scheduled message \":subject\" matched no confirmed subscribers and was moved back to draft.": "Il messaggio programmato \":subject\" non ha iscritti confermati corrispondenti ed è stato riportato in bozza.",
+    "Made with": "Realizzato con",
+    "by Andrea Pollastri": "da Andrea Pollastri",
+    "Email preview": "Anteprima email"
 }

@@ -10,7 +10,6 @@ use App\Models\MessageSend;
 use App\Models\Subscriber;
 use App\Models\Template;
 use App\Models\User;
-use App\Services\EmailRateLimiter;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
@@ -65,7 +64,7 @@ class SendNewsletterEmailRateLimitTest extends TestCase
         Config::set('newsletter.rate_limits.per_day', 0);
 
         $job = new SendNewsletterEmail($this->messageSend->id);
-        $job->handle(app(EmailRateLimiter::class));
+        $this->app->call([$job, 'handle']);
 
         $this->messageSend->refresh();
         $this->assertNotNull($this->messageSend->sent_at);
@@ -79,7 +78,7 @@ class SendNewsletterEmailRateLimitTest extends TestCase
 
         // First job should send
         $job1 = new SendNewsletterEmail($this->messageSend->id);
-        $job1->handle(app(EmailRateLimiter::class));
+        $this->app->call([$job1, 'handle']);
 
         $this->messageSend->refresh();
         $this->assertNotNull($this->messageSend->sent_at);
@@ -93,7 +92,7 @@ class SendNewsletterEmailRateLimitTest extends TestCase
         // Second job should be released (not sent)
         Queue::fake();
         $job2 = new SendNewsletterEmail($messageSend2->id);
-        $job2->handle(app(EmailRateLimiter::class));
+        $this->app->call([$job2, 'handle']);
 
         $messageSend2->refresh();
         $this->assertNull($messageSend2->sent_at);
@@ -107,7 +106,7 @@ class SendNewsletterEmailRateLimitTest extends TestCase
 
         // First job should send
         $job1 = new SendNewsletterEmail($this->messageSend->id);
-        $job1->handle(app(EmailRateLimiter::class));
+        $this->app->call([$job1, 'handle']);
 
         $this->messageSend->refresh();
         $this->assertNotNull($this->messageSend->sent_at);
@@ -121,7 +120,7 @@ class SendNewsletterEmailRateLimitTest extends TestCase
         // Second job should be released
         Queue::fake();
         $job2 = new SendNewsletterEmail($messageSend2->id);
-        $job2->handle(app(EmailRateLimiter::class));
+        $this->app->call([$job2, 'handle']);
 
         $messageSend2->refresh();
         $this->assertNull($messageSend2->sent_at);
@@ -135,7 +134,7 @@ class SendNewsletterEmailRateLimitTest extends TestCase
 
         // First job should send
         $job1 = new SendNewsletterEmail($this->messageSend->id);
-        $job1->handle(app(EmailRateLimiter::class));
+        $this->app->call([$job1, 'handle']);
 
         $this->messageSend->refresh();
         $this->assertNotNull($this->messageSend->sent_at);
@@ -149,7 +148,7 @@ class SendNewsletterEmailRateLimitTest extends TestCase
         // Second job should be released
         Queue::fake();
         $job2 = new SendNewsletterEmail($messageSend2->id);
-        $job2->handle(app(EmailRateLimiter::class));
+        $this->app->call([$job2, 'handle']);
 
         $messageSend2->refresh();
         $this->assertNull($messageSend2->sent_at);

@@ -114,14 +114,7 @@ class SubscribeController extends Controller
      */
     public function oneClickUnsubscribe(Request $request, Subscriber $subscriber): Response
     {
-        $messageSendId = $request->query('message_send');
-
-        $messageId = null;
-        if ($messageSendId && ($messageSend = MessageSend::find($messageSendId))) {
-            $messageId = $messageSend->message_id;
-        }
-
-        $this->markUnsubscribed($subscriber, $messageId);
+        $this->markUnsubscribed($subscriber, $this->messageIdForSend($request->query('message_send')));
 
         return response()->noContent();
     }
@@ -139,28 +132,31 @@ class SubscribeController extends Controller
      */
     public function confirmUnsubscribe(Request $request, Subscriber $subscriber): View
     {
-        $messageId = null;
+        // The message_send comes from the email link (query) or from the confirmation page (session)
+        $sessionMessageSendId = $request->session()->pull('unsubscribe_message_send');
+        $messageSendId = $request->query('message_send') ?? $sessionMessageSendId;
 
-        // Get message_id from message_send if provided (from query or session)
-        $messageSendId = $request->query('message_send') ?? $request->session()->get('unsubscribe_message_send');
-        if ($messageSendId) {
-            $messageSend = MessageSend::find($messageSendId);
-            if ($messageSend) {
-                $messageId = $messageSend->message_id;
-            }
-            // Clear session
-            $request->session()->forget('unsubscribe_message_send');
-        }
-
-        $this->markUnsubscribed($subscriber, $messageId);
+        $this->markUnsubscribed($subscriber, $this->messageIdForSend($messageSendId));
 
         return view('subscribe.unsubscribed');
     }
 
     /**
+     * Message that a send belongs to, for unsubscribe attribution. Ignores malformed ids from links.
+     */
+    protected function messageIdForSend(mixed $messageSendId): ?string
+    {
+        if (! is_string($messageSendId) || ! Str::isUuid($messageSendId)) {
+            return null;
+        }
+
+        return MessageSend::query()->whereKey($messageSendId)->value('message_id');
+    }
+
+    /**
      * Mark the subscriber as unsubscribed.
      */
-    protected function markUnsubscribed(Subscriber $subscriber, ?int $messageId): void
+    protected function markUnsubscribed(Subscriber $subscriber, ?string $messageId): void
     {
         if ($subscriber->status !== SubscriberStatus::Unsubscribed) {
             $subscriber->update([

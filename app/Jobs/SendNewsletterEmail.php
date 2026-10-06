@@ -6,10 +6,12 @@ use App\Mail\NewsletterMail;
 use App\Models\MessageSend;
 use App\Services\EmailRateLimiter;
 use App\Services\MessageCompletionService;
+use App\Support\NewsletterHtml;
 use App\Support\NewsletterUrlUtm;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\URL;
 use Throwable;
 
 class SendNewsletterEmail implements ShouldQueue
@@ -55,11 +57,8 @@ class SendNewsletterEmail implements ShouldQueue
         $subscriber = $messageSend->subscriber;
 
         try {
-            // Build the final HTML content
-            $htmlContent = $this->buildHtmlContent($message);
-
-            // Convert relative image URLs to absolute URLs
-            $htmlContent = $this->convertToAbsoluteUrls($htmlContent);
+            // Merge the body into the template and make image URLs absolute
+            $htmlContent = NewsletterHtml::absolutizeImageSources(NewsletterHtml::compose($message));
 
             // Replace placeholders
             $subject = $this->replacePlaceholders($message->subject, $subscriber, $messageSend);
@@ -106,51 +105,6 @@ class SendNewsletterEmail implements ShouldQueue
         }
     }
 
-    /**
-     * Build the final HTML content by merging template with message body.
-     */
-    protected function buildHtmlContent($message): string
-    {
-        $messageBody = $message->html_content;
-
-        // If there's a template, merge the body into it
-        if ($message->template) {
-            $templateHtml = $message->template->html_content;
-
-            // Replace {{body}} placeholder with message content
-            if (str_contains($templateHtml, '{{body}}')) {
-                return str_replace('{{body}}', $messageBody, $templateHtml);
-            }
-
-            // If no {{body}} placeholder, append message to template
-            return $templateHtml.$messageBody;
-        }
-
-        // No template, return message body wrapped in basic HTML
-        return $messageBody;
-    }
-
-    /**
-     * Convert relative URLs to absolute URLs for images.
-     */
-    protected function convertToAbsoluteUrls(string $content): string
-    {
-        $baseUrl = config('app.url');
-
-        // Convert relative src attributes to absolute
-        $content = preg_replace_callback(
-            '/src=["\'](?!https?:\/\/)([^"\']+)["\']/i',
-            function ($matches) use ($baseUrl) {
-                $path = ltrim($matches[1], '/');
-
-                return 'src="'.$baseUrl.'/storage/'.$path.'"';
-            },
-            $content
-        );
-
-        return $content;
-    }
-
     protected function replacePlaceholders(string $content, $subscriber, $messageSend = null): string
     {
         $unsubscribeUrl = route('unsubscribe', $subscriber->id);
@@ -160,11 +114,20 @@ class SendNewsletterEmail implements ShouldQueue
             $unsubscribeUrl .= '?message_send='.$messageSend->id;
         }
 
-        return str_replace(
-            ['{{name}}', '{{email}}', '{{unsubscribe_url}}'],
-            [$subscriber->name ?? '', $subscriber->email, $unsubscribeUrl],
-            $content
-        );
+        return NewsletterHtml::fillPlaceholders($content, $subscriber->name ?? '', $subscriber->email, $unsubscribeUrl);
+    }
+
+    /**
+     * Click-tracking URL whose signature binds the destination to this send, so the redirect cannot be
+     * reused as an open redirect. The signature is relative so it survives scheme/host differences
+     * between the queue worker and the web server (proxies, APP_URL drift).
+     */
+    protected function signedClickUrl(string $messageSendId, string $destinationUrl): string
+    {
+        return url(URL::signedRoute('tracking.click', [
+            'messageSend' => $messageSendId,
+            'url' => base64_encode($destinationUrl),
+        ], absolute: false));
     }
 
     protected function wrapLinksForTracking(string $content, string $messageSendId, string $campaignSlug, string $messageId): string
@@ -172,7 +135,13 @@ class SendNewsletterEmail implements ShouldQueue
         return preg_replace_callback(
             '/<a\s+([^>]*?)href=["\']([^"\']+)["\']([^>]*)>/i',
             function ($matches) use ($messageSendId, $campaignSlug, $messageId) {
-                $url = $matches[2];
+                // Attribute values are HTML-encoded (e.g. "&amp;" between query parameters).
+                $url = html_entity_decode($matches[2], ENT_QUOTES | ENT_HTML5);
+
+                // Only http(s) links can be redirected; mailto:, tel: and #anchors stay untouched.
+                if (preg_match('#^https?://#i', $url) !== 1) {
+                    return $matches[0];
+                }
 
                 // Skip tracking URLs and unsubscribe URLs
                 if (str_contains($url, '/track/') || str_contains($url, '/unsubscribe/')) {
@@ -181,9 +150,7 @@ class SendNewsletterEmail implements ShouldQueue
 
                 $urlWithUtm = NewsletterUrlUtm::append($url, $campaignSlug, $messageId);
 
-                $trackingUrl = route('tracking.click', ['messageSend' => $messageSendId, 'url' => base64_encode($urlWithUtm)]);
-
-                return '<a '.$matches[1].'href="'.$trackingUrl.'"'.$matches[3].'>';
+                return '<a '.$matches[1].'href="'.e($this->signedClickUrl($messageSendId, $urlWithUtm)).'"'.$matches[3].'>';
             },
             $content
         );

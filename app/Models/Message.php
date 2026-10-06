@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -69,6 +70,14 @@ class Message extends Model
     }
 
     /**
+     * @return HasManyThrough<Bounce, MessageSend, $this>
+     */
+    public function bounces(): HasManyThrough
+    {
+        return $this->hasManyThrough(Bounce::class, MessageSend::class);
+    }
+
+    /**
      * Boot the model.
      * Note: MessageSend records are automatically deleted via cascadeOnDelete in the migration.
      * Any jobs in the queue will check if MessageSend exists before processing.
@@ -109,16 +118,31 @@ class Message extends Model
     {
         $this->loadMissing(['tags', 'excludedTags']);
 
+        return static::audienceQuery(
+            $this->tags->modelKeys(),
+            $this->excludedTags->modelKeys(),
+        );
+    }
+
+    /**
+     * Confirmed subscribers matching an include/exclude tag selection (same rules as targetSubscribers()).
+     *
+     * Used before a message is saved, e.g. to preview the audience size while editing.
+     *
+     * @param  array<int, string>  $includedTagIds
+     * @param  array<int, string>  $excludedTagIds
+     * @return Builder<Subscriber>
+     */
+    public static function audienceQuery(array $includedTagIds, array $excludedTagIds = []): Builder
+    {
         $query = Subscriber::query()->where('status', SubscriberStatus::Confirmed);
 
-        if ($this->tags->isNotEmpty()) {
-            $tagIds = $this->tags->pluck('id');
-            $query->whereHas('tags', fn (Builder $q) => $q->whereIn('tags.id', $tagIds));
+        if ($includedTagIds !== []) {
+            $query->whereHas('tags', fn (Builder $q) => $q->whereIn('tags.id', $includedTagIds));
         }
 
-        if ($this->excludedTags->isNotEmpty()) {
-            $excludedIds = $this->excludedTags->pluck('id');
-            $query->whereDoesntHave('tags', fn (Builder $q) => $q->whereIn('tags.id', $excludedIds));
+        if ($excludedTagIds !== []) {
+            $query->whereDoesntHave('tags', fn (Builder $q) => $q->whereIn('tags.id', $excludedTagIds));
         }
 
         return $query;

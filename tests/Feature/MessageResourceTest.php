@@ -6,6 +6,8 @@ use App\Enums\MessageStatus;
 use App\Filament\Resources\Messages\Pages\CreateMessage;
 use App\Filament\Resources\Messages\Pages\EditMessage;
 use App\Filament\Resources\Messages\Pages\ListMessages;
+use App\Filament\Resources\Messages\Pages\ViewMessage;
+use App\Models\Bounce;
 use App\Models\Campaign;
 use App\Models\Message;
 use App\Models\MessageSend;
@@ -447,5 +449,49 @@ class MessageResourceTest extends TestCase
         $this->assertDatabaseMissing('messages', ['id' => $message->id]);
         $this->assertDatabaseMissing('message_sends', ['id' => $messageSend1->id]);
         $this->assertDatabaseMissing('message_sends', ['id' => $messageSend2->id]);
+    }
+
+    public function test_create_form_shows_estimated_recipients_to_managers(): void
+    {
+        Livewire::test(CreateMessage::class)
+            ->assertSee(__('Estimated recipients'));
+    }
+
+    public function test_create_form_hides_estimated_recipients_from_editors(): void
+    {
+        $this->actingAs(User::factory()->editor()->create());
+
+        Livewire::test(CreateMessage::class)
+            ->assertDontSee(__('Estimated recipients'));
+    }
+
+    public function test_view_page_shows_bounces_for_the_message(): void
+    {
+        $message = Message::factory()->sent()->create();
+        $send = MessageSend::factory()->sent()->create(['message_id' => $message->id]);
+        Bounce::create([
+            'message_send_id' => $send->id,
+            'email' => $send->subscriber->email,
+            'type' => 'hard',
+            'raw_message' => '550 5.1.1 User unknown',
+            'detected_at' => now(),
+        ]);
+
+        $this->assertSame(1, $message->bounces()->count());
+
+        Livewire::test(ViewMessage::class, ['record' => $message->getRouteKey()])
+            ->assertSee(__('Bounces'));
+    }
+
+    public function test_list_shows_relative_send_and_schedule_times_once(): void
+    {
+        Message::factory()->sent()->create(['sent_at' => now()->subDay()]);
+        Message::factory()->ready()->create(['scheduled_at' => now()->addDays(3)->addMinute()]);
+
+        Livewire::test(ListMessages::class)
+            ->assertSee('1 day ago')
+            ->assertSee(__('Automatic sending in :time', ['time' => '3 days']))
+            ->assertDontSee('ago ago')
+            ->assertDontSee('from now');
     }
 }

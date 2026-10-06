@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Messages\Pages;
 
 use App\Enums\MessageStatus;
+use App\Filament\Actions\EmailPreviewAction;
 use App\Filament\Resources\Messages\MessageResource;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\ViewAction;
@@ -29,6 +30,7 @@ class EditMessage extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
+            EmailPreviewAction::forMessage(),
             ViewAction::make(),
             DeleteAction::make()
                 ->visible(fn (): bool => MessageResource::canDelete($this->record)),

@@ -82,4 +82,23 @@ class MessageTargetAudienceTest extends TestCase
             $message->fresh()->audienceLabels()
         );
     }
+
+    public function test_audience_query_matches_an_unsaved_tag_selection(): void
+    {
+        $customers = Tag::factory()->create(['name' => 'customers']);
+        $partners = Tag::factory()->create(['name' => 'partners']);
+
+        $customer = Subscriber::factory()->confirmed()->create();
+        $customer->tags()->attach($customers->id);
+        $customerPartner = Subscriber::factory()->confirmed()->create();
+        $customerPartner->tags()->attach([$customers->id, $partners->id]);
+        Subscriber::factory()->confirmed()->create();
+
+        $this->assertSame(3, Message::audienceQuery([])->count());
+        $this->assertSame(2, Message::audienceQuery([$customers->id])->count());
+        $this->assertEqualsCanonicalizing(
+            [$customer->id],
+            Message::audienceQuery([$customers->id], [$partners->id])->pluck('id')->all(),
+        );
+    }
 }

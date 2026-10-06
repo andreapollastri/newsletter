@@ -57,7 +57,8 @@ class TrackingController extends Controller
     /**
      * Track email click and redirect.
      *
-     * When the send row no longer exists (e.g. testing-audience purge after completion), the destination URL is still applied so links in archived mail remain usable.
+     * When the send row no longer exists (e.g. testing-audience purge after completion), a signed link still redirects so links in archived mail remain usable.
+     * Unsigned links (sent before signing was introduced) only redirect for an existing send, so the endpoint cannot be abused as an open redirect.
      * Duplicate clicks for the same send + URL are ignored (unique click per destination).
      * Clicks for bounced sends are ignored: NDRs include the original HTML and would otherwise count as clicks.
      */
@@ -82,6 +83,10 @@ class TrackingController extends Controller
 
         $record = MessageSend::find($messageSend);
 
+        if (! $this->isTrustedClickLink($request, $record)) {
+            abort(403, 'Invalid link signature');
+        }
+
         if ($record) {
             $this->recordIfNotBounced($record, function (MessageSend $record) use ($decodedUrl, $request): void {
                 $created = MessageClick::query()->firstOrCreate(
@@ -103,6 +108,18 @@ class TrackingController extends Controller
         }
 
         return redirect()->away($decodedUrl);
+    }
+
+    /**
+     * Signed links bind the destination to the send. Unsigned links are accepted only for a known send.
+     */
+    private function isTrustedClickLink(Request $request, ?MessageSend $record): bool
+    {
+        if ($request->has('signature')) {
+            return $request->hasValidRelativeSignature();
+        }
+
+        return $record !== null;
     }
 
     /**

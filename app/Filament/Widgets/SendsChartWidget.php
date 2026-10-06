@@ -3,19 +3,20 @@
 namespace App\Filament\Widgets;
 
 use App\Models\Message;
+use App\Models\MessageOpen;
 use App\Models\MessageSend;
 use Carbon\Carbon;
 use Filament\Widgets\ChartWidget;
 use Filament\Widgets\Concerns\InteractsWithPageFilters;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
 
 class SendsChartWidget extends ChartWidget
 {
     use InteractsWithPageFilters;
 
     protected int|string|array $columnSpan = 'full';
+
+    protected ?string $maxHeight = '320px';
 
     public function getHeading(): ?string
     {
@@ -25,6 +26,11 @@ class SendsChartWidget extends ChartWidget
         return __('Sends').' - '.$periodLabel;
     }
 
+    /**
+     * Emails sent and unique opens per day (per hour for the last 24 hours).
+     *
+     * @return array{datasets: list<array<string, mixed>>, labels: list<string>}
+     */
     protected function getData(): array
     {
         $period = $this->pageFilters['period'] ?? '1m';
@@ -35,94 +41,98 @@ class SendsChartWidget extends ChartWidget
             ? Message::where('campaign_id', $campaignId)->pluck('id')
             : null;
 
-        if ($period === '24h') {
-            return $this->getHourlyData($startDate, $messageIds);
-        }
-
-        $data = MessageSend::query()
-            ->forStatistics()
-            ->whereNotNull('sent_at')
-            ->when($startDate, fn (Builder $query) => $query->where('sent_at', '>=', $startDate))
-            ->when($messageIds, fn (Builder $query) => $query->whereIn('message_id', $messageIds))
-            ->select(DB::raw('DATE(sent_at) as date'), DB::raw('COUNT(*) as count'))
-            ->groupBy('date')
-            ->orderBy('date')
-            ->get()
-            ->pluck('count', 'date')
-            ->toArray();
-
-        $days = $this->getDaysForPeriod($period);
-
-        // Fill in missing dates with zero
-        $labels = [];
-        $values = [];
-        for ($i = $days - 1; $i >= 0; $i--) {
-            $date = Carbon::now()->subDays($i)->format('Y-m-d');
-            $labels[] = Carbon::now()->subDays($i)->format('d/m');
-            $values[] = $data[$date] ?? 0;
-        }
-
-        return [
-            'datasets' => [
-                [
-                    'label' => __('Emails sent'),
-                    'data' => $values,
-                    'borderColor' => '#3b82f6',
-                    'backgroundColor' => 'rgba(59, 130, 246, 0.1)',
-                    'fill' => true,
-                ],
-            ],
-            'labels' => $labels,
-        ];
-    }
-
-    protected function getHourlyData(Carbon $startDate, ?Collection $messageIds = null): array
-    {
-        // Use database-agnostic approach: get all records and group in PHP
-        $records = MessageSend::query()
+        $sends = MessageSend::query()
             ->forStatistics()
             ->whereNotNull('sent_at')
             ->where('sent_at', '>=', $startDate)
-            ->when($messageIds, fn (Builder $query) => $query->whereIn('message_id', $messageIds))
-            ->get();
+            ->when($messageIds, fn (Builder $query) => $query->whereIn('message_id', $messageIds));
 
-        $data = [];
-        foreach ($records as $record) {
-            $hour = $record->sent_at->format('Y-m-d H:00:00');
-            $data[$hour] = ($data[$hour] ?? 0) + 1;
-        }
+        $opens = MessageOpen::query()
+            ->where('opened_at', '>=', $startDate)
+            ->whereHas('messageSend', fn (Builder $query) => $query
+                ->forStatistics()
+                ->when($messageIds, fn (Builder $q) => $q->whereIn('message_id', $messageIds)));
 
-        $labels = [];
-        $values = [];
-
-        // Generate labels for last 24 hours (grouped by hour)
-        for ($i = 23; $i >= 0; $i--) {
-            $hour = Carbon::now()->subHours($i)->format('Y-m-d H:00:00');
-            $label = Carbon::now()->subHours($i)->format('H:i');
-            $labels[] = $label;
-            $values[] = $data[$hour] ?? 0;
-        }
+        $buckets = $this->getBuckets($period);
 
         return [
             'datasets' => [
                 [
                     'label' => __('Emails sent'),
-                    'data' => $values,
+                    'data' => $this->countPerBucket($sends, 'sent_at', $buckets),
+                    'backgroundColor' => 'rgba(59, 130, 246, 0.75)',
                     'borderColor' => '#3b82f6',
-                    'backgroundColor' => 'rgba(59, 130, 246, 0.1)',
-                    'fill' => true,
+                    'borderRadius' => 4,
+                ],
+                [
+                    'label' => __('Opens'),
+                    'data' => $this->countPerBucket($opens, 'opened_at', $buckets),
+                    'backgroundColor' => 'rgba(16, 185, 129, 0.75)',
+                    'borderColor' => '#10b981',
+                    'borderRadius' => 4,
                 ],
             ],
-            'labels' => $labels,
+            'labels' => array_values($buckets),
         ];
     }
 
     protected function getType(): string
     {
-        return 'line';
+        return 'bar';
     }
 
-    protected function getStartDateForPeriod(?string $period): ?Carbon
+    /**
+     * Bucket keys (Y-m-d or Y-m-d H for the last 24 hours) mapped to chart labels, oldest first.
+     *
+     * @return array<string, string>
+     */
+    protected function getBuckets(string $period): array
+    {
+        $buckets = [];
+
+        if ($period === '24h') {
+            for ($i = 23; $i >= 0; $i--) {
+                $hour = Carbon::now()->subHours($i);
+                $buckets[$hour->format('Y-m-d H')] = $hour->format('H:00');
+            }
+
+            return $buckets;
+        }
+
+        for ($i = $this->getDaysForPeriod($period) - 1; $i >= 0; $i--) {
+            $day = Carbon::now()->subDays($i);
+            $buckets[$day->format('Y-m-d')] = $day->format('d/m');
+        }
+
+        return $buckets;
+    }
+
+    /**
+     * Daily buckets are grouped by the database; the 24-hour window is small enough to group in PHP,
+     * which avoids database-specific hour functions.
+     *
+     * @param  Builder<covariant \Illuminate\Database\Eloquent\Model>  $query
+     * @param  array<string, string>  $buckets
+     * @return list<int>
+     */
+    protected function countPerBucket(Builder $query, string $column, array $buckets): array
+    {
+        if (str_contains((string) array_key_first($buckets), ' ')) {
+            $counts = $query
+                ->pluck($column)
+                ->filter()
+                ->countBy(fn (Carbon $timestamp): string => $timestamp->format('Y-m-d H'));
+        } else {
+            $counts = $query
+                ->selectRaw("DATE({$column}) as bucket, COUNT(*) as aggregate")
+                ->groupBy('bucket')
+                ->pluck('aggregate', 'bucket');
+        }
+
+        return array_map(fn (string $bucket): int => (int) ($counts[$bucket] ?? 0), array_keys($buckets));
+    }
+
+    protected function getStartDateForPeriod(?string $period): Carbon
     {
         return match ($period) {
             '24h' => now()->subHours(24),

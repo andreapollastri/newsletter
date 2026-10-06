@@ -3,11 +3,12 @@
 namespace App\Filament\Resources\Messages\Tables;
 
 use App\Enums\MessageStatus;
+use App\Filament\Actions\EmailPreviewAction;
 use App\Filament\Resources\Messages\MessageResource;
-use App\Jobs\SendNewsletterEmail;
 use App\Models\Message;
-use App\Models\MessageSend;
-use App\Models\User;
+use App\Services\MessageDispatchService;
+use App\Support\NewsletterHtml;
+use Carbon\CarbonInterface;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\DeleteAction;
@@ -75,7 +76,7 @@ class MessagesTable
                     ->sortable()
                     ->placeholder('—')
                     ->description(fn (Message $record): ?string => $record->scheduled_at && $record->scheduled_at->isFuture()
-                        ? __('Automatic sending in :time', ['time' => $record->scheduled_at->diffForHumans()])
+                        ? __('Automatic sending in :time', ['time' => $record->scheduled_at->diffForHumans(syntax: CarbonInterface::DIFF_ABSOLUTE)])
                         : null),
 
                 TextColumn::make('sent_at')
@@ -84,7 +85,7 @@ class MessagesTable
                     ->sortable()
                     ->placeholder('—')
                     ->description(fn (Message $record): ?string => $record->sent_at
-                        ? __(':time ago', ['time' => $record->sent_at->diffForHumans()])
+                        ? $record->sent_at->diffForHumans()
                         : null),
             ])
             ->filters([
@@ -114,32 +115,16 @@ class MessagesTable
                         ->requiresConfirmation()
                         ->modalHeading(__('Send Message'))
                         ->modalDescription(__('Are you sure you want to send this message immediately?'))
-                        ->action(function (Message $record) {
-                            $record->update(['status' => MessageStatus::Sending]);
-
-                            $subscribers = $record->targetSubscribers()->get();
-
-                            foreach ($subscribers as $subscriber) {
-                                $messageSend = MessageSend::create([
-                                    'message_id' => $record->id,
-                                    'subscriber_id' => $subscriber->id,
-                                ]);
-
-                                SendNewsletterEmail::dispatch($messageSend->id);
-                            }
-
-                            // Send database notification to all users
-                            foreach (User::all() as $user) {
+                        ->action(function (Message $record, MessageDispatchService $dispatcher): void {
+                            if ($dispatcher->dispatch($record) === 0) {
                                 Notification::make()
-                                    ->title(__('Sending started'))
-                                    ->body(__('Message ":subject" is being sent to :count recipients.', [
-                                        'subject' => $record->subject,
-                                        'count' => $subscribers->count(),
-                                    ]))
-                                    ->success()
-                                    ->sendToDatabase($user);
+                                    ->title(__('No recipients'))
+                                    ->body(__('No confirmed subscribers match this message audience.'))
+                                    ->warning()
+                                    ->send();
                             }
                         }),
+                    EmailPreviewAction::forMessage(),
                     Action::make('sendTest')
                         ->label(__('Send Test'))
                         ->icon(Heroicon::Beaker)
@@ -155,18 +140,14 @@ class MessagesTable
                                 ->label(__('Test Email')),
                         ])
                         ->action(function (Message $record, array $data) {
-                            // Load template relationship if not already loaded
-                            $record->loadMissing('template');
-
-                            // Build the complete HTML with template
-                            $htmlContent = self::buildTestHtmlContent($record);
-
-                            // Convert relative URLs to absolute
-                            $htmlContent = self::convertToAbsoluteUrls($htmlContent);
-
-                            // Replace placeholders with test data
-                            $subject = self::replaceTestPlaceholders($record->subject);
-                            $htmlContent = self::replaceTestPlaceholders($htmlContent);
+                            // Same markup as a real send, with visible placeholder values and no tracking
+                            $subject = NewsletterHtml::fillPlaceholders($record->subject, 'NAME', 'EMAIL', '#');
+                            $htmlContent = NewsletterHtml::fillPlaceholders(
+                                NewsletterHtml::absolutizeImageSources(NewsletterHtml::compose($record)),
+                                'NAME',
+                                'EMAIL',
+                                '#',
+                            );
 
                             // Send test email directly without tracking
                             Mail::html($htmlContent, function ($message) use ($subject, $data) {
@@ -221,62 +202,5 @@ class MessagesTable
                         ->visible(fn (Message $record): bool => MessageResource::canDelete($record)),
                 ]),
             ]);
-    }
-
-    /**
-     * Build the complete HTML content with template for test emails.
-     */
-    protected static function buildTestHtmlContent(Message $message): string
-    {
-        $messageBody = $message->html_content;
-
-        // If there's a template, merge the body into it
-        if ($message->template) {
-            $templateHtml = $message->template->html_content;
-
-            // Replace {{body}} placeholder with message content
-            if (str_contains($templateHtml, '{{body}}')) {
-                return str_replace('{{body}}', $messageBody, $templateHtml);
-            }
-
-            // If no {{body}} placeholder, append message to template
-            return $templateHtml.$messageBody;
-        }
-
-        // No template, return message body wrapped in basic HTML
-        return $messageBody;
-    }
-
-    /**
-     * Convert relative URLs to absolute URLs for images.
-     */
-    protected static function convertToAbsoluteUrls(string $content): string
-    {
-        $baseUrl = config('app.url');
-
-        // Convert relative src attributes to absolute
-        $content = preg_replace_callback(
-            '/src=["\'](?!https?:\/\/)([^"\']+)["\']/i',
-            function ($matches) use ($baseUrl) {
-                $path = ltrim($matches[1], '/');
-
-                return 'src="'.$baseUrl.'/storage/'.$path.'"';
-            },
-            $content
-        );
-
-        return $content;
-    }
-
-    /**
-     * Replace placeholders with test data.
-     */
-    protected static function replaceTestPlaceholders(string $content): string
-    {
-        return str_replace(
-            ['{{name}}', '{{email}}', '{{unsubscribe_url}}'],
-            ['NAME', 'EMAIL', '#'],
-            $content
-        );
     }
 }

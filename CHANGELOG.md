@@ -7,6 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.2.0] - 2026-10-07
+
+### Added
+
+- **Exclude tags** ([#12](https://github.com/andreapollastri/newsletter/issues/12)) — messages can exclude subscribers that carry any of the selected tags (e.g. *Customers*, but not *Partners*), from Filament, the REST API (`excluded_tag_ids`) and MCP. Audience badges show exclusions as `not {tag}`.
+- **One-click unsubscribe** ([#10](https://github.com/andreapollastri/newsletter/issues/10), thanks @bilogic) — `List-Unsubscribe` and `List-Unsubscribe-Post` headers (RFC 8058) on newsletters and test sends, with CSRF-exempt `POST` endpoints.
+- **Estimated recipients** — live count of confirmed subscribers matching the include/exclude tag selection in the message form (Managers and Administrators).
+- **Email preview** — *Preview* action on messages (table, view and edit pages) and templates; renders the saved email inside its template in a sandboxed iframe.
+- **Opens in the dashboard chart** — the sends chart is now a daily bar chart of emails sent **and** opens, capped in height.
+- **Bounces per message** — new *Bounces* statistic on the message page (`Message::bounces()` relation).
+- **Realistic demo data** — `newsletter:seed-data` builds a reproducible dataset (400 subscribers by default, `--subscribers=`), with opens, clicks, bounces, unsubscribes, failed sends, a scheduled message, drafts and a testing-tag message. All addresses use reserved `example.*` domains; it refuses to run in production without `--force`.
+- **Real screenshots** in the README and on the docs site, captured from the demo dataset.
+
+### Changed
+
+- **Bounce detection** ([#9](https://github.com/andreapollastri/newsletter/issues/9), [#13](https://github.com/andreapollastri/newsletter/issues/13)) — "Undelivered Mail Returned to Sender" reports are recognised; RFC 3464 delivery-status fields are parsed when present (only `Action: failed` recipients bounce, `5.x.x` = hard, `4.x.x` = soft); delay warnings are ignored; your own sender/mailbox address is never marked as bounced; the original send is found in quoted-printable returned messages too; opens and clicks recorded for a bounced send are discarded (and ignored afterwards), with a migration that cleans existing data.
+- **Sending pipeline** — *Send Now* and `newsletter:send-scheduled` share `MessageDispatchService`: recipients are streamed in chunks, already-queued subscribers are skipped (no duplicate sends), and a due scheduled message without recipients returns to **Draft** with a notification instead of staying in *Sending* forever.
+- **Email HTML** — real sends, test sends and previews share `App\Support\NewsletterHtml`.
+- **First user is an Administrator** — on a fresh install the first account created without a role (e.g. `php artisan make:filament-user`) becomes an Administrator; later accounts still default to Editor. `newsletter:seed-data` now creates `admin@newsletter.test` as an Administrator.
+- **Panel layout** — content width raised to 1536px so the messages table fits without horizontal scrolling; subscribers are sorted newest first; message content renders with typography.
+- **Dependencies** — Laravel Framework **13.35**, Filament **5.10**, Livewire **4.4.7**, Laravel MCP **1.0.1**, Laravel Boost **2.10**, PHPUnit **13.4**, Spatie Laravel Backup **10.3.3**; Vite **8**, laravel-vite-plugin **3**, Tailwind CSS **4.3**, concurrently **10**, axios **1.20** (`shell-quote` pinned to a patched release via `overrides`). This resolves the advisories reported for the previous lockfiles (Filament MFA re-authentication, Laravel debug-page XSS, `league/commonmark`, `shell-quote`, `source-map-js`).
+- **Queue worker** — `start-worker.sh` also processes the `newsletters` queue (thanks @bilogic).
+- **Boost guidelines** — `AGENTS.md` and `boost.json` refreshed for Laravel Boost 2.10.
+
+### Fixed
+
+- **Unsubscribe links crashed** — unsubscribing from an email link (`?message_send=…`), via the confirmation page or one-click `POST`, raised a `TypeError` (message ids are UUIDs); malformed `message_send` values are now ignored.
+- **Open redirect on click tracking** — tracked links are signed (relative signature, robust to proxies/APP_URL drift); unsigned links are only honoured for an existing send, so emails sent before this release keep working.
+- **Tracked links with query strings** — `&amp;` in hrefs was not decoded, producing broken destination URLs; `mailto:`, `tel:` and `#anchor` links are no longer wrapped (they used to fail with `400`).
+- **Relative times** — "1 day ago ago" in the *Sent At* column and "in 3 days from now" in *Scheduled At*.
+- **Images in emails** — `/storage/...` sources no longer become `/storage/storage/...`; `data:`, `cid:` and protocol-relative sources are left alone.
+- **Subscription form abuse** — `POST /subscribe` is rate limited (10/min per IP, 5/hour per address) since each request can send a confirmation email.
+- **Subscriber export 404** ([#5](https://github.com/andreapollastri/newsletter/issues/5)) — exports are written to the default filesystem disk.
+- **Translations** — 16 strings that were missing in every locale (including pre-existing *Details*, *Update Status*, *Add Tags*) are now translated in IT/EN/DE/FR/ES/PT; duplicate JSON keys removed.
+- **Test suite** — rate-limit job tests resolve `SendNewsletterEmail::handle()` dependencies through the container.
+
+---
+
 ## [2.1.1] - 2026-07-24
 
 ### Added

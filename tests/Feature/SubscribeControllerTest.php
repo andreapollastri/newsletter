@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Enums\SubscriberStatus;
 use App\Mail\SubscriptionConfirmation;
+use App\Models\MessageSend;
 use App\Models\Subscriber;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
@@ -121,5 +122,71 @@ class SubscribeControllerTest extends TestCase
         $this->post(route('subscribe.store'), [
             'name' => 'Test User',
         ])->assertSessionHasErrors('email');
+    }
+
+    public function test_confirm_unsubscribe_records_the_message_it_came_from(): void
+    {
+        $messageSend = MessageSend::factory()->sent()->create([
+            'subscriber_id' => Subscriber::factory()->confirmed(),
+        ]);
+
+        $this->post(route('unsubscribe.confirm', $messageSend->subscriber).'?message_send='.$messageSend->id)
+            ->assertViewIs('subscribe.unsubscribed');
+
+        $subscriber = $messageSend->subscriber->fresh();
+        $this->assertEquals(SubscriberStatus::Unsubscribed, $subscriber->status);
+        $this->assertSame($messageSend->message_id, $subscriber->unsubscribed_from_message_id);
+    }
+
+    public function test_one_click_unsubscribe_marks_subscriber_unsubscribed(): void
+    {
+        $messageSend = MessageSend::factory()->sent()->create([
+            'subscriber_id' => Subscriber::factory()->confirmed(),
+        ]);
+
+        // RFC 8058: mailbox providers POST "List-Unsubscribe=One-Click" to the List-Unsubscribe URL.
+        $this->post(
+            route('unsubscribe.oneClick', $messageSend->subscriber).'?message_send='.$messageSend->id,
+            ['List-Unsubscribe' => 'One-Click'],
+        )->assertNoContent();
+
+        $subscriber = $messageSend->subscriber->fresh();
+        $this->assertEquals(SubscriberStatus::Unsubscribed, $subscriber->status);
+        $this->assertNotNull($subscriber->unsubscribed_at);
+        $this->assertSame($messageSend->message_id, $subscriber->unsubscribed_from_message_id);
+    }
+
+    public function test_one_click_unsubscribe_is_idempotent(): void
+    {
+        $subscriber = Subscriber::factory()->confirmed()->create();
+
+        $this->post(route('unsubscribe.oneClick', $subscriber))->assertNoContent();
+        $firstUnsubscribedAt = $subscriber->fresh()->unsubscribed_at;
+
+        $this->travel(1)->hour();
+        $this->post(route('unsubscribe.oneClick', $subscriber))->assertNoContent();
+
+        $this->assertEquals($firstUnsubscribedAt, $subscriber->fresh()->unsubscribed_at);
+    }
+
+    public function test_one_click_unsubscribe_for_test_sends_returns_no_content(): void
+    {
+        $this->post(route('unsubscribe.test'), ['List-Unsubscribe' => 'One-Click'])
+            ->assertNoContent();
+    }
+
+    public function test_subscription_requests_are_rate_limited_per_address(): void
+    {
+        Mail::fake();
+
+        foreach (range(1, 5) as $attempt) {
+            $this->post(route('subscribe.store'), ['email' => 'flood@example.com'])
+                ->assertOk();
+        }
+
+        $this->post(route('subscribe.store'), ['email' => 'flood@example.com'])
+            ->assertTooManyRequests();
+
+        Mail::assertSent(SubscriptionConfirmation::class, 5);
     }
 }

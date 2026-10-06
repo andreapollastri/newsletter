@@ -125,6 +125,12 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
             if (! UserLocale::isAllowed($user->locale ?? null)) {
                 $user->locale = UserLocale::negotiateFromRequest(request());
             }
+
+            // The first account (e.g. from `php artisan make:filament-user` on a fresh install) must be able to
+            // manage the app; later accounts without an explicit role keep the least-privileged default.
+            if ($user->role === null) {
+                $user->role = static::query()->exists() ? UserRole::Editor : UserRole::Administrator;
+            }
         });
     }
 

@@ -3,11 +3,8 @@
 namespace App\Console\Commands;
 
 use App\Enums\MessageStatus;
-use App\Jobs\SendNewsletterEmail;
 use App\Models\Message;
-use App\Models\MessageSend;
-use App\Models\User;
-use Filament\Notifications\Notification;
+use App\Services\MessageDispatchService;
 use Illuminate\Console\Command;
 
 class SendScheduledMessages extends Command
@@ -29,7 +26,7 @@ class SendScheduledMessages extends Command
     /**
      * Execute the console command.
      */
-    public function handle(): int
+    public function handle(MessageDispatchService $dispatcher): int
     {
         $messages = Message::where('status', MessageStatus::Ready)
             ->whereNotNull('scheduled_at')
@@ -44,7 +41,7 @@ class SendScheduledMessages extends Command
         }
 
         foreach ($messages as $message) {
-            $this->processMessage($message);
+            $this->processMessage($message, $dispatcher);
         }
 
         $this->info("Processed {$messages->count()} scheduled message(s).");
@@ -52,50 +49,19 @@ class SendScheduledMessages extends Command
         return self::SUCCESS;
     }
 
-    protected function processMessage(Message $message): void
+    protected function processMessage(Message $message, MessageDispatchService $dispatcher): void
     {
         $this->info("Processing message: {$message->subject}");
 
-        // Update status to sending
-        $message->update(['status' => MessageStatus::Sending]);
+        $queued = $dispatcher->dispatch($message);
 
-        $subscribers = $message->targetSubscribers()->get();
+        if ($queued === 0 && $message->status === MessageStatus::Ready) {
+            $dispatcher->returnToDraftWithoutRecipients($message);
+            $this->warn("No recipients for message: {$message->subject} (moved back to draft)");
 
-        $this->info("Found {$subscribers->count()} target subscriber(s).");
-
-        $created = 0;
-        foreach ($subscribers as $subscriber) {
-            // Check if MessageSend already exists
-            $exists = MessageSend::where('message_id', $message->id)
-                ->where('subscriber_id', $subscriber->id)
-                ->exists();
-
-            if (! $exists) {
-                $messageSend = MessageSend::create([
-                    'message_id' => $message->id,
-                    'subscriber_id' => $subscriber->id,
-                ]);
-
-                // Dispatch to queue instead of processing immediately
-                SendNewsletterEmail::dispatch($messageSend->id);
-                $created++;
-            }
+            return;
         }
 
-        $this->info("Queued {$created} job(s) for message: {$message->subject}");
-
-        // Send database notification to all users when scheduled sending starts
-        if ($created > 0) {
-            foreach (User::all() as $user) {
-                Notification::make()
-                    ->title(__('Sending started'))
-                    ->body(__('Message ":subject" is being sent to :count recipients.', [
-                        'subject' => $message->subject,
-                        'count' => $subscribers->count(),
-                    ]))
-                    ->success()
-                    ->sendToDatabase($user);
-            }
-        }
+        $this->info("Queued {$queued} job(s) for message: {$message->subject}");
     }
 }

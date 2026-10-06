@@ -137,4 +137,68 @@ class SendNewsletterEmailJobTest extends TestCase
         $this->assertEquals(MessageStatus::Sent, $message->status);
         $this->assertEmpty(MessageSend::where('message_id', $message->id)->get());
     }
+
+    public function test_job_wraps_links_with_signed_tracking_urls_that_keep_query_strings(): void
+    {
+        Mail::fake();
+        config(['newsletter.tracking.enabled' => true]);
+
+        $message = Message::factory()->ready()->create([
+            'html_content' => '<p><a href="https://example.com/page?a=1&amp;b=2">Read more</a></p>',
+        ]);
+        $messageSend = MessageSend::factory()->create(['message_id' => $message->id, 'clicks_count' => 0]);
+
+        $this->app->call([new SendNewsletterEmail($messageSend->id), 'handle']);
+
+        $html = Mail::sent(NewsletterMail::class)->first()->htmlContent;
+        $this->assertSame(1, preg_match('#href="([^"]*/track/click/[^"]+)"#', $html, $matches));
+
+        $trackingUrl = html_entity_decode($matches[1]);
+        $this->assertStringContainsString('signature=', $trackingUrl);
+
+        $response = $this->get($trackingUrl);
+
+        $response->assertRedirect();
+        $this->assertStringStartsWith(
+            'https://example.com/page?a=1&b=2&utm_source=nl&utm_medium=newsletter',
+            $response->headers->get('Location'),
+        );
+        $this->assertSame(1, $messageSend->fresh()->clicks_count);
+    }
+
+    public function test_job_leaves_non_http_links_untouched(): void
+    {
+        Mail::fake();
+        config(['newsletter.tracking.enabled' => true]);
+
+        $message = Message::factory()->ready()->create([
+            'html_content' => '<a href="mailto:hello@example.com">Write</a> <a href="tel:+3900000000">Call</a> <a href="#top">Top</a>',
+        ]);
+        $messageSend = MessageSend::factory()->create(['message_id' => $message->id]);
+
+        $this->app->call([new SendNewsletterEmail($messageSend->id), 'handle']);
+
+        $html = Mail::sent(NewsletterMail::class)->first()->htmlContent;
+        $this->assertStringContainsString('href="mailto:hello@example.com"', $html);
+        $this->assertStringContainsString('href="tel:+3900000000"', $html);
+        $this->assertStringContainsString('href="#top"', $html);
+        $this->assertStringNotContainsString('/track/click/', $html);
+    }
+
+    public function test_job_adds_one_click_list_unsubscribe_headers(): void
+    {
+        Mail::fake();
+
+        $messageSend = MessageSend::factory()->create();
+
+        $this->app->call([new SendNewsletterEmail($messageSend->id), 'handle']);
+
+        Mail::assertSent(NewsletterMail::class, function (NewsletterMail $mail) use ($messageSend): bool {
+            $headers = $mail->headers()->text;
+            $expectedUrl = route('unsubscribe', $messageSend->subscriber_id).'?message_send='.$messageSend->id;
+
+            return $headers['List-Unsubscribe'] === '<'.$expectedUrl.'>'
+                && $headers['List-Unsubscribe-Post'] === 'List-Unsubscribe=One-Click';
+        });
+    }
 }
