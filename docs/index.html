@@ -1131,11 +1131,6 @@
             and Outlook, double opt-in, and rate limits that match your SMTP quotas.</div>
         </div>
         <div class="feature-row">
-          <div class="name">Self-updating</div>
-          <div class="desc">Follows the stable releases or the main branch and never goes backwards: nightly, or one
-            click in the panel, with a database backup and automatic rollback.</div>
-        </div>
-        <div class="feature-row">
           <div class="name">Multilingual admin</div>
           <div class="desc">Italian, English, German, French, Spanish, and Portuguese.</div>
         </div>
@@ -1200,6 +1195,7 @@
           <li><a href="#doc-api">REST API</a></li>
           <li><a href="#doc-mcp">MCP</a></li>
           <li><a href="#doc-scheduler">Scheduler</a></li>
+          <li><a href="#doc-updates">Updates</a></li>
           <li><a href="#doc-deploy">Deploy</a></li>
         </ol>
       </aside>
@@ -1236,7 +1232,9 @@
             <li><strong>Filament</strong> <code>5</code></li>
             <li><strong>Database</strong> SQLite, MySQL, or PostgreSQL</li>
             <li><strong>Queue</strong> database, Redis, or similar</li>
-            <li><strong>Node.js</strong> <code>22+</code> for Vite asset builds</li>
+            <li><strong>Node.js</strong> <code>22+</code> for Vite asset builds — on the server too, every update
+              builds them</li>
+            <li><strong>Git</strong> on the server, for <a class="link-inline" href="#doc-updates">updates</a></li>
           </ul>
         </article>
 
@@ -1274,6 +1272,10 @@
           </p>
           <p>
             Generate OpenAPI docs with <code>php artisan l5-swagger:generate</code>.
+          </p>
+          <p>
+            From then on, Newsletter updates itself from the scheduler: see
+            <a class="link-inline" href="#doc-updates">Updates</a>.
           </p>
         </article>
 
@@ -1380,7 +1382,7 @@
                 </tr>
                 <tr>
                   <td><strong>Administrator</strong></td>
-                  <td>Everything a Manager can do, plus users and API token management.</td>
+                  <td>Everything a Manager can do, plus users, API tokens and updates.</td>
                 </tr>
               </tbody>
             </table>
@@ -1575,6 +1577,147 @@
                 height="660" loading="lazy" alt="Public subscription form with name and email fields" /></a>
             <figcaption>/subscribe</figcaption>
           </figure>
+        </article>
+
+        <article class="doc-block" id="doc-updates">
+          <h3>Updates</h3>
+          <p>
+            Newsletter keeps itself up to date. Administrators find <strong>Updates</strong> in the user menu: the
+            installed release and build, the newest one, <strong>Check now</strong>, <strong>Update to …</strong> and
+            <strong>Force update</strong>, the channel, the nightly update, and the log of the last run.
+          </p>
+          <h4>Channels</h4>
+          <div class="table-wrap">
+            <table class="docs-table">
+              <thead>
+                <tr>
+                  <th>Channel</th>
+                  <th>Installs</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Stable</strong></td>
+                  <td>The release tags (<code>2.3.0</code>; <code>v2.3.0</code> and <code>2.3</code> count too) and
+                    nothing in between. The default.</td>
+                </tr>
+                <tr>
+                  <td><strong>Beta</strong></td>
+                  <td>The head of <code>main</code>: every commit, before it becomes a release. For a server you test
+                    on.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            An update never goes backwards: a build is installed only when it contains the installed one. Back on
+            stable after beta, Newsletter keeps its main build until a release contains it. <strong>Force
+            update</strong> installs the channel's newest build again, or one whose history differs — never an older
+            one.
+          </p>
+          <h4>When it runs</h4>
+          <p>
+            Every night at <code>APP_UPDATE_TIME</code> (<code>04:00</code> by default) while automatic updates are on.
+            An update asked for on the Updates page starts within a minute.
+          </p>
+          <div class="callout">
+            Both run from the scheduler, so the <a class="link-inline" href="#doc-scheduler">cron entry</a> is
+            required. The Updates page warns when the scheduler has not run in the last few minutes.
+          </div>
+          <h4>What an update does</h4>
+          <ol>
+            <li>Backs up the database to <code>storage/app/updates/backups</code> (the newest 5 are kept)</li>
+            <li>Installs the new build and runs <code>composer install --no-dev</code></li>
+            <li>Builds the assets: <code>npm ci</code> and <code>npm run build</code></li>
+            <li>Migrates, rebuilds the caches and restarts the queue workers</li>
+            <li>Checks that Newsletter boots</li>
+          </ol>
+          <p style="margin-top:1rem">
+            If a step fails, the previous code and the database come back. The log of the last run is on the page and
+            in <code>storage/app/updates/update.log</code>.
+          </p>
+          <h4>Installations</h4>
+          <div class="table-wrap">
+            <table class="docs-table">
+              <thead>
+                <tr>
+                  <th>Installation</th>
+                  <th>How it is updated</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Git checkout</strong></td>
+                  <td>In place, as in <a class="link-inline" href="#doc-installation">Installation</a>: maintenance mode,
+                    the new build checked out, built and migrated. Tracked files changed by hand stop the update;
+                    <strong>Force update</strong> discards them.</td>
+                </tr>
+                <tr>
+                  <td><strong>Releases</strong></td>
+                  <td><code>releases/</code>, <code>current</code>, <code>shared/</code>, as Cipi and Deployer make
+                    them: the new build is cloned into <code>releases/&lt;build&gt;</code> next to the running one,
+                    shares its <code>.env</code> and <code>storage</code>, is built and migrated, then
+                    <code>current</code> points at it.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            The scheduler's user runs the update: it needs <code>git</code>, <code>composer</code> and the database
+            client (<code>mysqldump</code>/<code>mysql</code>, <code>pg_dump</code>/<code>psql</code>) on its
+            <code>PATH</code>, and write access to the application. <code>public/build</code> is not committed, so
+            every update builds the assets: <code>npm</code> (Node.js 22+) must be on that <code>PATH</code> too, or set
+            <code>APP_UPDATE_NPM</code>. On Cipi releases, Cipi's own <code>node-build.sh</code> builds them.
+          </p>
+          <h4>Environment</h4>
+          <ul>
+            <li><code>APP_UPDATES</code> — on in production; <code>false</code> turns updates off</li>
+            <li><code>APP_UPDATE_REPOSITORY</code> — where builds come from (this repository on GitHub)</li>
+            <li><code>APP_UPDATE_CHANNEL</code> (<code>stable</code>) and <code>APP_UPDATE_AUTO</code>
+              (<code>true</code>) — the defaults until an Administrator chooses on the Updates page</li>
+            <li><code>APP_UPDATE_TIME</code> (<code>04:00</code>) — the nightly update, in the app timezone</li>
+            <li><code>APP_UPDATE_BACKUP</code> (<code>true</code>) — the database backup before each update</li>
+            <li><code>APP_UPDATE_ASSETS</code> (<code>true</code>) — build the assets with npm; leave it on</li>
+            <li><code>APP_UPDATE_PHP</code>, <code>APP_UPDATE_COMPOSER</code>, <code>APP_UPDATE_NPM</code>,
+              <code>APP_UPDATE_GIT</code> — the tools, when the scheduler's <code>PATH</code> lacks them</li>
+          </ul>
+          <h4>Command line</h4>
+          <div class="code-block">
+            <div class="code-header"><span>bash</span></div>
+            <pre><span class="tok-cmt"># the last check and run (JSON)</span>
+<span class="tok-cmd">php artisan</span> <span class="tok-arg">app:update status</span>
+<span class="tok-cmt"># what the channel would install</span>
+<span class="tok-cmd">php artisan</span> <span class="tok-arg">app:update check</span>
+<span class="tok-cmt"># update now, or reinstall</span>
+<span class="tok-cmd">php artisan</span> <span class="tok-arg">app:update apply</span>
+<span class="tok-cmd">php artisan</span> <span class="tok-arg">app:update apply</span> <span class="tok-flag" style="white-space:nowrap">--force</span>
+<span class="tok-cmt"># channel: stable or beta</span>
+<span class="tok-cmd">php artisan</span> <span class="tok-arg">app:update channel beta</span>
+<span class="tok-cmt"># nightly update: on or off</span>
+<span class="tok-cmd">php artisan</span> <span class="tok-arg">app:update auto off</span></pre>
+          </div>
+          <h4>Upgrading from 2.2.0 or earlier</h4>
+          <p>
+            Those versions have no updater: update to 2.3.0 by hand one last time and make sure the cron entry is
+            there. From then on, Newsletter updates itself. On a git checkout:
+          </p>
+          <div class="code-block">
+            <div class="code-header">
+              <span>bash — one last manual update</span>
+              <button class="copy-btn" type="button"
+                data-copy="git fetch --tags&#10;git checkout 2.3.0&#10;composer install --no-dev&#10;npm ci &amp;&amp; npm run build&#10;php artisan migrate --force&#10;php artisan optimize&#10;php artisan queue:restart">Copy</button>
+            </div>
+            <pre><span class="tok-cmd">git fetch</span> <span class="tok-flag">--tags</span>
+<span class="tok-cmd">git checkout</span> <span class="tok-arg">2.3.0</span>
+<span class="tok-cmd">composer</span> install <span class="tok-flag">--no-dev</span>
+<span class="tok-cmd">npm ci</span> &amp;&amp; <span class="tok-cmd">npm run</span> <span class="tok-arg">build</span>
+<span class="tok-cmd">php artisan</span> <span class="tok-arg">migrate</span> <span class="tok-flag">--force</span>
+<span class="tok-cmd">php artisan</span> <span class="tok-arg">optimize</span>
+<span class="tok-cmd">php artisan</span> <span class="tok-arg">queue:restart</span></pre>
+          </div>
+          <p style="margin-top:1rem">
+            On Cipi or Deployer, deploy 2.3.0 the way you deployed until now.
+          </p>
         </article>
 
         <article class="doc-block" id="doc-deploy">

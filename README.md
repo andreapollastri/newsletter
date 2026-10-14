@@ -56,7 +56,6 @@ A complete newsletter management system for Laravel, built with Filament. Manage
 | **UTM Tracking**          | Automatic UTM parameters on signed, tracked outbound links           |
 | **Demo Data**             | `newsletter:seed-data` builds a realistic dataset to explore the app |
 | **User Roles**            | Three permission levels: Editor, Manager, Administrator              |
-| **Self-Updating**         | Stable releases or `main`, nightly or on demand, with rollback       |
 
 ---
 
@@ -128,6 +127,8 @@ When upgrading from a version without roles, two migrations handle the transitio
 1. `add_role_to_users_table` — adds the `role` column (defaults to `editor`).
 2. `set_all_existing_users_to_legacy_administrator_role` — promotes all pre-existing users to `administrator` so they retain full access.
 
+They run like any other migration: from 2.3.0 on, every [update](#updates) runs them by itself; an installation on 2.2.0 or earlier is updated by hand one last time (see [Upgrading from 2.2.0 or earlier](#upgrading-from-220-or-earlier)).
+
 On a fresh install, the **first account** created without an explicit role (for example with `php artisan make:filament-user`) becomes an **Administrator**. Later accounts without a role default to **Editor**.
 
 ---
@@ -139,7 +140,8 @@ On a fresh install, the **first account** created without an explicit role (for 
 - Filament 5
 - Database (SQLite, MySQL, or PostgreSQL)
 - Queue driver (database, Redis, etc.)
-- Node.js 22+ (only to build the frontend assets)
+- Node.js 22+ (to build the frontend assets, also on the server: every [update](#updates) builds them)
+- Git on the server, for [updates](#updates)
 
 ---
 
@@ -148,7 +150,7 @@ On a fresh install, the **first account** created without an explicit role (for 
 1. **Clone the repository and install dependencies:**
 
 ```bash
-git clone <repository-url> newsletter
+git clone https://github.com/andreapollastri/newsletter.git newsletter
 cd newsletter
 composer install
 ```
@@ -184,6 +186,8 @@ php artisan make:filament-user
 ```bash
 php artisan l5-swagger:generate
 ```
+
+1. **Add the scheduler to cron** (see [Scheduled Tasks](#scheduled-tasks)): it sends scheduled messages and, from then on, keeps Newsletter up to date (see [Updates](#updates)).
 
 ---
 
@@ -578,7 +582,7 @@ Add the Laravel scheduler to your crontab:
 
 Newsletter keeps itself up to date. Administrators find **Updates** in the user menu: the installed release and build, the newest one, **Check now**, **Update to …** and **Force update**, the channel and the nightly update, and the log of the last run.
 
-- **Channels**: *Stable* installs the release tags (`2.3.0`) and nothing in between; *Beta* follows the head of `main`, for a server you test on.
+- **Channels**: *Stable* installs the release tags (`2.3.0`; `v2.3.0` and `2.3` count too) and nothing in between; *Beta* follows the head of `main`, for a server you test on.
 - **Never backwards**: a build is installed only when it contains the installed one. Back on stable after beta, Newsletter keeps its main build until a release contains it. **Force update** installs the channel's newest build again (or one whose history differs), never an older one.
 - **Every night** at `APP_UPDATE_TIME` (04:00 by default) while automatic updates are on; an update asked for on the page starts within a minute. Both run from the scheduler, so the [cron entry](#scheduled-tasks) is required: the page warns when the scheduler has not run in the last few minutes.
 - **Safe**: each update backs up the database (`storage/app/updates/backups`, the newest 5 are kept), installs the build, runs `composer install --no-dev`, builds the assets (`npm ci` and `npm run build`), migrates, rebuilds the caches, restarts the queue workers and checks that Newsletter boots. If a step fails, the previous code and the database come back. The log of the last run is on the page and in `storage/app/updates/update.log`.
@@ -609,9 +613,25 @@ php artisan app:update auto off        # or on
 | `APP_UPDATE_TIME` | `04:00` | when the nightly update runs |
 | `APP_UPDATE_BACKUP` | `true` | the database backup before each update |
 | `APP_UPDATE_ASSETS` | `true` | build the assets (`npm`); leave it on, `public/build` is not committed |
-| `APP_UPDATE_PHP`, `APP_UPDATE_COMPOSER`, `APP_UPDATE_NPM` | found on the `PATH` | the tools, when the scheduler's `PATH` does not have them |
+| `APP_UPDATE_PHP`, `APP_UPDATE_COMPOSER`, `APP_UPDATE_NPM`, `APP_UPDATE_GIT` | found on the `PATH` | the tools, when the scheduler's `PATH` does not have them |
 
 The installed release is in the `VERSION` file.
+
+### Upgrading from 2.2.0 or earlier
+
+Those versions have no updater: update to 2.3.0 by hand one last time and make sure the [cron entry](#scheduled-tasks) is there. From then on, Newsletter updates itself. On a git checkout:
+
+```bash
+git fetch --tags
+git checkout 2.3.0
+composer install --no-dev
+npm ci && npm run build
+php artisan migrate --force
+php artisan optimize
+php artisan queue:restart
+```
+
+On Cipi or Deployer, deploy 2.3.0 the way you deployed until now.
 
 ---
 
@@ -656,6 +676,12 @@ php artisan newsletter:rate-limits
 ### Frontend changes not visible
 
 Run `npm run build` or `npm run dev` to compile assets.
+
+### Updates not starting
+
+1. The **Updates** page warns when the scheduler has not run in the last few minutes: check the [cron entry](#scheduled-tasks) of the user that runs Newsletter
+2. Read the log of the last run on the page, or `storage/app/updates/update.log`
+3. A tool not found (`composer`, `npm`, `git`): set `APP_UPDATE_COMPOSER`, `APP_UPDATE_NPM` or `APP_UPDATE_GIT` to its path
 
 ### API issues
 

@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Safe updates** — every update backs up the database (`storage/app/updates/backups`), installs the build, runs `composer install --no-dev`, builds the assets, migrates, rebuilds the caches, restarts the queue workers and checks that the application boots; if a step fails, the previous code and the database come back. A git checkout is updated in place; a release of a deploy (`releases/`, `current`, `shared/`, as Cipi and Deployer make them) gets the new build next to the running one.
 - **Scheduler** — `app:update pending` every minute (the update an Administrator asked for) and `app:update apply --auto` daily at `APP_UPDATE_TIME` (04:00 by default).
 - **`app:update` command** — `status`, `check`, `apply [--force]`, `channel stable|beta`, `auto on|off`.
-- **Configuration** — `config/updates.php` with `APP_UPDATES`, `APP_UPDATE_REPOSITORY`, `APP_UPDATE_CHANNEL`, `APP_UPDATE_AUTO`, `APP_UPDATE_TIME`, `APP_UPDATE_BACKUP`, `APP_UPDATE_PHP`, `APP_UPDATE_COMPOSER`, `APP_UPDATE_NPM` (commented in `.env.example`).
+- **Configuration** — `config/updates.php` with `APP_UPDATES`, `APP_UPDATE_REPOSITORY`, `APP_UPDATE_CHANNEL`, `APP_UPDATE_AUTO`, `APP_UPDATE_TIME`, `APP_UPDATE_BACKUP`, `APP_UPDATE_ASSETS`, `APP_UPDATE_PHP`, `APP_UPDATE_COMPOSER`, `APP_UPDATE_NPM`, `APP_UPDATE_GIT` (commented in `.env.example`).
 - **`VERSION` file** — the installed release, also available as `config('app.version')`.
 
 ### Changed
