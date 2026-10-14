@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased]
+
+### Fixed
+
+- **Email sign-in codes were always rejected as invalid.** Filament 5.10 keeps the code's expiry date in the cache, and the cache allowed no PHP class to be read back (`serializable_classes => false`), so the expiry came back incomplete. The cache now allows the Carbon date classes only.
+
 ## [2.3.0] - 2026-10-14
 
 ### Added
