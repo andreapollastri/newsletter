@@ -1698,17 +1698,17 @@
           </div>
           <h4>Upgrading from 2.2.0 or earlier</h4>
           <p>
-            Those versions have no updater: update to 2.3.0 by hand one last time and make sure the cron entry is
+            Those versions have no updater: update to 2.3.1 by hand one last time and make sure the cron entry is
             there. From then on, Newsletter updates itself. On a git checkout:
           </p>
           <div class="code-block">
             <div class="code-header">
               <span>bash — one last manual update</span>
               <button class="copy-btn" type="button"
-                data-copy="git fetch --tags&#10;git checkout 2.3.0&#10;composer install --no-dev&#10;npm ci &amp;&amp; npm run build&#10;php artisan migrate --force&#10;php artisan optimize&#10;php artisan queue:restart">Copy</button>
+                data-copy="git fetch --tags&#10;git checkout 2.3.1&#10;composer install --no-dev&#10;npm ci &amp;&amp; npm run build&#10;php artisan migrate --force&#10;php artisan optimize&#10;php artisan queue:restart">Copy</button>
             </div>
             <pre><span class="tok-cmd">git fetch</span> <span class="tok-flag">--tags</span>
-<span class="tok-cmd">git checkout</span> <span class="tok-arg">2.3.0</span>
+<span class="tok-cmd">git checkout</span> <span class="tok-arg">2.3.1</span>
 <span class="tok-cmd">composer</span> install <span class="tok-flag">--no-dev</span>
 <span class="tok-cmd">npm ci</span> &amp;&amp; <span class="tok-cmd">npm run</span> <span class="tok-arg">build</span>
 <span class="tok-cmd">php artisan</span> <span class="tok-arg">migrate</span> <span class="tok-flag">--force</span>
@@ -1716,7 +1716,7 @@
 <span class="tok-cmd">php artisan</span> <span class="tok-arg">queue:restart</span></pre>
           </div>
           <p style="margin-top:1rem">
-            On Cipi or Deployer, deploy 2.3.0 the way you deployed until now.
+            On Cipi or Deployer, deploy 2.3.1 the way you deployed until now.
           </p>
         </article>
 

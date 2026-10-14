@@ -1,6 +1,6 @@
 # Newsletter System
 
-**Version 2.3.0** — [Changelog](CHANGELOG.md) · [Website & docs](https://newsletter.web.ap.it/)
+**Version 2.3.1** — [Changelog](CHANGELOG.md) · [Website & docs](https://newsletter.web.ap.it/)
 
 A complete newsletter management system for Laravel, built with Filament. Manage subscribers, campaigns, HTML templates, scheduled sending, and full tracking — all from a modern admin panel. Includes a REST API, OpenAPI documentation, and an MCP server for AI integrations.
 
@@ -619,11 +619,11 @@ The installed release is in the `VERSION` file.
 
 ### Upgrading from 2.2.0 or earlier
 
-Those versions have no updater: update to 2.3.0 by hand one last time and make sure the [cron entry](#scheduled-tasks) is there. From then on, Newsletter updates itself. On a git checkout:
+Those versions have no updater: update to 2.3.1 by hand one last time and make sure the [cron entry](#scheduled-tasks) is there. From then on, Newsletter updates itself. On a git checkout:
 
 ```bash
 git fetch --tags
-git checkout 2.3.0
+git checkout 2.3.1
 composer install --no-dev
 npm ci && npm run build
 php artisan migrate --force
