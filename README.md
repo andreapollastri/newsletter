@@ -642,7 +642,7 @@ Once your app is ready, deploy it to any Ubuntu VPS with [cipi.sh](https://cipi.
 - Full app isolation — own Linux user, PHP-FPM pool & database per app
 - Zero-downtime deploys with instant rollback via Deployer
 - Let's Encrypt SSL, Fail2ban, UFW firewall — all automated
-- Multi-PHP (7.4 → 8.5), queue workers, S3 backups, auto-deploy webhooks
+- Multi-PHP (7.4 → 8.5), queue workers, S3 backups
 - AI Agent ready — any AI with SSH access can deploy & manage your server
 
 ```bash
