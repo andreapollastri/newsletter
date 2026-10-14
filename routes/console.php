@@ -10,3 +10,8 @@ Schedule::command('newsletter:process-bounces')->everyFifteenMinutes()->withoutO
 // Backup scheduled tasks
 Schedule::command('backup:run')->daily()->at('03:00');
 Schedule::command('backup:clean')->daily()->at('04:00');
+
+// Updates: the one an administrator asked for starts within a minute; the nightly one
+// runs while automatic updates are on (app:update, user menu → Updates).
+Schedule::command('app:update pending')->everyMinute()->runInBackground();
+Schedule::command('app:update apply --auto')->dailyAt(config('updates.time'))->runInBackground();

@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.3.0] - 2026-10-14
+
+### Added
+
+- **Self-updating** — Newsletter keeps itself on the newest build of its channel: *Stable* follows the release tags, *Beta* the head of `main`, and an update never goes backwards. The new **Updates** page (user menu, Administrators only) shows the installed release and build, the newest one and why an update waits; **Check now**, **Update to …** and **Force update** (both with a confirmation), the channel switch, the nightly update on/off, a live banner while an update runs and the log of the last run. Translated in IT/EN/DE/FR/ES/PT.
+- **Safe updates** — every update backs up the database (`storage/app/updates/backups`), installs the build, runs `composer install --no-dev`, builds the assets, migrates, rebuilds the caches, restarts the queue workers and checks that the application boots; if a step fails, the previous code and the database come back. A git checkout is updated in place; a release of a deploy (`releases/`, `current`, `shared/`, as Cipi and Deployer make them) gets the new build next to the running one.
+- **Scheduler** — `app:update pending` every minute (the update an Administrator asked for) and `app:update apply --auto` daily at `APP_UPDATE_TIME` (04:00 by default).
+- **`app:update` command** — `status`, `check`, `apply [--force]`, `channel stable|beta`, `auto on|off`.
+- **Configuration** — `config/updates.php` with `APP_UPDATES`, `APP_UPDATE_REPOSITORY`, `APP_UPDATE_CHANNEL`, `APP_UPDATE_AUTO`, `APP_UPDATE_TIME`, `APP_UPDATE_BACKUP`, `APP_UPDATE_PHP`, `APP_UPDATE_COMPOSER`, `APP_UPDATE_NPM` (commented in `.env.example`).
+- **`VERSION` file** — the installed release, also available as `config('app.version')`.
+
+### Changed
+
+- **OpenAPI scan** — `l5-swagger:generate` scans only `app/Http/Controllers/Api` and `app/OpenApi`, where the annotations are, instead of the whole `app/` directory: the generated spec is unchanged, the generation is lighter.
+
+---
+
 ## [2.2.0] - 2026-10-07
 
 ### Added

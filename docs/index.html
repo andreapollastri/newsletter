@@ -980,7 +980,7 @@
       <h2 class="section-title">Built for operators<br>and integrations.</h2>
       <p class="section-lead">
         Three surfaces, one source of truth — the admin panel, the REST API, and an MCP server for AI clients.
-        PHP 8.3+ · Laravel 13 · Filament 5 · MIT · v2.2
+        PHP 8.3+ · Laravel 13 · Filament 5 · MIT · v2.3
       </p>
 
       <div class="coverage-list">
@@ -1129,6 +1129,11 @@
           <div class="name">Deliverability</div>
           <div class="desc">One-click unsubscribe headers (<code>List-Unsubscribe</code> + RFC 8058) for Gmail, Yahoo
             and Outlook, double opt-in, and rate limits that match your SMTP quotas.</div>
+        </div>
+        <div class="feature-row">
+          <div class="name">Self-updating</div>
+          <div class="desc">Follows the stable releases or the main branch and never goes backwards: nightly, or one
+            click in the panel, with a database backup and automatic rollback.</div>
         </div>
         <div class="feature-row">
           <div class="name">Multilingual admin</div>
@@ -1529,6 +1534,10 @@
                   <td><code>backup:run</code> / <code>backup:clean</code></td>
                   <td>Daily</td>
                 </tr>
+                <tr>
+                  <td><code>app:update</code></td>
+                  <td>Every minute (updates asked for in the panel) and nightly</td>
+                </tr>
               </tbody>
             </table>
           </div>
@@ -1586,7 +1595,7 @@
             Source and issues:
             <a class="link-inline" href="https://github.com/andreapollastri/newsletter" target="_blank"
               rel="noopener">github.com/andreapollastri/newsletter</a>
-            · MIT License · v2.2
+            · MIT License · v2.3
           </p>
         </article>
       </div>
@@ -1596,7 +1605,7 @@
   <footer>
     <div>
       &copy; 2026 <a href="https://andreapollastri.net" target="_blank" rel="noopener" style="margin-left:0">Andrea
-        Pollastri</a> — MIT License · v2.2
+        Pollastri</a> — MIT License · v2.3
     </div>
     <div>
       <a href="https://github.com/andreapollastri/newsletter" target="_blank" rel="noopener">GitHub</a>

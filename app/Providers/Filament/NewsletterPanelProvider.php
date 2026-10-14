@@ -5,6 +5,7 @@ namespace App\Providers\Filament;
 use App\Filament\Pages\Auth\EditProfile;
 use App\Filament\Pages\Dashboard;
 use App\Filament\Pages\ManageApiTokens;
+use App\Filament\Pages\Updates;
 use App\Filament\Resources\Campaigns\CampaignResource;
 use App\Filament\Resources\Tags\TagResource;
 use App\Filament\Resources\Templates\TemplateResource;
@@ -119,6 +120,12 @@ class NewsletterPanelProvider extends PanelProvider
                     ->icon(Heroicon::OutlinedKey)
                     ->sort(40)
                     ->visible(fn (): bool => ManageApiTokens::canAccess()),
+                Action::make('updates')
+                    ->label(__('Updates'))
+                    ->url(fn (): string => Updates::getUrl())
+                    ->icon(Heroicon::OutlinedArrowPath)
+                    ->sort(50)
+                    ->visible(fn (): bool => Updates::canAccess()),
             ]);
     }
 }

@@ -1,6 +1,6 @@
 # Newsletter System
 
-**Version 2.2.0** — [Changelog](CHANGELOG.md) · [Website & docs](https://newsletter.web.ap.it/)
+**Version 2.3.0** — [Changelog](CHANGELOG.md) · [Website & docs](https://newsletter.web.ap.it/)
 
 A complete newsletter management system for Laravel, built with Filament. Manage subscribers, campaigns, HTML templates, scheduled sending, and full tracking — all from a modern admin panel. Includes a REST API, OpenAPI documentation, and an MCP server for AI integrations.
 
@@ -29,6 +29,7 @@ A complete newsletter management system for Laravel, built with Filament. Manage
 - [Public Routes](#public-routes)
 - [Scheduled Tasks](#scheduled-tasks)
 - [Artisan Commands](#artisan-commands)
+- [Updates](#updates)
 - [Troubleshooting](#troubleshooting)
 
 ---
@@ -55,6 +56,7 @@ A complete newsletter management system for Laravel, built with Filament. Manage
 | **UTM Tracking**          | Automatic UTM parameters on signed, tracked outbound links           |
 | **Demo Data**             | `newsletter:seed-data` builds a realistic dataset to explore the app |
 | **User Roles**            | Three permission levels: Editor, Manager, Administrator              |
+| **Self-Updating**         | Stable releases or `main`, nightly or on demand, with rollback       |
 
 ---
 
@@ -80,7 +82,7 @@ The application supports three user roles with progressively broader permissions
 | ----------------- | ------------------------------------------------------------------------------------------------- |
 | **Editor**        | Focused on content creation. Can create and manage **draft** messages within existing campaigns.  |
 | **Manager**       | Full operational access. Manages campaigns, subscribers, tags, templates, and all message states. |
-| **Administrator** | Everything a Manager can do, plus **user management** and **API token management**.               |
+| **Administrator** | Everything a Manager can do, plus **user management**, **API token management** and **updates**.  |
 
 ### Permission Matrix
 
@@ -97,13 +99,14 @@ The application supports three user roles with progressively broader permissions
 | **Templates**                         |   —    |    ✓    |       ✓       |
 | **Users**                             |   —    |    —    |       ✓       |
 | **API Tokens**                        |   —    |    —    |       ✓       |
+| **Updates**                           |   —    |    —    |       ✓       |
 | **Newsletter Report API**             |   —    |    ✓    |       ✓       |
 
 ### Navigation
 
 - **Editor** — lands on the **Campaigns** page after login; the dashboard is not shown in navigation.
 - **Manager / Administrator** — lands on the **Dashboard**; all navigation items are visible according to the matrix above.
-- **User menu** — the **API Tokens** and **Users** links appear only for Administrators.
+- **User menu** — the **Users**, **API Tokens** and **Updates** links appear only for Administrators.
 
 ### Managing Users
 
@@ -551,6 +554,8 @@ Add the Laravel scheduler to your crontab:
 | `newsletter:process-bounces` | Every 15 minutes | Processes bounced emails via IMAP (when enabled + package installed) |
 | `backup:run`                 | Daily at 03:00   | Runs application backup                                          |
 | `backup:clean`               | Daily at 04:00   | Cleans old backups                                               |
+| `app:update pending`         | Every minute     | Starts the update an Administrator asked for (see [Updates](#updates)) |
+| `app:update apply --auto`    | Daily at `APP_UPDATE_TIME` | Nightly update, while automatic updates are on         |
 
 ---
 
@@ -565,6 +570,48 @@ Add the Laravel scheduler to your crontab:
 | `newsletter:rate-limits`       | Display current rate limit status                                  |
 | `l5-swagger:generate`          | Generate or update the OpenAPI specification                       |
 | `mcp:inspector mcp/newsletter` | Debug the MCP server locally                                       |
+| `app:update`                   | Release, channel and updates (see [Updates](#updates))             |
+
+---
+
+## Updates
+
+Newsletter keeps itself up to date. Administrators find **Updates** in the user menu: the installed release and build, the newest one, **Check now**, **Update to …** and **Force update**, the channel and the nightly update, and the log of the last run.
+
+- **Channels**: *Stable* installs the release tags (`2.3.0`) and nothing in between; *Beta* follows the head of `main`, for a server you test on.
+- **Never backwards**: a build is installed only when it contains the installed one. Back on stable after beta, Newsletter keeps its main build until a release contains it. **Force update** installs the channel's newest build again (or one whose history differs), never an older one.
+- **Every night** at `APP_UPDATE_TIME` (04:00 by default) while automatic updates are on; an update asked for on the page starts within a minute. Both run from the scheduler, so the [cron entry](#scheduled-tasks) is required: the page warns when the scheduler has not run in the last few minutes.
+- **Safe**: each update backs up the database (`storage/app/updates/backups`, the newest 5 are kept), installs the build, runs `composer install --no-dev`, builds the assets (`npm ci` and `npm run build`), migrates, rebuilds the caches, restarts the queue workers and checks that Newsletter boots. If a step fails, the previous code and the database come back. The log of the last run is on the page and in `storage/app/updates/update.log`.
+
+Two kinds of installation update themselves:
+
+| Installation | How it is updated |
+| --- | --- |
+| A git checkout (`git clone`, as in [Installation](#installation)) | in place: maintenance mode, checkout of the new build (detached), build, migrations. Tracked files changed by hand stop the update; **Force update** discards them. |
+| A release of a deploy: `releases/<x>`, `current`, `shared/` ([Cipi](https://cipi.sh), Deployer) | the new build is cloned into `releases/<build>` next to the running one, shares its `.env` and `storage`, is built and migrated, then `current` points at it; Cipi's workers restart. A later `cipi deploy` keeps working as before. |
+
+The scheduler's user runs the update, so it needs `git`, `composer` and the database client (`mysqldump`/`mysql`, `pg_dump`/`psql`) on its `PATH`, and write access to the application. `public/build` is not committed, so every update builds the assets: `npm` (Node.js 22+) must be on that `PATH` too, or set `APP_UPDATE_NPM` (on Cipi, its own Node build script is used). From the command line:
+
+```bash
+php artisan app:update status          # what the last check and the last run said (JSON)
+php artisan app:update check           # what the channel would install
+php artisan app:update apply [--force] # update now
+php artisan app:update channel stable  # or beta
+php artisan app:update auto off        # or on
+```
+
+| Variable | Default | |
+| --- | --- | --- |
+| `APP_UPDATES` | on in production | `false` turns updates off |
+| `APP_UPDATE_REPOSITORY` | `https://github.com/andreapollastri/newsletter.git` | where builds come from |
+| `APP_UPDATE_CHANNEL` | `stable` | the channel until an Administrator picks one |
+| `APP_UPDATE_AUTO` | `true` | the nightly update until an Administrator switches it |
+| `APP_UPDATE_TIME` | `04:00` | when the nightly update runs |
+| `APP_UPDATE_BACKUP` | `true` | the database backup before each update |
+| `APP_UPDATE_ASSETS` | `true` | build the assets (`npm`); leave it on, `public/build` is not committed |
+| `APP_UPDATE_PHP`, `APP_UPDATE_COMPOSER`, `APP_UPDATE_NPM` | found on the `PATH` | the tools, when the scheduler's `PATH` does not have them |
+
+The installed release is in the `VERSION` file.
 
 ---
 

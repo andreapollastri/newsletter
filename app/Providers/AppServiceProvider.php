@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use App\Http\Controllers\L5SwaggerController;
+use App\Updates\Updater;
+use App\Updates\UpdateState;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -20,6 +22,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(SwaggerController::class, L5SwaggerController::class);
+        $this->app->singleton(Updater::class, fn (): Updater => new Updater(new UpdateState((string) config('updates.state'))));
     }
 
     /**
